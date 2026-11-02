@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import {
-    createHistory, dispatch, exportZip, firstScreenOf, importZip, languagesOf, newDocument, textIn, themeOf, titleOf,
+    createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, languagesOf, missingImages, newDocument, textIn,
+    themeOf, titleOf,
     type Doc, type Element, type History, type Op, type Screen,
 } from './model/index.ts';
 import { THEMES, WIDGETS, widget } from './catalog.ts';
 import { previewScreen } from './preview';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
 import { LanguageSwitcher, TextInput, TextIssues, shownLanguage } from './Languages';
+import { ImagesPanel } from './Pictures';
+import { AutosaveProblem, RestorePrompt, useAutosave } from './Autosave';
 
 const W = 1796, H = 632;   // iDrive 7, embedded in the HMI page
 
@@ -49,7 +52,7 @@ export function App() {
         try {
             open(importZip(new Uint8Array(await f.arrayBuffer())));
         } catch (err) {
-            setProblem((err as Error).message);
+            setProblem(`Couldn’t open ${f.name}: ${(err as Error).message} Your design is unchanged.`);
         }
     }
 
@@ -63,6 +66,8 @@ export function App() {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    const saved = useAutosave(doc, open);
+
     // the selected screen may be gone after an edit (deleted, renamed): fall back to the first screen
     const screen: Screen | undefined = file.screens.find((s) => s.name === selected);
     useEffect(() => {
@@ -72,8 +77,8 @@ export function App() {
 
     useEffect(() => {
         if (!screen || !canvas.current) return;
-        setLog(previewScreen(file, screen.name, canvas.current, language));
-    }, [file, screen, language]);
+        setLog(previewScreen(file, screen.name, canvas.current, doc.images, language));
+    }, [file, screen, doc.images, language]);
 
     /** The title the HMI page shows in the shown language (the screen's name when it has none). */
     function shownTitle(s: Screen): string {
@@ -111,7 +116,9 @@ export function App() {
                 </label>
                 <LanguageSwitcher file={file} language={language} onLanguage={setPicked} edit={edit} />
                 {problem && <span className="problem" role="alert">{problem}</span>}
+                <AutosaveProblem problem={saved.problem} />
             </header>
+            {saved.offer && <RestorePrompt onRestore={saved.restore} onDecline={saved.decline} />}
             <main>
                 <nav aria-label="Screens">
                     <ul>{file.screens.map((s) => (
@@ -177,6 +184,10 @@ export function App() {
                                 <TextInput file={file} language={language} value={value}
                                     onCommit={(v) => edit({ type: 'setText', screen: screen.name, element: el.name, key: o.key, language: language || undefined, value: v })} />
                             )}
+                            images={doc.images}
+                            onUploadPicture={(key, name, bytes) => edit({
+                                type: 'uploadPicture', screen: screen.name, element: el.name, key, path: imagePathFor(name), bytes,
+                            })}
                         />
                     )}
                     <TextIssues file={file} onSelect={(p, l) => {
@@ -184,6 +195,9 @@ export function App() {
                         setElement(p.element === undefined ? null : p.element);
                         if (l) setPicked(l);
                     }} />
+                    <ImagesPanel doc={doc} missing={missingImages(doc)}
+                        onAdd={(name, bytes) => edit({ type: 'addImage', path: imagePathFor(name), bytes })}
+                        onRemove={(p) => edit({ type: 'removeImage', path: p })} />
                 </aside>
             </main>
         </div>

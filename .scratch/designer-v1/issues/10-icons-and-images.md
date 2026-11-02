@@ -6,9 +6,9 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] An icon picker lists the kit's vector icons and sets an element's icon
-- [ ] Uploaded PNGs are stored under `images/` and referenced by relative path
-- [ ] The runtime draws referenced PNGs (head unit and preview)
-- [ ] Unused images are dropped from the downloaded zip; a missing image is reported in the Designer
+- [x] An icon picker lists the kit's vector icons and sets an element's icon
+- [x] Uploaded PNGs are stored under `images/` and referenced by relative path
+- [x] The runtime draws referenced PNGs (head unit and preview)
+- [x] Unused images are dropped from the downloaded zip; a missing image is reported in the Designer

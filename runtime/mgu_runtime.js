@@ -12,11 +12,14 @@
  *
  * sink.frame(recorder): a kit Recorder (kit_record.js) per frame; returns false if it could not take it
  * (the render client's frame() has this contract). log: console-like (error, warn, info).
+ * readImage(path) (optional): the bytes of a PNG the screen file names by its path ('images/logo.png'), or null
+ * when there is none; a missing or unreadable picture is logged and its element drawn without it.
  *
  * Screen file: schema 1 (design, first, screens[], languages, per screen focus and nav), or a Store screen
  * file (no schema, no first: the first listed screen is the first screen). Any other schema is refused.
  */
 
+const { createPictures } = require('./mgu_pictures.js');
 const text = require('./mgu_text.js');
 
 const SCHEMA = 1;
@@ -27,6 +30,7 @@ function createRuntime(opts) {
     const kit = opts.kit || require('./am_gpu.js');
     const sink = opts.sink;
     const log = opts.log || console;
+    let pictures = createPictures(opts.readImage, log);
 
     let file = null;        // the loaded screen file
     let current = null;     // the screen shown
@@ -54,6 +58,7 @@ function createRuntime(opts) {
         }
         file = f;
         current = null;
+        pictures = createPictures(opts.readImage, log);      // a new file: read its pictures afresh
         return true;
     }
 
@@ -73,7 +78,7 @@ function createRuntime(opts) {
     function draw() {
         const design = file.design || DESIGN;
         if (languagesOf(file).length) text.useLanguage(active());     // a Store file leaves the kit's language be
-        const rec = kit.record(text.screenIn(current, languagesOf(file), active()), {
+        const rec = kit.record(pictures.resolve(text.screenIn(current, languagesOf(file), active())), {
             textScale: 1,
             design: design,
             area: { x: 0, y: 0, w: design.w, h: design.h },     // embedded: the whole box is the app's

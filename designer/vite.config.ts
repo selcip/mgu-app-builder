@@ -49,6 +49,7 @@ function mguRuntime(): Plugin {
                         play: require('./kit_record.js').play,
                         Canvas: require('./kit_canvas.js').Canvas,
                         text: require('./mgu_text.js'),
+                        vicon: require('./kit_vicons.js').vicon,
                     };`,
                     resolveDir: RUNTIME,
                     sourcefile: 'mgu-runtime-entry.js',

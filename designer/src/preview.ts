@@ -10,15 +10,18 @@ export interface PreviewFrame {
 }
 
 /**
- * Draws `screen` of `file` onto `canvas` as the head unit would show it first, in `language` (the file's default
- * when not given). Returns the runtime's log lines.
+ * Draws `screen` of `file` onto `canvas` as the head unit would show it first, with the design's PNGs ('images/x.png'
+ * -> bytes) as the pictures beside the screen file, in `language` (the file's default when not given). Returns the
+ * runtime's log lines.
  */
-export function previewScreen(file: ScreenFile, screen: string, canvas: HTMLCanvasElement, language?: string | null): string[] {
+export function previewScreen(file: ScreenFile, screen: string, canvas: HTMLCanvasElement,
+    images: Readonly<Record<string, Uint8Array>> = {}, language?: string | null): string[] {
     const lines: string[] = [];
     const put = (m: string) => { lines.push(String(m)); };
     const rt = mgu.createRuntime({
         kit: mgu.kit,
         log: { error: put, warn: put, info: () => {} },
+        readImage: (p) => (Object.prototype.hasOwnProperty.call(images, p) ? images[p] : null),
         sink: {
             frame(rec) {
                 const w = rec.words();
