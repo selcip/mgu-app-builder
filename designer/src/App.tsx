@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import {
-    createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, languagesOf, missingImages, newDocument, textIn,
-    themeOf, titleOf,
+    apply, canRedo, canUndo, createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, languagesOf, missingImages, newDocument, redo,
+    textIn, themeOf, titleOf, undo,
     type Doc, type Element, type History, type Op, type Screen,
 } from './model/index.ts';
 import { THEMES, WIDGETS, widget } from './catalog.ts';
 import { previewScreen } from './preview';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
 import { LanguageSwitcher, TextInput, TextIssues, shownLanguage } from './Languages';
+import { Canvas, WIDGET_DRAG_TYPE, type CanvasSettings } from './Canvas';
+import { EditBar, type Clipboard } from './EditBar';
 import { ImagesPanel } from './Pictures';
 import { AutosaveProblem, RestorePrompt, useAutosave } from './Autosave';
 
@@ -16,7 +18,10 @@ const W = 1796, H = 632;   // iDrive 7, embedded in the HMI page
 export function App() {
     const [history, setHistory] = useState<History>(() => createHistory(newDocument()));
     const [selected, setSelected] = useState<string>(() => firstScreenOf(history.present.file));
-    const [element, setElement] = useState<string | null>(null);
+    const [selection, setSelection] = useState<string[]>([]);
+    const [settings, setSettings] = useState<CanvasSettings>({ grid: 8, snap: true, guides: { xs: [], ys: [] } });
+    const [clipboard, setClipboard] = useState<Clipboard | null>(null);
+    const [dragOp, setDragOp] = useState<Op | null>(null);     // the canvas edit being dragged, previewed until committed
     const [problem, setProblem] = useState<string | null>(null);
     const [log, setLog] = useState<string[]>([]);
     const [picked, setPicked] = useState<string | null>(null);     // the language shown and edited
@@ -41,7 +46,7 @@ export function App() {
     function open(d: Doc) {
         setHistory(createHistory(d));
         setSelected(firstScreenOf(d.file));
-        setElement(null);
+        setSelection([]);
         setProblem(null);
     }
 
@@ -73,12 +78,21 @@ export function App() {
     useEffect(() => {
         if (!screen) setSelected(firstScreenOf(file));
     }, [screen, file]);
-    const el: Element | undefined = screen && element !== null ? screen.components.find((c) => c.name === element) : undefined;
+    const selected1 = selection.length === 1 ? selection[0] : null;
+    const el: Element | undefined = screen && selected1 !== null ? screen.components.find((c) => c.name === selected1) : undefined;
 
     useEffect(() => {
         if (!screen || !canvas.current) return;
-        setLog(previewScreen(file, screen.name, canvas.current, doc.images, language));
-    }, [file, screen, doc.images, language]);
+        let shown = file;
+        if (dragOp) {
+            try { shown = apply(doc, dragOp).file; } catch { /* refused: show the file as it is */ }
+        }
+        setLog(previewScreen(shown, screen.name, canvas.current, doc.images, language));
+    }, [doc, file, screen, dragOp, language]);
+
+    const editOk = (op: Op) => edit(op) !== null;
+    const setGuides = useCallback((guides: CanvasSettings['guides']) => setSettings((s) => ({ ...s, guides })), []);
+    const selectOnly = (name: string | null) => setSelection(name === null ? [] : [name]);
 
     /** The title the HMI page shows in the shown language (the screen's name when it has none). */
     function shownTitle(s: Screen): string {
@@ -95,7 +109,7 @@ export function App() {
         const next = edit(op);
         if (!next) return;
         const added = next.file.screens.find((s) => s.name === screen.name)!.components.find((c) => !before.has(c.name));
-        if (added) setElement(added.name);
+        if (added) selectOnly(added.name);
     }
 
     return (
@@ -124,7 +138,7 @@ export function App() {
                     <ul>{file.screens.map((s) => (
                         <li key={s.name}>
                             <button data-screen={s.name} aria-current={s.name === selected}
-                                onClick={() => { setSelected(s.name); setElement(null); }}>
+                                onClick={() => { setSelected(s.name); setSelection([]); }}>
                                 {s.name}{s.name === firstScreenOf(file) ? ' (first)' : ''}
                             </button>
                         </li>
@@ -153,15 +167,30 @@ export function App() {
                     )}
                 </nav>
                 <section className="stage">
+                    {screen && (
+                        <EditBar screen={screen} design={{ w: W, h: H }} selection={selection} settings={settings} clipboard={clipboard}
+                            canUndo={canUndo(history)} canRedo={canRedo(history)} onEdit={editOk}
+                            onUndo={() => setHistory(undo(history))} onRedo={() => setHistory(redo(history))}
+                            onSelect={setSelection} onSettings={setSettings} onClipboard={setClipboard} />
+                    )}
                     <div className="hmi-page" style={{ width: W }}>
                         <div className="hmi-title" data-hmi-title="">{screen ? shownTitle(screen) : ''}</div>
-                        <canvas ref={canvas} width={W} height={H} />
+                        {screen ? (
+                            <Canvas screen={screen} design={{ w: W, h: H }} selection={selection} settings={settings}
+                                onSelect={setSelection} onEdit={editOk} onDrag={setDragOp} onGuides={setGuides}>
+                                <canvas ref={canvas} width={W} height={H} />
+                            </Canvas>
+                        ) : <canvas ref={canvas} width={W} height={H} />}
                     </div>
                     {log.length > 0 && <ul className="log">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}
                     <div className="palette" aria-label="Widgets">
                         <h2>Add a widget</h2>
                         {WIDGETS.map((wd) => (
-                            <button key={wd.type} data-widget={wd.type} onClick={() => addElement(wd.type)}>{wd.label}</button>
+                            <button key={wd.type} data-widget={wd.type} onClick={() => addElement(wd.type)} draggable
+                                title="Click to add, or drag onto the screen"
+                                onDragStart={(e) => { e.dataTransfer.setData(WIDGET_DRAG_TYPE, wd.type); e.dataTransfer.effectAllowed = 'copy'; }}>
+                                {wd.label}
+                            </button>
                         ))}
                     </div>
                 </section>
@@ -169,7 +198,10 @@ export function App() {
                     <h2>Elements</h2>
                     <ul className="elements">{screen && screen.components.map((c) => (
                         <li key={c.name}>
-                            <button data-element={c.name} aria-current={c.name === element} onClick={() => setElement(c.name)}>
+                            <button data-element={c.name} aria-current={selection.includes(c.name)} title="Shift- or Ctrl-click to select several"
+                                onClick={(e) => setSelection(e.shiftKey || e.metaKey || e.ctrlKey
+                                    ? (selection.includes(c.name) ? selection.filter((n) => n !== c.name) : selection.concat([c.name]))
+                                    : [c.name])}>
                                 {c.name} <small>{(widget(c.gpu) || { label: c.gpu }).label}</small>
                             </button>
                         </li>
@@ -177,8 +209,8 @@ export function App() {
                     {screen && el && (
                         <PropertyPanel
                             element={el}
-                            onRename={(v) => { if (edit({ type: 'renameElement', screen: screen.name, element: el.name, name: v })) setElement(v); }}
-                            onDelete={() => { if (edit({ type: 'deleteElement', screen: screen.name, element: el.name })) setElement(null); }}
+                            onRename={(v) => { if (edit({ type: 'renameElement', screen: screen.name, element: el.name, name: v })) selectOnly(v); }}
+                            onDelete={() => { if (edit({ type: 'deleteElement', screen: screen.name, element: el.name })) selectOnly(null); }}
                             onOption={(key, value) => edit({ type: 'setOption', screen: screen.name, element: el.name, key, value })}
                             onRows={(e) => edit({ ...e, screen: screen.name, element: el.name })}
                             renderText={(o, value) => (
@@ -193,7 +225,7 @@ export function App() {
                     )}
                     <TextIssues file={file} onSelect={(p, l) => {
                         setSelected(p.screen);
-                        setElement(p.element === undefined ? null : p.element);
+                        selectOnly(p.element === undefined ? null : p.element);
                         if (l) setPicked(l);
                     }} />
                     <ImagesPanel doc={doc} missing={missingImages(doc)}

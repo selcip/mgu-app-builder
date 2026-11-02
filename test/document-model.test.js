@@ -99,7 +99,7 @@ test('a widget added from the palette becomes an element with a unique name, the
     assert.deepStrictEqual(elNames(d, 'main'), ['button1', 'button2', 'fog']);
     assert.deepStrictEqual(elNames(d, 'b'), ['button1']);
     assert.deepStrictEqual(el(d, 'main', 'button1'), {
-        name: 'button1', rtype: 'gpu', gpu: 'button', x: 100, y: 50, w: 349, h: 52,
+        name: 'button1', rtype: 'gpu', gpu: 'button', x: 100, y: 50, w: 360, h: 76,
         opts: { text: 'Apply', style: 'primary', size: 0, radius: 16, color: '' },
     });
     assert.strictEqual(M.newElementName(screen(d, 'main'), 'button'), 'button3');

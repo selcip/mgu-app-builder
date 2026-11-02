@@ -37,6 +37,32 @@ button:disabled { opacity: .4; cursor: default; }
 .inspector .elements button[aria-current="true"] { background: #3d6ef5; }
 .inspector small { color: #aaa; }
 .colour { display: flex; gap: 4px; }
+/* the canvas: an overlay on the preview for laying elements out */
+.canvas-wrap { position: relative; }
+.canvas-layer { position: absolute; inset: 0; cursor: default; touch-action: none; user-select: none; }
+.canvas-layer .element { position: absolute; outline: 1px dashed rgba(255, 255, 255, .25); cursor: move; }
+.canvas-layer .element:hover { outline-color: rgba(120, 170, 255, .8); }
+.canvas-layer .element.selected { outline: 2px solid #3d8bff; }
+/* the 8 px focus-ring margin around each element and inside the screen's edges */
+.canvas-layer .ring-margin { position: absolute; border: 1px dotted rgba(255, 196, 77, .35); pointer-events: none; }
+.canvas-layer .screen-margin { position: absolute; outline: 1px dashed rgba(255, 196, 77, .5); pointer-events: none; }
+.canvas-layer .handle { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; background: #fff; border: 2px solid #3d8bff; border-radius: 2px; }
+.handle.nw { left: 0; top: 0; cursor: nwse-resize; } .handle.n { left: 50%; top: 0; cursor: ns-resize; }
+.handle.ne { left: 100%; top: 0; cursor: nesw-resize; } .handle.e { left: 100%; top: 50%; cursor: ew-resize; }
+.handle.se { left: 100%; top: 100%; cursor: nwse-resize; } .handle.s { left: 50%; top: 100%; cursor: ns-resize; }
+.handle.sw { left: 0; top: 100%; cursor: nesw-resize; } .handle.w { left: 0; top: 50%; cursor: ew-resize; }
+.canvas-layer .guide, .canvas-layer .snap { position: absolute; }
+.canvas-layer .guide.v { top: 0; bottom: 0; width: 7px; margin-left: -3px; cursor: ew-resize; background: linear-gradient(90deg, transparent 3px, #19d3c5 3px, #19d3c5 4px, transparent 4px); }
+.canvas-layer .guide.h { left: 0; right: 0; height: 7px; margin-top: -3px; cursor: ns-resize; background: linear-gradient(transparent 3px, #19d3c5 3px, #19d3c5 4px, transparent 4px); }
+.canvas-layer .snap { pointer-events: none; background: #ff3dbb; }
+.canvas-layer .snap.v { top: 0; bottom: 0; width: 1px; }
+.canvas-layer .snap.h { left: 0; right: 0; height: 1px; }
+.canvas-layer .marquee { position: absolute; border: 1px solid #3d8bff; background: rgba(61, 139, 255, .12); pointer-events: none; }
+.edit-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px; max-width: 1820px; }
+.edit-bar .group { display: flex; gap: 4px; align-items: center; }
+.edit-bar button { padding: 4px 9px; border: 1px solid #555; border-radius: 6px; background: #2a2d34; color: inherit; cursor: pointer; }
+.edit-bar .box input { width: 70px; padding: 3px 5px; background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
+.edit-bar select { background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
 .properties .option.rows { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
 .rows-editor table { width: 100%; border-collapse: collapse; }
 .rows-editor th { text-align: left; font-weight: normal; font-size: 12px; opacity: 0.7; }

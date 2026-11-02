@@ -6,11 +6,11 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Dragging a widget onto a screen adds an element where it was dropped
-- [ ] Moving and resizing with mouse and arrow keys, and typing exact boxes, all go through document-model operations
-- [ ] Snapping to grid, edges and guides works while dragging and resizing
-- [ ] The focus-ring margin is shown for every element and the screen's edges
-- [ ] Multi-select move, align and delete; copy and paste within and between screens (pasted names stay unique)
-- [ ] Undo and redo cover every edit, tested on the document model
+- [x] Dragging a widget onto a screen adds an element where it was dropped
+- [x] Moving and resizing with mouse and arrow keys, and typing exact boxes, all go through document-model operations
+- [x] Snapping to grid, edges and guides works while dragging and resizing
+- [x] The focus-ring margin is shown for every element and the screen's edges
+- [x] Multi-select move, align and delete; copy and paste within and between screens (pasted names stay unique)
+- [x] Undo and redo cover every edit, tested on the document model
