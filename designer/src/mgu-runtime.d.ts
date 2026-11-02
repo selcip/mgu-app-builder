@@ -15,6 +15,8 @@ declare module 'virtual:mgu-runtime' {
     export interface Runtime {
         load(file: unknown): boolean;
         start(): boolean;
+        /** Sets what an element shows (text, on/off, number, rows, picture); false if refused (logged). */
+        set(screen: string, element: string, value: unknown): boolean;
     }
     export interface KitCanvas {
         w: number;

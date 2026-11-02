@@ -37,3 +37,9 @@ button:disabled { opacity: .4; cursor: default; }
 .inspector .elements button[aria-current="true"] { background: #3d6ef5; }
 .inspector small { color: #aaa; }
 .colour { display: flex; gap: 4px; }
+.properties .option.rows { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.rows-editor table { width: 100%; border-collapse: collapse; }
+.rows-editor th { text-align: left; font-weight: normal; font-size: 12px; opacity: 0.7; }
+.rows-editor td input { width: 100%; box-sizing: border-box; }
+.rows-editor .row-tools { white-space: nowrap; }
+.rows-editor .row-tools button { padding: 0 6px; }

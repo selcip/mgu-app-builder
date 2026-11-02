@@ -162,6 +162,7 @@ export function App() {
                             onRename={(v) => { if (edit({ type: 'renameElement', screen: screen.name, element: el.name, name: v })) setElement(v); }}
                             onDelete={() => { if (edit({ type: 'deleteElement', screen: screen.name, element: el.name })) setElement(null); }}
                             onOption={(key, value) => edit({ type: 'setOption', screen: screen.name, element: el.name, key, value })}
+                            onRows={(e) => edit({ ...e, screen: screen.name, element: el.name })}
                         />
                     )}
                 </aside>

@@ -4,5 +4,6 @@ export { newDocument, apply } from './document.ts';
 export type { Op } from './operations.ts';
 export { themeOf, newScreenName, titleOf, firstScreenOf } from './ops/screens.ts';
 export { newElementName } from './ops/elements.ts';
+export { rowsOf, ROW_FIELDS } from './ops/rows.ts';
 export { createHistory, dispatch, undo, redo, canUndo, canRedo, type History } from './history.ts';
 export { importZip, importScreenFile, exportZip, screenFileProblem, ImportError } from './zip.ts';

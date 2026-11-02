@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "languages": ["en"],
+  "first": "live",
+  "design": { "w": 1796, "h": 632 },
+  "screens": [
+    {
+      "name": "live", "kind": "gpu", "title": "Live", "theme": "m_red", "bg": "theme",
+      "components": [
+        { "name": "title", "rtype": "gpu", "gpu": "text", "x": 40, "y": 20, "w": 800, "h": 60, "opts": { "text": "Live data", "size": 41 } },
+        { "name": "wifi", "rtype": "gpu", "gpu": "toggle", "x": 900, "y": 20, "w": 81, "h": 45, "opts": { "on": false } },
+        { "name": "fog", "rtype": "gpu", "gpu": "row", "x": 40, "y": 90, "w": 1000, "h": 65, "opts": { "label": "Fog lights", "control": "toggle", "on": true } },
+        { "name": "fan", "rtype": "gpu", "gpu": "row", "x": 40, "y": 160, "w": 1000, "h": 65, "opts": { "label": "Fan", "control": "slider", "value": 20 } },
+        { "name": "volume", "rtype": "gpu", "gpu": "slider", "x": 40, "y": 240, "w": 600, "h": 40, "opts": { "value": 65 } },
+        { "name": "faults", "rtype": "gpu", "gpu": "list", "x": 1080, "y": 90, "w": 680, "h": 324, "opts": { "items": "1, Engine, 0x12\n2, Body, 0x40", "rowH": 80 } },
+        { "name": "storage", "rtype": "gpu", "gpu": "progress", "x": 40, "y": 300, "w": 600, "h": 81, "opts": { "label": "Storage", "value": 36 } },
+        { "name": "logo", "rtype": "gpu", "gpu": "image", "x": 700, "y": 300, "w": 120, "h": 120, "opts": { "src": "" } },
+        { "name": "panel", "rtype": "gpu", "gpu": "rect", "x": 40, "y": 450, "w": 400, "h": 100, "opts": {} }
+      ]
+    },
+    {
+      "name": "other", "kind": "gpu", "title": "Other", "theme": "m_red", "bg": "theme",
+      "components": [
+        { "name": "label", "rtype": "gpu", "gpu": "text", "x": 40, "y": 40, "w": 800, "h": 80, "opts": { "text": "Other screen" } }
+      ]
+    }
+  ]
+}
