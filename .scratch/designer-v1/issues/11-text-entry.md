@@ -6,10 +6,10 @@
 
 **Blocked by:** 06
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Selecting a field opens the runtime's keyboard screen with the field's current text
-- [ ] Confirm returns to the previous screen and reports `{ screen, element, action, value }` with the typed text
-- [ ] Cancel returns and reports nothing
-- [ ] Controller and touch both work on the keyboard screen
-- [ ] The preview opens the keyboard screen too; tested at the recording seam
+- [x] Selecting a field opens the runtime's keyboard screen with the field's current text
+- [x] Confirm returns to the previous screen and reports `{ screen, element, action, value }` with the typed text
+- [x] Cancel returns and reports nothing
+- [x] Controller and touch both work on the keyboard screen
+- [x] The preview opens the keyboard screen too; tested at the recording seam

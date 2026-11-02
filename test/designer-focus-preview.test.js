@@ -125,3 +125,27 @@ test('trying the preview: arrow keys and Enter as the controller, clicks as taps
         await page.close();
     }
 });
+
+test('trying a field in the preview opens the keyboard screen, drawn as in Node; the typed text is listed as its value', { skip }, async () => {
+    const TEXT = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'screens', 'text-entry.json'), 'utf8'));
+    const { page, errors } = await openWithFile(TEXT);
+    try {
+        await page.locator('.try-panel input[type=checkbox]').check();
+        await page.keyboard.press('Enter');                 // the field: the keyboard screen
+        assert.ok((await lastFrame(page)).equals(nodeAfter(TEXT, ['press'])), 'keyboard screen as in Node');
+        await page.locator('canvas').click({ position: { x: 100, y: 210 } });       // '1'
+        for (let i = 0; i < 45; i++) await page.keyboard.press('ArrowRight');      // OK
+        assert.ok((await lastFrame(page)).equals(nodeAfter(TEXT, ['press', ['down', 100, 210], ['up', 100, 210], ...Array(45).fill('right')])),
+            'typed and on OK, as in Node');
+        await page.keyboard.press('Enter');
+        assert.ok((await lastFrame(page)).equals(nodeAfter(TEXT, ['press', ['down', 100, 210], ['up', 100, 210], ...Array(45).fill('right'), 'press'])),
+            'back on the field, as in Node');
+        await page.keyboard.press('Enter');                 // again, then cancel
+        await page.keyboard.press('Escape');
+        const listed = await page.locator('[data-action]').evaluateAll((els) => els.map((e) => e.textContent));
+        assert.deepStrictEqual(listed, ["{ screen: 'main', element: 'name', action: 'rename', value: 'Bob1' }"]);
+        assert.deepStrictEqual(errors, []);
+    } finally {
+        await page.close();
+    }
+});

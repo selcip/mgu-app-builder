@@ -7,12 +7,13 @@ export function TryPanel(props: { trying: boolean; onTrying: (on: boolean) => vo
         <div className="try-panel">
             <label>
                 <input type="checkbox" checked={props.trying} onChange={(e) => props.onTrying(e.target.checked)} />{' '}
-                Try it: ← → (or ↑ ↓) move the highlight, Enter selects, a click taps
+                Try it: ← → (or ↑ ↓) move the highlight, Enter selects, Esc is BACK, a click taps
             </label>
             {props.actions.length > 0 && <button onClick={props.onClear}>Clear</button>}
             <ol className="actions" aria-label="Actions reported">{props.actions.map((a, i) => (
                 <li key={i} data-action={a.action}>
-                    <code>{`{ screen: '${a.screen}', element: '${a.element}', action: '${a.action}' }`}</code>
+                    <code>{`{ screen: '${a.screen}', element: '${a.element}', action: '${a.action}'`
+                        + ('value' in a ? `, value: ${JSON.stringify(a.value).replace(/^"(.*)"$/, "'$1'")}` : '') + ' }'}</code>
                 </li>
             ))}</ol>
         </div>

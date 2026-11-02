@@ -7,6 +7,7 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+require('./flat-layout.js');     // the runtime requires the kit by basename, as on the head unit
 const { EventEmitter } = require('node:events');
 
 const ROOT = path.join(__dirname, '..');

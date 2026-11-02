@@ -7,6 +7,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
+require('./flat-layout.js');     // the runtime requires the kit by basename, as on the head unit
 const { execFileSync } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');

@@ -10,7 +10,8 @@
  *   rt.start();               // shows the first screen: one recording to sink.frame(recorder)
  *   rt.set('home', 'oil', 96); // sets what an element shows; the screen redraws if shown (false + log if refused)
  *   rt.setLanguage('de');     // draws the texts in German (missing ones in the default language)
- *   rt.on('action', fn);      // fn({ screen, element, action }) when the driver selects an element
+ *   rt.on('action', fn);      // fn({ screen, element, action }) when the driver selects an element;
+ *                             // fn({ screen, element, action, value }) when the driver types a field's text
  *   rt.controller(input, n);  // 'left' | 'right' (move the highlight n steps, default 1), 'press' (select the
  *                             // highlighted element), 'back'
  *   rt.touch(phase, x, y);    // 'down' | 'move' | 'up', in screen px: down and up on one element selects it
@@ -30,11 +31,17 @@
  *
  * Focus and actions (mgu_focus.js): the highlight moves in the screen's focus order and is drawn by the runtime as a
  * ring on top of the kit's recording; a press or a tap reports the element's action.
+ *
+ * Text entry (mgu_keyboard.js): selecting a field opens the keyboard screen over the shown screen with the field's
+ * text. It takes the controller and touch while open (BACK cancels); confirming returns to the field, which shows
+ * the typed text from then on, and reports it as the field's action value; cancelling returns and reports nothing.
+ * The keyboard screen is the runtime's, not a screen of the file: it reports no screen change.
  */
 
 const { createPictures } = require('./mgu_pictures.js');
 const text = require('./mgu_text.js');
 const focus = require('./mgu_focus.js');
+const keyboard = require('./mgu_keyboard.js');
 
 const SCHEMA = 1;
 const DESIGN = { w: 1796, h: 632 };     // iDrive 7, embedded in the HMI page
@@ -53,6 +60,8 @@ function createRuntime(opts) {
     let items = [];         // the shown screen's elements in focus order
     let focused = 0;        // index into items
     let touched = null;     // the element a touch went down on
+    // the keyboard screen, open over `current` while the driver types a field's text: { field, k, items, focused }
+    let typing = null;
     const listeners = { action: [] };
 
     function refuse(why) {
@@ -77,6 +86,7 @@ function createRuntime(opts) {
         }
         file = f;
         current = null;
+        typing = null;
         values = Object.create(null);
         pictures = createPictures(opts.readImage, log);      // a new file: read its pictures afresh
         return true;
@@ -100,6 +110,7 @@ function createRuntime(opts) {
         items = focus.focusOrder(screen);
         focused = 0;
         touched = null;
+        typing = null;
     }
 
     function on(event, fn) {
@@ -114,13 +125,72 @@ function createRuntime(opts) {
     }
 
     function select(c) {
+        if (c.gpu === 'field') return openKeyboard(c);
         emit('action', { screen: current.name, element: c.name, action: focus.actionOf(c) });
     }
 
+    /** The screen as drawn now: values set from code over its options, text maps in the active language. */
+    function shownScreen() {
+        return text.screenIn(withValues(current, values[current.name]), languagesOf(file), active());
+    }
+
+    /** Opens the keyboard screen over the shown screen with the field's text as drawn now. */
+    function openKeyboard(c) {
+        const drawn = elementNamed(shownScreen(), c.name);
+        const k = keyboard.open(drawn && drawn.opts ? drawn.opts.text : '');
+        typing = { field: c, k: k, items: keyboard.itemsOf(k, designOf()), focused: 0, touched: null };
+        draw();
+    }
+
+    /** Closes the keyboard screen: with the typed text (confirm) or null (cancel); back on the field's screen. */
+    function closeKeyboard(typed) {
+        const c = typing.field;
+        typing = null;
+        if (typed === null) { draw(); return; }
+        const own = values[current.name] || (values[current.name] = Object.create(null));
+        own[c.name] = Object.assign({}, own[c.name], { text: typed });     // the field shows what was typed
+        draw();
+        emit('action', { screen: current.name, element: c.name, action: focus.actionOf(c), value: typed });
+    }
+
+    function pressKey(item) {
+        const done = keyboard.press(typing.k, item);
+        if (done === 'confirm') return closeKeyboard(typing.k.text);
+        if (done === 'cancel') return closeKeyboard(null);
+        typing.items = keyboard.itemsOf(typing.k, designOf());     // Shift and the symbols page change what keys type
+        draw();
+    }
+
+    function keyboardController(input, steps) {
+        const t = typing;
+        if (input === 'left' || input === 'right') {
+            const to = Math.max(0, Math.min(t.items.length - 1, t.focused + (input === 'left' ? -steps : steps)));
+            if (to === t.focused) return;
+            t.focused = to;
+            draw();
+        } else if (input === 'press') pressKey(t.items[t.focused]);
+        else if (input === 'back') closeKeyboard(null);
+        else log.warn('mgu-runtime: unknown controller input ' + JSON.stringify(input));
+    }
+
+    function keyboardTouch(phase, x, y) {
+        const t = typing;
+        const it = keyboard.hit(t.items, x, y);
+        if (phase === 'down') t.touched = it;
+        else if (phase === 'up') {
+            const was = t.touched;
+            t.touched = null;
+            if (!it || it !== was) return;
+            t.focused = t.items.indexOf(it);
+            pressKey(it);
+        }
+    }
+
     /** Controller input: 'left' / 'right' move the highlight `steps` elements (default 1; stops at the ends, no
-     * wrap), 'press' selects, 'back' (not yet handled). */
+     * wrap), 'press' selects, 'back' (on the keyboard screen: cancel; elsewhere not yet handled). */
     function controller(input, steps) {
         if (!current) return;
+        if (typing) return keyboardController(input, typeof steps === 'number' && steps > 0 ? Math.floor(steps) : 1);
         if (input === 'left' || input === 'right') {
             const n = typeof steps === 'number' && steps > 0 ? Math.floor(steps) : 1;
             const to = Math.max(0, Math.min(items.length - 1, focused + (input === 'left' ? -n : n)));
@@ -138,6 +208,7 @@ function createRuntime(opts) {
      * (and highlighted). */
     function touch(phase, x, y) {
         if (!current) return;
+        if (typing) return keyboardTouch(phase, x, y);
         const c = focus.hit(current, items, x, y);
         if (phase === 'down') touched = c;
         else if (phase === 'up') {
@@ -150,19 +221,29 @@ function createRuntime(opts) {
         }
     }
 
+    function designOf() {
+        return file.design || DESIGN;
+    }
+
     function draw() {
-        const design = file.design || DESIGN;
+        const design = designOf();
         if (languagesOf(file).length) text.useLanguage(active());     // a Store file leaves the kit's language be
         // values set from code go over the file's options first: a text set by code is a plain string, so it is
         // drawn as set whatever the language; the file's own text maps are then resolved in the active language
-        const shown = text.screenIn(withValues(current, values[current.name]), languagesOf(file), active());
+        let shown = shownScreen();
+        let ring = items[focused];
+        if (typing) {
+            const f = elementNamed(shown, typing.field.name);
+            shown = keyboard.screenOf(typing.k, shown, f && f.opts ? f.opts.label : '', design);
+            ring = typing.items[typing.focused];
+        }
         const rec = kit.record(pictures.resolve(shown), {
             textScale: 1,
             design: design,
             area: { x: 0, y: 0, w: design.w, h: design.h },     // embedded: the whole box is the app's
         });
         if (rec.errors) log.warn('mgu-runtime: ' + current.name + ': ' + rec.errors.join('; '));
-        if (items[focused]) focus.drawRing(rec, items[focused]);
+        if (ring) focus.drawRing(rec, ring);
         return sink.frame(rec) !== false;
     }
 
@@ -181,7 +262,7 @@ function createRuntime(opts) {
         const own = values[screen] || (values[screen] = Object.create(null));
         const v = own[element] || (own[element] = {});
         v[how[0]] = how[1].to ? how[1].to(value) : value;
-        if (current === s) draw();
+        if (current === s && !typing) draw();        // the keyboard screen is drawn over it: no change there
         return true;
     }
 

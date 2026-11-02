@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "languages": ["en", "de"],
+  "first": "main",
+  "design": { "w": 1796, "h": 632 },
+  "screens": [
+    {
+      "name": "main", "kind": "gpu", "title": "Profile", "theme": "m_red", "bg": "theme",
+      "components": [
+        { "name": "heading", "rtype": "gpu", "gpu": "text", "x": 40, "y": 30, "w": 900, "h": 70, "opts": { "text": "Profile", "size": 44, "font": "bold" } },
+        { "name": "name", "rtype": "gpu", "gpu": "field", "x": 40, "y": 150, "w": 1000, "h": 100, "opts": { "text": "Bob", "label": { "en": "Driver name", "de": "Fahrername" } }, "onTap": "event:rename" },
+        { "name": "save", "rtype": "gpu", "gpu": "button", "x": 1200, "y": 500, "w": 560, "h": 84, "opts": { "text": "Save", "style": "primary" } }
+      ]
+    }
+  ]
+}
