@@ -7,6 +7,7 @@ import { canvasOps } from './ops/canvas.ts';
 import { rowOps } from './ops/rows.ts';
 import { languageOps } from './ops/languages.ts';
 import { imageOps } from './ops/images.ts';
+import { focusOps } from './ops/focus.ts';
 
 export const HANDLERS = {
     ...screenOps,
@@ -15,6 +16,7 @@ export const HANDLERS = {
     ...rowOps,
     ...languageOps,
     ...imageOps,
+    ...focusOps,
 };
 
 /** An edit to the document: `{ type: 'addScreen', name: 'home' }`, `{ type: 'setOption', ... }`, ... */

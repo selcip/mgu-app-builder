@@ -10,6 +10,10 @@
  *   rt.start();               // shows the first screen: one recording to sink.frame(recorder)
  *   rt.set('home', 'oil', 96); // sets what an element shows; the screen redraws if shown (false + log if refused)
  *   rt.setLanguage('de');     // draws the texts in German (missing ones in the default language)
+ *   rt.on('action', fn);      // fn({ screen, element, action }) when the driver selects an element
+ *   rt.controller(input, n);  // 'left' | 'right' (move the highlight n steps, default 1), 'press' (select the
+ *                             // highlighted element), 'back'
+ *   rt.touch(phase, x, y);    // 'down' | 'move' | 'up', in screen px: down and up on one element selects it
  *
  * sink.frame(recorder): a kit Recorder (kit_record.js) per frame; returns false if it could not take it
  * (the render client's frame() has this contract). log: console-like (error, warn, info).
@@ -23,10 +27,14 @@
  *
  * Screen file: schema 1 (design, first, screens[], languages, per screen focus and nav), or a Store screen
  * file (no schema, no first: the first listed screen is the first screen). Any other schema is refused.
+ *
+ * Focus and actions (mgu_focus.js): the highlight moves in the screen's focus order and is drawn by the runtime as a
+ * ring on top of the kit's recording; a press or a tap reports the element's action.
  */
 
 const { createPictures } = require('./mgu_pictures.js');
 const text = require('./mgu_text.js');
+const focus = require('./mgu_focus.js');
 
 const SCHEMA = 1;
 const DESIGN = { w: 1796, h: 632 };     // iDrive 7, embedded in the HMI page
@@ -42,6 +50,10 @@ function createRuntime(opts) {
     let current = null;     // the screen shown
     let values = Object.create(null);   // values set from code: screen name -> element name -> { option: value }
     let language = null;    // the language asked for (setLanguage); null: the file's default
+    let items = [];         // the shown screen's elements in focus order
+    let focused = 0;        // index into items
+    let touched = null;     // the element a touch went down on
+    const listeners = { action: [] };
 
     function refuse(why) {
         log.error('mgu-runtime: screen file refused: ' + why);
@@ -72,7 +84,7 @@ function createRuntime(opts) {
 
     function start() {
         if (!file) return false;
-        current = file.first !== undefined ? screenNamed(file, file.first) : file.screens[0];
+        show(file.first !== undefined ? screenNamed(file, file.first) : file.screens[0]);
         return draw();
     }
 
@@ -81,6 +93,61 @@ function createRuntime(opts) {
         const langs = file ? languagesOf(file) : [];
         if (language !== null && langs.indexOf(language) >= 0) return language;
         return langs.length ? langs[0] : null;
+    }
+
+    function show(screen) {
+        current = screen;
+        items = focus.focusOrder(screen);
+        focused = 0;
+        touched = null;
+    }
+
+    function on(event, fn) {
+        if (!listeners[event]) throw new Error('mgu-runtime: no event ' + JSON.stringify(event));
+        listeners[event].push(fn);
+    }
+
+    function emit(event, value) {
+        listeners[event].slice().forEach((fn) => {
+            try { fn(value); } catch (e) { log.error('mgu-runtime: ' + event + ' listener threw: ' + (e && e.stack || e)); }
+        });
+    }
+
+    function select(c) {
+        emit('action', { screen: current.name, element: c.name, action: focus.actionOf(c) });
+    }
+
+    /** Controller input: 'left' / 'right' move the highlight `steps` elements (default 1; stops at the ends, no
+     * wrap), 'press' selects, 'back' (not yet handled). */
+    function controller(input, steps) {
+        if (!current) return;
+        if (input === 'left' || input === 'right') {
+            const n = typeof steps === 'number' && steps > 0 ? Math.floor(steps) : 1;
+            const to = Math.max(0, Math.min(items.length - 1, focused + (input === 'left' ? -n : n)));
+            if (to === focused || !items.length) return;
+            focused = to;
+            draw();
+        } else if (input === 'press') {
+            if (items[focused]) select(items[focused]);
+        } else if (input !== 'back') {
+            log.warn('mgu-runtime: unknown controller input ' + JSON.stringify(input));
+        }
+    }
+
+    /** A touch point in screen px: an element in the focus order that the touch goes down and up on is selected
+     * (and highlighted). */
+    function touch(phase, x, y) {
+        if (!current) return;
+        const c = focus.hit(current, items, x, y);
+        if (phase === 'down') touched = c;
+        else if (phase === 'up') {
+            const was = touched;
+            touched = null;
+            if (!c || c !== was) return;
+            const i = items.indexOf(c);
+            if (i !== focused) { focused = i; draw(); }
+            select(c);
+        }
     }
 
     function draw() {
@@ -95,6 +162,7 @@ function createRuntime(opts) {
             area: { x: 0, y: 0, w: design.w, h: design.h },     // embedded: the whole box is the app's
         });
         if (rec.errors) log.warn('mgu-runtime: ' + current.name + ': ' + rec.errors.join('; '));
+        if (items[focused]) focus.drawRing(rec, items[focused]);
         return sink.frame(rec) !== false;
     }
 
@@ -139,7 +207,10 @@ function createRuntime(opts) {
         return true;
     }
 
-    return { load: load, start: start, set: set, setLanguage: setLanguage, language: active };
+    return {
+        load: load, start: start, set: set, setLanguage: setLanguage, language: active,
+        on: on, controller: controller, touch: touch,
+    };
 }
 
 /**

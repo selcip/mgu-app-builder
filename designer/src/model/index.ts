@@ -7,6 +7,7 @@ export { newElementName } from './ops/elements.ts';
 export { copyElements, pastedNames, boundsOf, EDGES, type Box, type Edge } from './ops/canvas.ts';
 export { rowsOf, ROW_FIELDS } from './ops/rows.ts';
 export { imagePathFor, isImagePath, usedImages, missingImages, type ImageUse } from './ops/images.ts';
+export { focusOrderOf, actionOf } from './ops/focus.ts';
 export { createHistory, dispatch, undo, redo, canUndo, canRedo, type History } from './history.ts';
 export { importZip, importScreenFile, exportZip, screenFileProblem, ImportError } from './zip.ts';
 export { languagesOf, textIn, hasText, isTextMap, textsOf, missingTranslations, type TextPlace, type TextMap } from './texts.ts';

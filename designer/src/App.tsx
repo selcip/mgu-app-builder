@@ -1,11 +1,15 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from 'react';
 import {
     apply, canRedo, canUndo, createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, languagesOf, missingImages, newDocument, redo,
     textIn, themeOf, titleOf, undo,
     type Doc, type Element, type History, type Op, type Screen,
 } from './model/index.ts';
 import { THEMES, WIDGETS, widget } from './catalog.ts';
-import { previewScreen } from './preview';
+import { startPreview, type Action, type Preview } from './preview';
+import { FocusOverlay } from './FocusOverlay';
+import { FocusPanel } from './FocusPanel';
+import { ActionField } from './ActionField';
+import { TryPanel, controllerKey } from './TryPanel';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
 import { LanguageSwitcher, TextInput, TextIssues, shownLanguage } from './Languages';
 import { Canvas, WIDGET_DRAG_TYPE, type CanvasSettings } from './Canvas';
@@ -26,6 +30,11 @@ export function App() {
     const [log, setLog] = useState<string[]>([]);
     const [picked, setPicked] = useState<string | null>(null);     // the language shown and edited
     const canvas = useRef<HTMLCanvasElement>(null);
+    const preview = useRef<Preview | null>(null);
+    const stage = useRef<HTMLDivElement>(null);
+    const [trying, setTrying] = useState(false);
+    const [showFocus, setShowFocus] = useState(true);
+    const [actions, setActions] = useState<Action[]>([]);
     const doc = history.present;
     const file = doc.file;
     const language = shownLanguage(file, picked);
@@ -84,11 +93,27 @@ export function App() {
     useEffect(() => {
         if (!screen || !canvas.current) return;
         let shown = file;
-        if (dragOp) {
+        if (dragOp && !trying) {
             try { shown = apply(doc, dragOp).file; } catch { /* refused: show the file as it is */ }
         }
-        setLog(previewScreen(shown, screen.name, canvas.current, doc.images, language));
-    }, [doc, file, screen, dragOp, language]);
+        const p = startPreview(shown, screen.name, canvas.current, doc.images, language,
+            (a) => setActions((l) => l.concat([a]).slice(-50)));
+        preview.current = p;
+        setLog(p.lines);
+    }, [doc, file, screen, dragOp, language, trying]);     // trying starts the screen afresh, and so does stopping
+
+    // trying the screen: keys as the iDrive controller, pointer down/up on the canvas as touches (in screen px)
+    function onKey(e: KeyboardEvent) {
+        const input = trying ? controllerKey(e.key) : null;
+        if (!input || !preview.current) return;
+        e.preventDefault();
+        preview.current.controller(input);
+    }
+    function onPointer(e: PointerEvent<HTMLCanvasElement>, phase: 'down' | 'move' | 'up') {
+        if (!trying || !preview.current || (phase === 'move' && !e.buttons)) return;
+        const r = e.currentTarget.getBoundingClientRect();
+        preview.current.touch(phase, (e.clientX - r.left) * (W / r.width), (e.clientY - r.top) * (H / r.height));
+    }
 
     const editOk = (op: Op) => edit(op) !== null;
     const setGuides = useCallback((guides: CanvasSettings['guides']) => setSettings((s) => ({ ...s, guides })), []);
@@ -167,21 +192,33 @@ export function App() {
                     )}
                 </nav>
                 <section className="stage">
-                    {screen && (
+                    {screen && !trying && (     // trying: no canvas editing, and the keys are the controller's
                         <EditBar screen={screen} design={{ w: W, h: H }} selection={selection} settings={settings} clipboard={clipboard}
                             canUndo={canUndo(history)} canRedo={canRedo(history)} onEdit={editOk}
                             onUndo={() => setHistory(undo(history))} onRedo={() => setHistory(redo(history))}
                             onSelect={setSelection} onSettings={setSettings} onClipboard={setClipboard} />
                     )}
-                    <div className="hmi-page" style={{ width: W }}>
+                    <div className="hmi-page" ref={stage} style={{ width: W }} tabIndex={0} onKeyDown={onKey} data-trying={trying}>
                         <div className="hmi-title" data-hmi-title="">{screen ? shownTitle(screen) : ''}</div>
-                        {screen ? (
+                        {screen && !trying ? (
                             <Canvas screen={screen} design={{ w: W, h: H }} selection={selection} settings={settings}
                                 onSelect={setSelection} onEdit={editOk} onDrag={setDragOp} onGuides={setGuides}>
                                 <canvas ref={canvas} width={W} height={H} />
+                                {showFocus && <FocusOverlay screen={screen} />}
                             </Canvas>
-                        ) : <canvas ref={canvas} width={W} height={H} />}
+                        ) : (
+                            <div className="canvas-wrap">
+                                <canvas ref={canvas} width={W} height={H}
+                                    onPointerDown={(e) => onPointer(e, 'down')} onPointerMove={(e) => onPointer(e, 'move')}
+                                    onPointerUp={(e) => onPointer(e, 'up')} />
+                            </div>
+                        )}
                     </div>
+                    <div className="row-buttons">
+                        <label><input type="checkbox" checked={showFocus} onChange={(e) => setShowFocus(e.target.checked)} /> Show focus order</label>
+                    </div>
+                    <TryPanel trying={trying} onTrying={(on) => { setTrying(on); setDragOp(null); if (on) stage.current?.focus(); }}
+                        actions={actions} onClear={() => setActions([])} />
                     {log.length > 0 && <ul className="log">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}
                     <div className="palette" aria-label="Widgets">
                         <h2>Add a widget</h2>
@@ -228,6 +265,8 @@ export function App() {
                         selectOnly(p.element === undefined ? null : p.element);
                         if (l) setPicked(l);
                     }} />
+                    {screen && el && <ActionField screen={screen.name} element={el} edit={edit} />}
+                    {screen && <FocusPanel screen={screen} edit={edit} />}
                     <ImagesPanel doc={doc} missing={missingImages(doc)}
                         onAdd={(name, bytes) => edit({ type: 'addImage', path: imagePathFor(name), bytes })}
                         onRemove={(p) => edit({ type: 'removeImage', path: p })} />

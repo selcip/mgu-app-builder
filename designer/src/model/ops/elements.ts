@@ -2,6 +2,7 @@
 import { defaultsOf, widget } from '../../catalog.ts';
 import { EditError, checkName, elementOf, screenOf, uniqueName, type Draft, type Screen } from '../core.ts';
 import { checkOptionValue } from '../options.ts';
+import { joinFocus } from './focus.ts';
 
 /** The name an element of `widget` added to `screen` gets unless one is given: button1, button2, ... */
 export function newElementName(screen: Screen, type: string): string {
@@ -23,6 +24,7 @@ export const elementOps = {
             w: a.w === undefined ? wd.size.w : a.w, h: a.h === undefined ? wd.size.h : a.h,
             opts: defaultsOf(a.widget),
         });
+        joinFocus(s, s.components[s.components.length - 1]);
     },
 
     renameElement(d: Draft, a: { screen: string; element: string; name: string }) {
