@@ -6,9 +6,11 @@
 
 **Blocked by:** 02, 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The runtime sets each value kind listed above and the next recording shows it
-- [ ] Elements show their screen-file options until a value is set
-- [ ] Setting a value on an unknown screen or element logs a clear message and changes nothing
-- [ ] The Designer edits a list element's default rows and the preview shows them
+- [x] The runtime sets each value kind listed above and the next recording shows it
+- [x] Elements show their screen-file options until a value is set
+- [x] Setting a value on an unknown screen or element logs a clear message and changes nothing
+- [x] The Designer edits a list element's default rows and the preview shows them
+
+**Notes:** `rt.set(screen, element, value)` in `runtime/mgu_runtime.js` (tests: `test/runtime-set-values.test.js`). Pictures set from code take an `images/x.png` path (read through ticket 10's `readImage`/`mgu_pictures.js`), a PNG data URL or `key:<name>`. Row editing: `model/ops/rows.ts` (`addRow`, `setRow`, `deleteRow`, `moveRow`; tests `test/list-rows.test.js`), UI `designer/src/RowsEditor.tsx` (browser test `test/designer-list-rows.test.js`). Rows held as a list of objects (Store files) are shown, not edited row by row.

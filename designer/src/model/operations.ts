@@ -4,11 +4,15 @@ import type { OpsOf } from './core.ts';
 import { screenOps } from './ops/screens.ts';
 import { elementOps } from './ops/elements.ts';
 import { canvasOps } from './ops/canvas.ts';
+import { rowOps } from './ops/rows.ts';
+import { imageOps } from './ops/images.ts';
 
 export const HANDLERS = {
     ...screenOps,
     ...elementOps,
     ...canvasOps,
+    ...rowOps,
+    ...imageOps,
 };
 
 /** An edit to the document: `{ type: 'addScreen', name: 'home' }`, `{ type: 'setOption', ... }`, ... */

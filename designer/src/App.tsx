@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import {
-    apply, canRedo, canUndo, createHistory, dispatch, exportZip, firstScreenOf, importZip, newDocument, redo, themeOf, titleOf, undo,
+    apply, canRedo, canUndo, createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, missingImages, newDocument, redo,
+    themeOf, titleOf, undo,
     type Doc, type Element, type History, type Op, type Screen,
 } from './model/index.ts';
 import { THEMES, WIDGETS, widget } from './catalog.ts';
@@ -8,6 +9,8 @@ import { previewScreen } from './preview';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
 import { Canvas, WIDGET_DRAG_TYPE, type CanvasSettings } from './Canvas';
 import { EditBar, type Clipboard } from './EditBar';
+import { ImagesPanel } from './Pictures';
+import { AutosaveProblem, RestorePrompt, useAutosave } from './Autosave';
 
 const W = 1796, H = 632;   // iDrive 7, embedded in the HMI page
 
@@ -51,7 +54,7 @@ export function App() {
         try {
             open(importZip(new Uint8Array(await f.arrayBuffer())));
         } catch (err) {
-            setProblem((err as Error).message);
+            setProblem(`Couldn’t open ${f.name}: ${(err as Error).message} Your design is unchanged.`);
         }
     }
 
@@ -64,6 +67,8 @@ export function App() {
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
+
+    const saved = useAutosave(doc, open);
 
     // the selected screen may be gone after an edit (deleted, renamed): fall back to the first screen
     const screen: Screen | undefined = file.screens.find((s) => s.name === selected);
@@ -79,7 +84,7 @@ export function App() {
         if (dragOp) {
             try { shown = apply(doc, dragOp).file; } catch { /* refused: show the file as it is */ }
         }
-        setLog(previewScreen(shown, screen.name, canvas.current));
+        setLog(previewScreen(shown, screen.name, canvas.current, doc.images));
     }, [doc, file, screen, dragOp]);
 
     const editOk = (op: Op) => edit(op) !== null;
@@ -114,7 +119,9 @@ export function App() {
                     </select>
                 </label>
                 {problem && <span className="problem" role="alert">{problem}</span>}
+                <AutosaveProblem problem={saved.problem} />
             </header>
+            {saved.offer && <RestorePrompt onRestore={saved.restore} onDecline={saved.decline} />}
             <main>
                 <nav aria-label="Screens">
                     <ul>{file.screens.map((s) => (
@@ -194,8 +201,16 @@ export function App() {
                             onRename={(v) => { if (edit({ type: 'renameElement', screen: screen.name, element: el.name, name: v })) selectOnly(v); }}
                             onDelete={() => { if (edit({ type: 'deleteElement', screen: screen.name, element: el.name })) selectOnly(null); }}
                             onOption={(key, value) => edit({ type: 'setOption', screen: screen.name, element: el.name, key, value })}
+                            onRows={(e) => edit({ ...e, screen: screen.name, element: el.name })}
+                            images={doc.images}
+                            onUploadPicture={(key, name, bytes) => edit({
+                                type: 'uploadPicture', screen: screen.name, element: el.name, key, path: imagePathFor(name), bytes,
+                            })}
                         />
                     )}
+                    <ImagesPanel doc={doc} missing={missingImages(doc)}
+                        onAdd={(name, bytes) => edit({ type: 'addImage', path: imagePathFor(name), bytes })}
+                        onRemove={(p) => edit({ type: 'removeImage', path: p })} />
                 </aside>
             </main>
         </div>

@@ -39,3 +39,43 @@ test('the runtime loads under Node 8 in the flat app layout and draws the golden
         fs.rmSync(dir, { recursive: true, force: true });
     }
 });
+
+// Node 8 syntax only: the head-unit adapter reads images/ beside screens.json and the recording draws the PNG
+const PICTURES = `'use strict';
+const fs = require('fs');
+const EventEmitter = require('events');
+const { runOnHeadUnit } = require('./mgu_headunit.js');
+const { play } = require('./kit_record.js');
+const { Canvas } = require('./kit_canvas.js');
+const client = new EventEmitter();
+const seen = [];
+Object.assign(client, { connect() {}, mode() {}, place() {}, show() {}, frame(rec) {
+    const cv = new Canvas(1796, 632); play(rec.words(), cv); const i = (150 * 1796 + 200) * 4;
+    seen.push([cv.d[i], cv.d[i + 1], cv.d[i + 2]].join(',')); return true; } });
+const log = { lines: [], error(m) { this.lines.push(m); }, warn(m) { this.lines.push(m); }, info() {} };
+if (!runOnHeadUnit({ client, log, dir: __dirname, screens: fs.readFileSync('screens.json', 'utf8') })) process.exit(2);
+process.stdout.write(process.version + ' ' + seen.join(';') + ' ' + JSON.stringify(log.lines));
+`;
+
+test('under Node 8 the head unit draws a picture from images/ beside the screen file', { skip: !NODE8 && 'set NODE8 to a Node 8 binary' }, () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mgu-runtime-node8-'));
+    try {
+        for (const sub of ['kit', 'runtime']) {
+            for (const f of fs.readdirSync(path.join(ROOT, sub))) if (f.endsWith('.js')) fs.copyFileSync(path.join(ROOT, sub, f), path.join(dir, f));
+        }
+        const { Canvas } = require(path.join(ROOT, 'kit', 'kit_canvas.js'));
+        const blue = new Canvas(8, 8);
+        for (let i = 0; i < blue.d.length; i += 4) blue.d.set([0, 0, 255, 255], i);
+        fs.mkdirSync(path.join(dir, 'images'));
+        fs.writeFileSync(path.join(dir, 'images', 'blue.png'), blue.png());
+        fs.writeFileSync(path.join(dir, 'screens.json'), JSON.stringify({ schema: 1, first: 'main', screens: [{ name: 'main', theme: 'm_tricolour',
+            bg: '#000000', components: [{ name: 'logo', gpu: 'image', x: 100, y: 100, w: 200, h: 100, opts: { src: 'images/blue.png' } }] }] }));
+        fs.writeFileSync(path.join(dir, 'main.js'), PICTURES);
+        const [version, pixels, log] = execFileSync(NODE8, ['main.js'], { cwd: dir, encoding: 'utf8' }).split(' ');
+        assert.match(version, /^v8\./);
+        assert.strictEqual(pixels, '0,0,255');
+        assert.strictEqual(log, '[]');
+    } finally {
+        fs.rmSync(dir, { recursive: true, force: true });
+    }
+});
