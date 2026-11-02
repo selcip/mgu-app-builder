@@ -25,15 +25,18 @@ export interface Preview {
 }
 
 /**
- * Starts the runtime on `screen` of `file`, drawing onto `canvas` as the head unit would show it, and reporting
- * the actions it reports to `onAction`.
+ * Starts the runtime on `screen` of `file`, drawing onto `canvas` as the head unit would show it, with the design's
+ * PNGs ('images/x.png' -> bytes) as the pictures beside the screen file, and passing the actions it reports to
+ * `onAction`.
  */
-export function startPreview(file: ScreenFile, screen: string, canvas: HTMLCanvasElement, onAction?: (a: Action) => void): Preview {
+export function startPreview(file: ScreenFile, screen: string, canvas: HTMLCanvasElement,
+    images: Readonly<Record<string, Uint8Array>> = {}, onAction?: (a: Action) => void): Preview {
     const lines: string[] = [];
     const put = (m: string) => { lines.push(String(m)); };
     const rt = mgu.createRuntime({
         kit: mgu.kit,
         log: { error: put, warn: put, info: () => {} },
+        readImage: (p) => (Object.prototype.hasOwnProperty.call(images, p) ? images[p] : null),
         sink: {
             frame(rec) {
                 const w = rec.words();
@@ -55,8 +58,9 @@ export function startPreview(file: ScreenFile, screen: string, canvas: HTMLCanva
 }
 
 /** Draws `screen` of `file` onto `canvas` as the head unit would show it first. Returns the runtime's log lines. */
-export function previewScreen(file: ScreenFile, screen: string, canvas: HTMLCanvasElement): string[] {
-    return startPreview(file, screen, canvas).lines;
+export function previewScreen(file: ScreenFile, screen: string, canvas: HTMLCanvasElement,
+    images: Readonly<Record<string, Uint8Array>> = {}): string[] {
+    return startPreview(file, screen, canvas, images).lines;
 }
 
 function paint(words: Uint32Array, canvas: HTMLCanvasElement) {

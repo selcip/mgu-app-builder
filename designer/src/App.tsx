@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from 'react';
 import {
-    createHistory, dispatch, exportZip, firstScreenOf, importZip, newDocument, themeOf, titleOf,
+    createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, missingImages, newDocument, themeOf, titleOf,
     type Doc, type Element, type History, type Op, type Screen,
 } from './model/index.ts';
 import { THEMES, WIDGETS, widget } from './catalog.ts';
@@ -10,6 +10,8 @@ import { FocusPanel } from './FocusPanel';
 import { ActionField } from './ActionField';
 import { TryPanel, controllerKey } from './TryPanel';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
+import { ImagesPanel } from './Pictures';
+import { AutosaveProblem, RestorePrompt, useAutosave } from './Autosave';
 
 const W = 1796, H = 632;   // iDrive 7, embedded in the HMI page
 
@@ -55,7 +57,7 @@ export function App() {
         try {
             open(importZip(new Uint8Array(await f.arrayBuffer())));
         } catch (err) {
-            setProblem((err as Error).message);
+            setProblem(`Couldn’t open ${f.name}: ${(err as Error).message} Your design is unchanged.`);
         }
     }
 
@@ -69,6 +71,8 @@ export function App() {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
+    const saved = useAutosave(doc, open);
+
     // the selected screen may be gone after an edit (deleted, renamed): fall back to the first screen
     const screen: Screen | undefined = file.screens.find((s) => s.name === selected);
     useEffect(() => {
@@ -78,10 +82,10 @@ export function App() {
 
     useEffect(() => {
         if (!screen || !canvas.current) return;
-        const p = startPreview(file, screen.name, canvas.current, (a) => setActions((l) => l.concat([a]).slice(-50)));
+        const p = startPreview(file, screen.name, canvas.current, doc.images, (a) => setActions((l) => l.concat([a]).slice(-50)));
         preview.current = p;
         setLog(p.lines);
-    }, [file, screen, trying]);     // trying starts the screen afresh, and so does stopping
+    }, [file, screen, doc.images, trying]);     // trying starts the screen afresh, and so does stopping
 
     // trying the screen: keys as the iDrive controller, pointer down/up on the canvas as touches (in screen px)
     function onKey(e: KeyboardEvent) {
@@ -124,7 +128,9 @@ export function App() {
                     </select>
                 </label>
                 {problem && <span className="problem" role="alert">{problem}</span>}
+                <AutosaveProblem problem={saved.problem} />
             </header>
+            {saved.offer && <RestorePrompt onRestore={saved.restore} onDecline={saved.decline} />}
             <main>
                 <nav aria-label="Screens">
                     <ul>{file.screens.map((s) => (
@@ -196,10 +202,18 @@ export function App() {
                             onRename={(v) => { if (edit({ type: 'renameElement', screen: screen.name, element: el.name, name: v })) setElement(v); }}
                             onDelete={() => { if (edit({ type: 'deleteElement', screen: screen.name, element: el.name })) setElement(null); }}
                             onOption={(key, value) => edit({ type: 'setOption', screen: screen.name, element: el.name, key, value })}
+                            onRows={(e) => edit({ ...e, screen: screen.name, element: el.name })}
+                            images={doc.images}
+                            onUploadPicture={(key, name, bytes) => edit({
+                                type: 'uploadPicture', screen: screen.name, element: el.name, key, path: imagePathFor(name), bytes,
+                            })}
                         />
                     )}
                     {screen && el && <ActionField screen={screen.name} element={el} edit={edit} />}
                     {screen && <FocusPanel screen={screen} edit={edit} />}
+                    <ImagesPanel doc={doc} missing={missingImages(doc)}
+                        onAdd={(name, bytes) => edit({ type: 'addImage', path: imagePathFor(name), bytes })}
+                        onRemove={(p) => edit({ type: 'removeImage', path: p })} />
                 </aside>
             </main>
         </div>

@@ -5,7 +5,7 @@
  *
  *   const { RenderClient } = require('./mgu_render_client.js');
  *   const client = new RenderClient('my_app', log, { kit: require('./kit_record.js'), mode: 'embed' });
- *   const rt = runOnHeadUnit({ client, screens: fs.readFileSync(path.join(__dirname, 'screens.json'), 'utf8'), log });
+ *   const rt = runOnHeadUnit({ client, screens: fs.readFileSync(path.join(__dirname, 'screens.json'), 'utf8'), dir: __dirname, log });
  *
  *   rt.on('action', (a) => ...);    // taps and controller presses
  *
@@ -15,6 +15,8 @@
  * its title and BACK), the controller through FrontCCU or RHMI focus proxies when there is no gate, and the
  * keep-alive frame come with later tickets; they belong here, not in the core.
  */
+const fs = require('fs');
+const path = require('path');
 const { createRuntime } = require('./mgu_runtime.js');
 
 const EMBED = { x: 0, y: 0, w: 1796, h: 632 };      // the embed box when the renderer names none (file sink)
@@ -64,12 +66,28 @@ function feedInput(client, rt) {
 }
 
 /**
+ * Reads the pictures a screen file names ('images/logo.png') from the folder the screen file is in. Only paths
+ * under images/ are read; null when the file isn't there.
+ */
+function imageReader(dir) {
+    return (p) => {
+        const full = path.join(dir, p);
+        if (path.relative(path.join(dir, 'images'), full).split(path.sep)[0] === '..') return null;
+        try { return fs.readFileSync(full); } catch (e) { if (e.code === 'ENOENT') return null; throw e; }
+    };
+}
+
+/**
  * One call for an app: load the screen file (parsed or JSON text), connect to the renderer and show the first
- * screen. opts: { client (a RenderClient, not yet connected), screens, log, kit? }. Returns the runtime, or null
- * if the screen file was refused (the log says why; the client is not connected then).
+ * screen. opts: { client (a RenderClient, not yet connected), screens, dir (the folder screens.json and its images/
+ * are in), log, kit? }. Returns the runtime, or null if the screen file was refused (the log says why; the client
+ * is not connected then).
  */
 function runOnHeadUnit(opts) {
-    const rt = createRuntime({ kit: opts.kit, log: opts.log, sink: renderSink(opts.client) });
+    const rt = createRuntime({
+        kit: opts.kit, log: opts.log, sink: renderSink(opts.client),
+        readImage: opts.dir ? imageReader(opts.dir) : undefined,
+    });
     if (!rt.load(opts.screens)) return null;
     feedInput(opts.client, rt);
     opts.client.connect();
@@ -77,4 +95,4 @@ function runOnHeadUnit(opts) {
     return rt;
 }
 
-module.exports = { runOnHeadUnit, renderSink };
+module.exports = { runOnHeadUnit, renderSink, imageReader };
