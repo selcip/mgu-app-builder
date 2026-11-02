@@ -6,3 +6,4 @@ export { themeOf, newScreenName, titleOf, firstScreenOf } from './ops/screens.ts
 export { newElementName } from './ops/elements.ts';
 export { createHistory, dispatch, undo, redo, canUndo, canRedo, type History } from './history.ts';
 export { importZip, importScreenFile, exportZip, screenFileProblem, ImportError } from './zip.ts';
+export { autosave, memoryStore, type Autosave, type DesignStore, type StoredDesign } from './autosave.ts';

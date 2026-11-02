@@ -6,9 +6,9 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Every edit is autosaved to browser storage; reopening offers to restore the last design
-- [ ] Declining the restore starts a new design; the stored copy is replaced on the next edit
-- [ ] An invalid zip, invalid JSON or unknown schema shows a clear error and changes nothing
-- [ ] Storage failures (quota, private mode) are reported and don't break editing
+- [x] Every edit is autosaved to browser storage; reopening offers to restore the last design
+- [x] Declining the restore starts a new design; the stored copy is replaced on the next edit
+- [x] An invalid zip, invalid JSON or unknown schema shows a clear error and changes nothing
+- [x] Storage failures (quota, private mode) are reported and don't break editing

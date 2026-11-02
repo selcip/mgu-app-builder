@@ -6,6 +6,7 @@ import {
 import { THEMES, WIDGETS, widget } from './catalog.ts';
 import { previewScreen } from './preview';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
+import { AutosaveProblem, RestorePrompt, useAutosave } from './Autosave';
 
 const W = 1796, H = 632;   // iDrive 7, embedded in the HMI page
 
@@ -46,7 +47,7 @@ export function App() {
         try {
             open(importZip(new Uint8Array(await f.arrayBuffer())));
         } catch (err) {
-            setProblem((err as Error).message);
+            setProblem(`Couldn’t open ${f.name}: ${(err as Error).message} Your design is unchanged.`);
         }
     }
 
@@ -59,6 +60,8 @@ export function App() {
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
+
+    const saved = useAutosave(doc, open);
 
     // the selected screen may be gone after an edit (deleted, renamed): fall back to the first screen
     const screen: Screen | undefined = file.screens.find((s) => s.name === selected);
@@ -100,7 +103,9 @@ export function App() {
                     </select>
                 </label>
                 {problem && <span className="problem" role="alert">{problem}</span>}
+                <AutosaveProblem problem={saved.problem} />
             </header>
+            {saved.offer && <RestorePrompt onRestore={saved.restore} onDecline={saved.decline} />}
             <main>
                 <nav aria-label="Screens">
                     <ul>{file.screens.map((s) => (
