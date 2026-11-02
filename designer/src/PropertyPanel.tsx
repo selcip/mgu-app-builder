@@ -1,6 +1,6 @@
 // The property panel: exactly the selected element's widget options, from the widget catalog, each with the input
 // its kind needs. Every change goes to the document model as a setOption operation.
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { COLOURS, widget, type WidgetOption } from './catalog.ts';
 import { rowsOf, type Element } from './model/index.ts';
 import { IconPicker } from './IconPicker';
@@ -8,7 +8,7 @@ import { PictureInput } from './Pictures';
 import { RowsEditor, type RowEdit } from './RowsEditor';
 
 /** A text input that commits on Enter or when it loses focus (one edit, not one per keystroke). */
-export function CommitInput(props: { value: string; onCommit: (v: string) => void; type?: string; step?: string; multiline?: boolean }) {
+export function CommitInput(props: { value: string; onCommit: (v: string) => void; type?: string; step?: string; multiline?: boolean; placeholder?: string }) {
     const [v, setV] = useState(props.value);
     useEffect(() => setV(props.value), [props.value]);
     const commit = () => { if (v !== props.value) props.onCommit(v); };
@@ -16,7 +16,7 @@ export function CommitInput(props: { value: string; onCommit: (v: string) => voi
         return <textarea value={v} rows={5} onChange={(e) => setV(e.target.value)} onBlur={commit} />;
     }
     return (
-        <input type={props.type || 'text'} step={props.step} value={v} onChange={(e) => setV(e.target.value)} onBlur={commit}
+        <input type={props.type || 'text'} step={props.step} value={v} placeholder={props.placeholder} onChange={(e) => setV(e.target.value)} onBlur={commit}
             onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setV(props.value); }} />
     );
 }
@@ -26,6 +26,8 @@ interface Props {
     onRename(name: string): void;
     onDelete(): void;
     onOption(key: string, value: unknown): void;
+    /** The input for a text option (languages); a plain text input when not given. */
+    renderText?(option: WidgetOption, value: unknown): ReactNode;
     /** The design's PNGs, for picture options. */
     images: Readonly<Record<string, Uint8Array>>;
     /** A PNG uploaded for picture option `key`. */
@@ -33,7 +35,7 @@ interface Props {
     onRows?(edit: RowEdit): void;       // row by row editing of a rows option, when the rows are lines of text
 }
 
-export function PropertyPanel({ element, onRename, onDelete, onOption, images, onUploadPicture, onRows }: Props) {
+export function PropertyPanel({ element, onRename, onDelete, onOption, renderText, images, onUploadPicture, onRows }: Props) {
     const wd = widget(element.gpu);
     const opts = element.opts || {};
     return (
@@ -51,7 +53,9 @@ export function PropertyPanel({ element, onRename, onDelete, onOption, images, o
                 <div className="option" key={o.key} data-option={o.key}>
                     <label>
                         <span>{o.label}</span>
-                        {o.kind === 'image'
+                        {o.kind === 'text' && renderText
+                            ? renderText(o, o.key in opts ? opts[o.key] : o.default)
+                            : o.kind === 'image'
                             ? <PictureInput value={String(o.key in opts ? opts[o.key] : o.default)} images={images}
                                 onChange={(v) => onOption(o.key, v)} onUpload={(n, b) => onUploadPicture(o.key, n, b)} />
                             : <OptionInput option={o} value={o.key in opts ? opts[o.key] : o.default} onChange={(v) => onOption(o.key, v)} />}

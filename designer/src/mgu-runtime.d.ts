@@ -17,6 +17,8 @@ declare module 'virtual:mgu-runtime' {
         start(): boolean;
         /** Sets what an element shows (text, on/off, number, rows, picture); false if refused (logged). */
         set(screen: string, element: string, value: unknown): boolean;
+        setLanguage(code: string): boolean;
+        language(): string | null;
     }
     export interface KitCanvas {
         w: number;
@@ -28,6 +30,10 @@ declare module 'virtual:mgu-runtime' {
         kit: unknown;
         play(words: Uint32Array, canvas: KitCanvas): void;
         Canvas: new (w: number, h: number) => KitCanvas;
+        text: {
+            /** The characters of `s` the kit draws as '?' in `language`, once each, in order. */
+            undrawable(s: string, language?: string | null): string[];
+        };
         /** Draws the kit's vector icon `name` in an s x s box at x, y in colour c ('#rrggbb'); false if there is none. */
         vicon(cv: KitCanvas, name: string, x: number, y: number, s: number, c: string): boolean;
     };

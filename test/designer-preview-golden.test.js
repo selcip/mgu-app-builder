@@ -11,6 +11,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
 const ROOT = path.join(__dirname, '..');
+require('./flat-layout.js');     // the runtime requires the kit by basename, as on the head unit
 const DESIGNER = path.join(ROOT, 'designer');
 const DIST = path.join(DESIGNER, 'dist');
 const ORIGIN = 'http://designer.test';

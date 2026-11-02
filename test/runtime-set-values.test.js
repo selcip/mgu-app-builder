@@ -9,6 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
+require('./flat-layout.js');     // the runtime requires the kit by basename, as on the head unit
 const kit = require(path.join(ROOT, 'kit', 'am_gpu.js'));
 const { createRuntime } = require(path.join(ROOT, 'runtime', 'mgu_runtime.js'));
 
@@ -122,6 +123,28 @@ test('elements show their screen-file options again once a screen file is loaded
     rt.load(fixture());
     rt.start();
     assert.ok(last(sink).equals(sink.frames[0]), 'the reloaded screen draws as the file says');
+});
+
+test('a text set from code is drawn as set in every language; the other texts follow the language', () => {
+    const multi = () => {
+        const f = fixture();
+        f.languages = ['en', 'de'];
+        const live = f.screens.find((s) => s.name === 'live');
+        live.components.find((c) => c.name === 'title').opts.text = { en: 'Live data', de: 'Live-Daten' };
+        live.components.find((c) => c.name === 'fog').opts.label = { en: 'Fog lights', de: 'Nebelscheinwerfer' };
+        return f;
+    };
+    const { rt, sink } = started(multi());
+    assert.strictEqual(rt.set('live', 'title', 'Lights'), true);
+    assert.strictEqual(rt.setLanguage('de'), true);
+    const de = drawnWith((o, f) => {
+        f.languages = ['de', 'en'];
+        o['live/title'].text = 'Lights';
+        o['live/fog'].label = 'Nebelscheinwerfer';
+    });
+    assert.ok(last(sink).equals(de), 'German, with the title as the code set it');
+    rt.setLanguage('en');
+    assert.ok(last(sink).equals(drawnWith((o) => { o['live/title'].text = 'Lights'; })), 'English, same title');
 });
 
 test('a value for an unknown screen or element is refused with a log line naming it, and nothing changes', () => {

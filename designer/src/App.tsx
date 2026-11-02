@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import {
-    createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, missingImages, newDocument, themeOf, titleOf,
+    createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, languagesOf, missingImages, newDocument, textIn,
+    themeOf, titleOf,
     type Doc, type Element, type History, type Op, type Screen,
 } from './model/index.ts';
 import { THEMES, WIDGETS, widget } from './catalog.ts';
 import { previewScreen } from './preview';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
+import { LanguageSwitcher, TextInput, TextIssues, shownLanguage } from './Languages';
 import { ImagesPanel } from './Pictures';
 import { AutosaveProblem, RestorePrompt, useAutosave } from './Autosave';
 
@@ -17,9 +19,11 @@ export function App() {
     const [element, setElement] = useState<string | null>(null);
     const [problem, setProblem] = useState<string | null>(null);
     const [log, setLog] = useState<string[]>([]);
+    const [picked, setPicked] = useState<string | null>(null);     // the language shown and edited
     const canvas = useRef<HTMLCanvasElement>(null);
     const doc = history.present;
     const file = doc.file;
+    const language = shownLanguage(file, picked);
 
     /** Applies an edit; a refusal is shown and changes nothing. Returns the edited document, or null if refused. */
     function edit(op: Op): Doc | null {
@@ -73,8 +77,15 @@ export function App() {
 
     useEffect(() => {
         if (!screen || !canvas.current) return;
-        setLog(previewScreen(file, screen.name, canvas.current, doc.images));
-    }, [file, screen, doc.images]);
+        setLog(previewScreen(file, screen.name, canvas.current, doc.images, language));
+    }, [file, screen, doc.images, language]);
+
+    /** The title the HMI page shows in the shown language (the screen's name when it has none). */
+    function shownTitle(s: Screen): string {
+        const langs = languagesOf(file);
+        const t = langs.length && language ? textIn(s.title, langs, language) : s.title;
+        return typeof t === 'string' && t ? t : titleOf(s);
+    }
 
     function addElement(type: string) {
         if (!screen) return;
@@ -103,6 +114,7 @@ export function App() {
                         {THEMES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
                     </select>
                 </label>
+                <LanguageSwitcher file={file} language={language} onLanguage={setPicked} edit={edit} />
                 {problem && <span className="problem" role="alert">{problem}</span>}
                 <AutosaveProblem problem={saved.problem} />
             </header>
@@ -127,8 +139,8 @@ export function App() {
                                 }} />
                             </label>
                             <label>Title
-                                <CommitInput value={typeof screen.title === 'string' ? screen.title : ''}
-                                    onCommit={(v) => edit({ type: 'setScreenTitle', screen: screen.name, title: v })} />
+                                <TextInput file={file} language={language} value={screen.title}
+                                    onCommit={(v) => edit({ type: 'setText', screen: screen.name, language: language || undefined, value: v })} />
                             </label>
                             <div className="row-buttons">
                                 <button disabled={screen.name === firstScreenOf(file)}
@@ -142,7 +154,7 @@ export function App() {
                 </nav>
                 <section className="stage">
                     <div className="hmi-page" style={{ width: W }}>
-                        <div className="hmi-title" data-hmi-title="">{screen ? titleOf(screen) : ''}</div>
+                        <div className="hmi-title" data-hmi-title="">{screen ? shownTitle(screen) : ''}</div>
                         <canvas ref={canvas} width={W} height={H} />
                     </div>
                     {log.length > 0 && <ul className="log">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}
@@ -169,12 +181,21 @@ export function App() {
                             onDelete={() => { if (edit({ type: 'deleteElement', screen: screen.name, element: el.name })) setElement(null); }}
                             onOption={(key, value) => edit({ type: 'setOption', screen: screen.name, element: el.name, key, value })}
                             onRows={(e) => edit({ ...e, screen: screen.name, element: el.name })}
+                            renderText={(o, value) => (
+                                <TextInput file={file} language={language} value={value}
+                                    onCommit={(v) => edit({ type: 'setText', screen: screen.name, element: el.name, key: o.key, language: language || undefined, value: v })} />
+                            )}
                             images={doc.images}
                             onUploadPicture={(key, name, bytes) => edit({
                                 type: 'uploadPicture', screen: screen.name, element: el.name, key, path: imagePathFor(name), bytes,
                             })}
                         />
                     )}
+                    <TextIssues file={file} onSelect={(p, l) => {
+                        setSelected(p.screen);
+                        setElement(p.element === undefined ? null : p.element);
+                        if (l) setPicked(l);
+                    }} />
                     <ImagesPanel doc={doc} missing={missingImages(doc)}
                         onAdd={(name, bytes) => edit({ type: 'addImage', path: imagePathFor(name), bytes })}
                         onRemove={(p) => edit({ type: 'removeImage', path: p })} />
