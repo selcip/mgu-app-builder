@@ -94,8 +94,11 @@ test('a Store screen file (no schema, no first) draws unchanged from its first l
     const { sink, loaded, log } = start(JSON.stringify(file));
     assert.strictEqual(loaded, true, log.lines.join('\n'));
     assert.strictEqual(sink.frames.length, 1);
-    // the kit's own recording of the Store tab (ticket 01's golden): the runtime adds and changes nothing
-    // (compared, never rewritten here)
+    // the kit's own recording of the Store tab (ticket 01's golden), then the runtime's focus ring (one 8-word
+    // rounded stroke): the runtime changes nothing of the screen (compared, never rewritten here)
     const golden = fs.readFileSync(path.join(__dirname, 'golden', 'store-id7-store.rec'));
-    assert.ok(sink.frames[0].equals(golden), 'recording differs from test/golden/store-id7-store.rec');
+    const frame = sink.frames[0];
+    assert.ok(frame.subarray(0, golden.length).equals(golden), 'recording does not start with test/golden/store-id7-store.rec');
+    assert.strictEqual(frame.length, golden.length + 8 * 4, 'the focus ring follows the screen');
+    assert.strictEqual(frame.readUInt32LE(golden.length), require(path.join(ROOT, 'kit', 'kit_record.js')).OP.RSTROKE);
 });

@@ -12,9 +12,18 @@ declare module 'virtual:mgu-runtime' {
         warn(msg: string): void;
         info(msg: string): void;
     }
+    export interface Action {
+        screen: string;
+        element: string;
+        action: string;
+        value?: unknown;
+    }
     export interface Runtime {
         load(file: unknown): boolean;
         start(): boolean;
+        on(event: 'action', fn: (a: Action) => void): void;
+        controller(input: 'left' | 'right' | 'press' | 'back', steps?: number): void;
+        touch(phase: 'down' | 'move' | 'up', x: number, y: number): void;
     }
     export interface KitCanvas {
         w: number;

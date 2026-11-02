@@ -1,10 +1,14 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from 'react';
 import {
     createHistory, dispatch, exportZip, firstScreenOf, importZip, newDocument, themeOf, titleOf,
     type Doc, type Element, type History, type Op, type Screen,
 } from './model/index.ts';
 import { THEMES, WIDGETS, widget } from './catalog.ts';
-import { previewScreen } from './preview';
+import { startPreview, type Action, type Preview } from './preview';
+import { FocusOverlay } from './FocusOverlay';
+import { FocusPanel } from './FocusPanel';
+import { ActionField } from './ActionField';
+import { TryPanel, controllerKey } from './TryPanel';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
 
 const W = 1796, H = 632;   // iDrive 7, embedded in the HMI page
@@ -16,6 +20,11 @@ export function App() {
     const [problem, setProblem] = useState<string | null>(null);
     const [log, setLog] = useState<string[]>([]);
     const canvas = useRef<HTMLCanvasElement>(null);
+    const preview = useRef<Preview | null>(null);
+    const stage = useRef<HTMLDivElement>(null);
+    const [trying, setTrying] = useState(false);
+    const [showFocus, setShowFocus] = useState(true);
+    const [actions, setActions] = useState<Action[]>([]);
     const doc = history.present;
     const file = doc.file;
 
@@ -69,8 +78,23 @@ export function App() {
 
     useEffect(() => {
         if (!screen || !canvas.current) return;
-        setLog(previewScreen(file, screen.name, canvas.current));
-    }, [file, screen]);
+        const p = startPreview(file, screen.name, canvas.current, (a) => setActions((l) => l.concat([a]).slice(-50)));
+        preview.current = p;
+        setLog(p.lines);
+    }, [file, screen, trying]);     // trying starts the screen afresh, and so does stopping
+
+    // trying the screen: keys as the iDrive controller, pointer down/up on the canvas as touches (in screen px)
+    function onKey(e: KeyboardEvent) {
+        const input = trying ? controllerKey(e.key) : null;
+        if (!input || !preview.current) return;
+        e.preventDefault();
+        preview.current.controller(input);
+    }
+    function onPointer(e: PointerEvent<HTMLCanvasElement>, phase: 'down' | 'move' | 'up') {
+        if (!trying || !preview.current || (phase === 'move' && !e.buttons)) return;
+        const r = e.currentTarget.getBoundingClientRect();
+        preview.current.touch(phase, (e.clientX - r.left) * (W / r.width), (e.clientY - r.top) * (H / r.height));
+    }
 
     function addElement(type: string) {
         if (!screen) return;
@@ -135,10 +159,20 @@ export function App() {
                     )}
                 </nav>
                 <section className="stage">
-                    <div className="hmi-page" style={{ width: W }}>
+                    <div className="hmi-page" ref={stage} style={{ width: W }} tabIndex={0} onKeyDown={onKey} data-trying={trying}>
                         <div className="hmi-title" data-hmi-title="">{screen ? titleOf(screen) : ''}</div>
-                        <canvas ref={canvas} width={W} height={H} />
+                        <div className="canvas-wrap">
+                            <canvas ref={canvas} width={W} height={H}
+                                onPointerDown={(e) => onPointer(e, 'down')} onPointerMove={(e) => onPointer(e, 'move')}
+                                onPointerUp={(e) => onPointer(e, 'up')} />
+                            {screen && showFocus && !trying && <FocusOverlay screen={screen} />}
+                        </div>
                     </div>
+                    <div className="row-buttons">
+                        <label><input type="checkbox" checked={showFocus} onChange={(e) => setShowFocus(e.target.checked)} /> Show focus order</label>
+                    </div>
+                    <TryPanel trying={trying} onTrying={(on) => { setTrying(on); if (on) stage.current?.focus(); }}
+                        actions={actions} onClear={() => setActions([])} />
                     {log.length > 0 && <ul className="log">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}
                     <div className="palette" aria-label="Widgets">
                         <h2>Add a widget</h2>
@@ -164,6 +198,8 @@ export function App() {
                             onOption={(key, value) => edit({ type: 'setOption', screen: screen.name, element: el.name, key, value })}
                         />
                     )}
+                    {screen && el && <ActionField screen={screen.name} element={el} edit={edit} />}
+                    {screen && <FocusPanel screen={screen} edit={edit} />}
                 </aside>
             </main>
         </div>

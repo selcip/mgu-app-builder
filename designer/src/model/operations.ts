@@ -3,10 +3,12 @@
 import type { OpsOf } from './core.ts';
 import { screenOps } from './ops/screens.ts';
 import { elementOps } from './ops/elements.ts';
+import { focusOps } from './ops/focus.ts';
 
 export const HANDLERS = {
     ...screenOps,
     ...elementOps,
+    ...focusOps,
 };
 
 /** An edit to the document: `{ type: 'addScreen', name: 'home' }`, `{ type: 'setOption', ... }`, ... */

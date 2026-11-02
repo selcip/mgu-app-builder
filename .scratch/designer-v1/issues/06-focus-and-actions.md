@@ -6,11 +6,17 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The runtime resolves reading order when `focus` is absent and the explicit order when present; excluded elements are skipped
-- [ ] Controller left/right moves the highlight, press reports the focused element's action; a tap on an element reports the same action
-- [ ] An element's action is its name unless the screen file names another; several elements may share one action
-- [ ] The Designer shows numbered focus order, reorders and excludes elements, and edits action names, all as document-model operations
-- [ ] The preview accepts arrow keys, Enter and clicks, and shows the actions reported
-- [ ] Runtime behaviour is tested at the recording seam with input sequences and expected recordings and actions
+- [x] The runtime resolves reading order when `focus` is absent and the explicit order when present; excluded elements are skipped
+- [x] Controller left/right moves the highlight, press reports the focused element's action; a tap on an element reports the same action
+- [x] An element's action is its name unless the screen file names another; several elements may share one action
+- [x] The Designer shows numbered focus order, reorders and excludes elements, and edits action names, all as document-model operations
+- [x] The preview accepts arrow keys, Enter and clicks, and shows the actions reported
+- [x] Runtime behaviour is tested at the recording seam with input sequences and expected recordings and actions
+
+## Notes
+
+- Screen file: an action other than the element's name is written as the Store's `onTap: 'event:<action>'`; an explicit order is the screen's `focus` list (excluding an element writes the whole order). With an explicit order, a newly added focusable element joins it at the end.
+- Runtime: `rt.on('action', fn)`, `rt.controller('left'|'right'|'press'|'back', steps?)`, `rt.touch(phase, x, y)`; focus, actions, hit testing and the ring (8 px out, 5 px wide, white, radius = element's + 8) in `runtime/mgu_focus.js`; its `FOCUSABLE` list is held to the catalog by `test/focus-model.test.js`. Focus is per element (not per tab/list row); taps do not change widget state (no TRY). `back` is accepted and ignored (ticket 07).
+- Head unit: claims the whole screen for touches and grabs the controller when the renderer offers the gate (`info.controller`); controller counter/push handled as the Store's `_dial`. FrontCCU and RHMI focus proxies are left to 07/13.

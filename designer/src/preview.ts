@@ -9,8 +9,26 @@ export interface PreviewFrame {
     words: Uint8Array;
 }
 
-/** Draws `screen` of `file` onto `canvas` as the head unit would show it first. Returns the runtime's log lines. */
-export function previewScreen(file: ScreenFile, screen: string, canvas: HTMLCanvasElement): string[] {
+/** An action the runtime reported: what the app's code receives. */
+export interface Action {
+    screen: string;
+    element: string;
+    action: string;
+    value?: unknown;
+}
+
+/** A running preview: the runtime showing one screen, taking the stand-ins for the controller and touch. */
+export interface Preview {
+    lines: string[];                                            // the runtime's log lines
+    controller(input: 'left' | 'right' | 'press' | 'back'): void;
+    touch(phase: 'down' | 'move' | 'up', x: number, y: number): void;     // in screen px (1796 x 632)
+}
+
+/**
+ * Starts the runtime on `screen` of `file`, drawing onto `canvas` as the head unit would show it, and reporting
+ * the actions it reports to `onAction`.
+ */
+export function startPreview(file: ScreenFile, screen: string, canvas: HTMLCanvasElement, onAction?: (a: Action) => void): Preview {
     const lines: string[] = [];
     const put = (m: string) => { lines.push(String(m)); };
     const rt = mgu.createRuntime({
@@ -26,9 +44,19 @@ export function previewScreen(file: ScreenFile, screen: string, canvas: HTMLCanv
             },
         },
     });
+    if (onAction) rt.on('action', onAction);
     // the runtime shows a file's first screen: preview the chosen one by making it first
     if (rt.load(Object.assign({}, file, { first: screen }))) rt.start();
-    return lines;
+    return {
+        lines,
+        controller: (input) => rt.controller(input),
+        touch: (phase, x, y) => rt.touch(phase, x, y),
+    };
+}
+
+/** Draws `screen` of `file` onto `canvas` as the head unit would show it first. Returns the runtime's log lines. */
+export function previewScreen(file: ScreenFile, screen: string, canvas: HTMLCanvasElement): string[] {
+    return startPreview(file, screen, canvas).lines;
 }
 
 function paint(words: Uint32Array, canvas: HTMLCanvasElement) {

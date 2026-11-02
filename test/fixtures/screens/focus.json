@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "languages": ["en"],
+  "first": "main",
+  "design": { "w": 1796, "h": 632 },
+  "screens": [
+    {
+      "name": "main", "kind": "gpu", "title": "Main", "theme": "m_red", "bg": "theme",
+      "components": [
+        { "name": "heading", "rtype": "gpu", "gpu": "text", "x": 40, "y": 30, "w": 900, "h": 70, "opts": { "text": "Settings", "size": 44, "font": "bold" } },
+        { "name": "save", "rtype": "gpu", "gpu": "button", "x": 1200, "y": 500, "w": 560, "h": 84, "opts": { "text": "Save", "style": "primary" } },
+        { "name": "wifi", "rtype": "gpu", "gpu": "row", "x": 40, "y": 150, "w": 1300, "h": 104, "opts": { "label": "Wi-Fi", "control": "chevron" } },
+        { "name": "lights", "rtype": "gpu", "gpu": "toggle", "x": 1500, "y": 160, "w": 130, "h": 72, "opts": { "on": true } },
+        { "name": "volume", "rtype": "gpu", "gpu": "slider", "x": 40, "y": 330, "w": 1000, "h": 60, "opts": { "value": 65 } },
+        { "name": "cancel", "rtype": "gpu", "gpu": "button", "x": 600, "y": 500, "w": 560, "h": 84, "opts": { "text": "Cancel", "style": "outline" } }
+      ]
+    },
+    {
+      "name": "custom", "kind": "gpu", "title": "Custom", "theme": "m_red", "bg": "theme",
+      "focus": ["save", "heading", "volume"],
+      "components": [
+        { "name": "heading", "rtype": "gpu", "gpu": "text", "x": 40, "y": 30, "w": 900, "h": 70, "opts": { "text": "Sound", "size": 44 } },
+        { "name": "volume", "rtype": "gpu", "gpu": "slider", "x": 40, "y": 330, "w": 1000, "h": 60, "opts": { "value": 65 }, "onTap": "event:sound" },
+        { "name": "bass", "rtype": "gpu", "gpu": "slider", "x": 40, "y": 420, "w": 1000, "h": 60, "opts": { "value": 20 }, "onTap": "event:sound" },
+        { "name": "save", "rtype": "gpu", "gpu": "vbutton", "x": 1200, "y": 500, "w": 560, "h": 84, "opts": { "text": "Save", "vicon": "check" } }
+      ]
+    }
+  ]
+}
