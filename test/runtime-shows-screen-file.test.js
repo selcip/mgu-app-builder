@@ -8,6 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
+require('./flat-layout.js');     // the runtime requires the kit by basename, as on the head unit
 const kit = require(path.join(ROOT, 'kit', 'am_gpu.js'));
 const { createRuntime } = require(path.join(ROOT, 'runtime', 'mgu_runtime.js'));
 const FIXTURES = path.join(__dirname, 'fixtures', 'screens');

@@ -15,6 +15,8 @@ declare module 'virtual:mgu-runtime' {
     export interface Runtime {
         load(file: unknown): boolean;
         start(): boolean;
+        setLanguage(code: string): boolean;
+        language(): string | null;
     }
     export interface KitCanvas {
         w: number;
@@ -26,6 +28,10 @@ declare module 'virtual:mgu-runtime' {
         kit: unknown;
         play(words: Uint32Array, canvas: KitCanvas): void;
         Canvas: new (w: number, h: number) => KitCanvas;
+        text: {
+            /** The characters of `s` the kit draws as '?' in `language`, once each, in order. */
+            undrawable(s: string, language?: string | null): string[];
+        };
     };
     export default mgu;
 }

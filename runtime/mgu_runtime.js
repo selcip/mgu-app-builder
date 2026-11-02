@@ -8,6 +8,7 @@
  *   const rt = createRuntime({ sink, log, kit });
  *   rt.load(screenFile);      // parsed object or JSON text; false (and a log line) if refused
  *   rt.start();               // shows the first screen: one recording to sink.frame(recorder)
+ *   rt.setLanguage('de');     // draws the texts in German (missing ones in the default language)
  *
  * sink.frame(recorder): a kit Recorder (kit_record.js) per frame; returns false if it could not take it
  * (the render client's frame() has this contract). log: console-like (error, warn, info).
@@ -15,6 +16,8 @@
  * Screen file: schema 1 (design, first, screens[], languages, per screen focus and nav), or a Store screen
  * file (no schema, no first: the first listed screen is the first screen). Any other schema is refused.
  */
+
+const text = require('./mgu_text.js');
 
 const SCHEMA = 1;
 const DESIGN = { w: 1796, h: 632 };     // iDrive 7, embedded in the HMI page
@@ -27,6 +30,7 @@ function createRuntime(opts) {
 
     let file = null;        // the loaded screen file
     let current = null;     // the screen shown
+    let language = null;    // the language asked for (setLanguage); null: the file's default
 
     function refuse(why) {
         log.error('mgu-runtime: screen file refused: ' + why);
@@ -59,9 +63,17 @@ function createRuntime(opts) {
         return draw();
     }
 
+    /** The language drawn: the one asked for if the file has it, else the file's default (its first). */
+    function active() {
+        const langs = file ? languagesOf(file) : [];
+        if (language !== null && langs.indexOf(language) >= 0) return language;
+        return langs.length ? langs[0] : null;
+    }
+
     function draw() {
         const design = file.design || DESIGN;
-        const rec = kit.record(current, {
+        if (languagesOf(file).length) text.useLanguage(active());     // a Store file leaves the kit's language be
+        const rec = kit.record(text.screenIn(current, languagesOf(file), active()), {
             textScale: 1,
             design: design,
             area: { x: 0, y: 0, w: design.w, h: design.h },     // embedded: the whole box is the app's
@@ -70,7 +82,28 @@ function createRuntime(opts) {
         return sink.frame(rec) !== false;
     }
 
-    return { load: load, start: start };
+    /**
+     * Draws the screen file's texts in `code` from now on (the shown screen again at once); a text missing in it
+     * is drawn in the default language. A code the loaded file doesn't list is refused (false, a log line): the
+     * default language is drawn then.
+     */
+    function setLanguage(code) {
+        if (file && languagesOf(file).indexOf(code) < 0) {
+            log.warn('mgu-runtime: the screen file has no language ' + JSON.stringify(code) + '; drawing its default language');
+            language = null;
+            if (current) draw();
+            return false;
+        }
+        language = code;
+        if (current) draw();
+        return true;
+    }
+
+    return { load: load, start: start, setLanguage: setLanguage, language: active };
+}
+
+function languagesOf(f) {
+    return Array.isArray(f.languages) ? f.languages.filter((l) => typeof l === 'string') : [];
 }
 
 function screenNamed(f, name) {

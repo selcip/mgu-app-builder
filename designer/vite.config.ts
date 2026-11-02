@@ -48,6 +48,7 @@ function mguRuntime(): Plugin {
                         kit: require('./am_gpu.js'),
                         play: require('./kit_record.js').play,
                         Canvas: require('./kit_canvas.js').Canvas,
+                        text: require('./mgu_text.js'),
                     };`,
                     resolveDir: RUNTIME,
                     sourcefile: 'mgu-runtime-entry.js',

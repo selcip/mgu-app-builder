@@ -6,10 +6,10 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The screen file holds `languages`; text options accept a string or a per-language map
-- [ ] The runtime draws the active language and falls back to the default for missing texts
-- [ ] The Designer's language switcher edits and previews each language
-- [ ] Missing translations are listed in the Designer
-- [ ] Store screen files with plain strings keep working
+- [x] The screen file holds `languages`; text options accept a string or a per-language map
+- [x] The runtime draws the active language and falls back to the default for missing texts
+- [x] The Designer's language switcher edits and previews each language
+- [x] Missing translations are listed in the Designer
+- [x] Store screen files with plain strings keep working
