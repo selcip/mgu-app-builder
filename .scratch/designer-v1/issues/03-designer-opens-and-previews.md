@@ -6,9 +6,9 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The Designer runs locally from the repository with no server beyond the dev server or a static build
-- [ ] Uploading a zip with a screen file lists its screens; selecting one previews it inside the HMI page frame
-- [ ] The preview is drawn by the runtime and the vendored kit, not by separate preview code
-- [ ] A golden test draws the same screen files in Node and in the browser build and requires identical recordings
+- [x] The Designer runs locally from the repository with no server beyond the dev server or a static build
+- [x] Uploading a zip with a screen file lists its screens; selecting one previews it inside the HMI page frame
+- [x] The preview is drawn by the runtime and the vendored kit, not by separate preview code
+- [x] A golden test draws the same screen files in Node and in the browser build and requires identical recordings

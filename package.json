@@ -5,9 +5,14 @@
   "description": "Designer for iDrive 7 app screens drawn by mgu-render through the kit",
   "scripts": {
     "test": "node --test \"test/*.test.js\"",
+    "designer": "npm run dev -w designer",
+    "build-designer": "npm run build -w designer",
     "sync-kit": "node scripts/sync-kit.js"
   },
   "engines": {
     "node": ">=22"
-  }
+  },
+  "workspaces": [
+    "designer"
+  ]
 }

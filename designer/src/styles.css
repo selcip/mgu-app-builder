@@ -1,0 +1,19 @@
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: #1b1d22; color: #e8e8ea; }
+header { display: flex; gap: 16px; align-items: center; padding: 10px 16px; border-bottom: 1px solid #333; }
+h1 { font-size: 16px; margin: 0; }
+.upload { padding: 6px 12px; border: 1px solid #555; border-radius: 6px; cursor: pointer; }
+.upload input { display: none; }
+.problem { color: #ff6b6b; }
+main { display: flex; align-items: flex-start; }
+nav { width: 200px; flex: none; padding: 12px; }
+nav ul { list-style: none; margin: 0; padding: 0; }
+nav button { width: 100%; text-align: left; padding: 6px 10px; margin-bottom: 4px; border: 0; border-radius: 4px; background: #2a2d34; color: inherit; cursor: pointer; }
+nav button[aria-current="true"] { background: #3d6ef5; }
+.hint { color: #999; }
+.stage { padding: 16px; overflow: auto; }
+/* mock HMI page: the head unit's title bar above the app's 1796 x 632 box */
+.hmi-page { background: #000; border: 12px solid #0b0b0d; border-radius: 10px; box-sizing: content-box; }
+.hmi-title { height: 88px; display: flex; align-items: center; padding: 0 48px; font-size: 34px; color: #fff; border-bottom: 1px solid #2c2c30; }
+.hmi-page canvas { display: block; }
+.log { color: #ffb86b; font-family: monospace; }
