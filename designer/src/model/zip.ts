@@ -1,8 +1,10 @@
 // The design zip: screens.json at the root (or inside one top folder) and its PNGs under images/. Upload reads and
 // checks it into a document; download writes the document back. A file comes back as it went in: nothing is added
-// to an unedited file, so Store screen files import and download unchanged.
+// to an unedited file, so Store screen files import and download unchanged. Images no element uses are left out of
+// the download.
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { SCHEMA, type Doc, type ScreenFile } from './core.ts';
+import { usedImages } from './ops/images.ts';
 
 /** An upload was refused: not a zip, no screens.json, not JSON or not a screen file this Designer reads. */
 export class ImportError extends Error {
@@ -73,6 +75,6 @@ const MTIME = new Date(2020, 0, 1);
 
 export function exportZip(doc: Doc): Uint8Array {
     const files: Record<string, Uint8Array> = { 'screens.json': strToU8(JSON.stringify(doc.file, null, 2) + '\n') };
-    for (const p of Object.keys(doc.images).sort()) files[p] = doc.images[p];
+    for (const p of usedImages(doc)) files[p] = doc.images[p];
     return zipSync(files, { mtime: MTIME });
 }

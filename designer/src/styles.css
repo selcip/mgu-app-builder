@@ -43,3 +43,18 @@ button:disabled { opacity: .4; cursor: default; }
 .rows-editor td input { width: 100%; box-sizing: border-box; }
 .rows-editor .row-tools { white-space: nowrap; }
 .rows-editor .row-tools button { padding: 0 6px; }
+/* icons and pictures */
+.icon-picker { position: relative; display: inline-block; }
+.icon-current { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border: 1px solid #444; border-radius: 4px; background: #121418; color: inherit; cursor: pointer; }
+.icon-grid { position: absolute; right: 0; z-index: 10; display: grid; grid-template-columns: repeat(4, 64px); gap: 4px; padding: 6px; background: #22252b; border: 1px solid #555; border-radius: 6px; }
+.icon-grid button { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; border: 1px solid transparent; border-radius: 4px; background: #121418; color: inherit; cursor: pointer; }
+.icon-grid button[aria-selected="true"] { border-color: #3d6ef5; }
+.icon-grid small { font-size: 10px; color: #aaa; overflow: hidden; text-overflow: ellipsis; max-width: 60px; }
+.vicon { display: block; }
+.picture-input { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.thumb { width: 32px; height: 32px; object-fit: contain; background: #000; border: 1px solid #333; display: inline-block; }
+.images ul { list-style: none; margin: 0 0 8px; padding: 0; }
+.images li { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.images li small { color: #aaa; }
+.images .missing li { color: #ff6b6b; }
+.images li button { padding: 2px 8px; border: 1px solid #555; border-radius: 6px; background: #2a2d34; color: inherit; cursor: pointer; }

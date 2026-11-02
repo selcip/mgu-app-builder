@@ -24,10 +24,12 @@ declare module 'virtual:mgu-runtime' {
         d: Uint8Array<ArrayBuffer>;     // RGBA, straight alpha
     }
     const mgu: {
-        createRuntime(opts: { sink: Sink; log?: Log; kit?: unknown }): Runtime;
+        createRuntime(opts: { sink: Sink; log?: Log; kit?: unknown; readImage?: (path: string) => Uint8Array | null }): Runtime;
         kit: unknown;
         play(words: Uint32Array, canvas: KitCanvas): void;
         Canvas: new (w: number, h: number) => KitCanvas;
+        /** Draws the kit's vector icon `name` in an s x s box at x, y in colour c ('#rrggbb'); false if there is none. */
+        vicon(cv: KitCanvas, name: string, x: number, y: number, s: number, c: string): boolean;
     };
     export default mgu;
 }

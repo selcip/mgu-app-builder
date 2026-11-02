@@ -31,11 +31,11 @@ function freshNode() {
     }
     const kit = require(path.join(ROOT, 'kit', 'am_gpu.js'));
     const { createRuntime } = require(path.join(ROOT, 'runtime', 'mgu_runtime.js'));
-    return (file, screen) => {
+    return (file, screen, images) => {
         let got = null;
         const quiet = { error() {}, warn() {}, info() {}, log() {} };
         const rt = createRuntime({
-            kit, log: quiet,
+            kit, log: quiet, readImage: (p) => (images && images[p]) || null,
             sink: { frame(rec) { const w = rec.words(); got = Buffer.from(w.buffer, w.byteOffset, w.byteLength); return true; } },
         });
         assert.ok(rt.load(Object.assign({}, file, { first: screen })), `Node loads ${screen}`);
@@ -89,17 +89,17 @@ async function waitFrames(page, n) {
     return framesOf(page);
 }
 
-function zipOf(file) {
-    return Buffer.from(zipSync({ 'screens.json': strToU8(JSON.stringify(file, null, 2)), 'images/': new Uint8Array(0) }));
+function zipOf(file, images) {
+    return Buffer.from(zipSync(Object.assign({ 'screens.json': strToU8(JSON.stringify(file, null, 2)), 'images/': new Uint8Array(0) }, images)));
 }
 
-async function previewEveryScreen(file) {
+async function previewEveryScreen(file, images, onPage) {
     const { page, errors } = await openDesigner();
     try {
         // the Designer opens on a new screen file and previews it; count the frames from the upload on
         await waitFrames(page, 1);
         await page.evaluate(() => { window.__frames = []; });
-        await page.setInputFiles('input[type=file]', { name: 'design.zip', mimeType: 'application/zip', buffer: zipOf(file) });
+        await page.setInputFiles('header input[type=file]', { name: 'design.zip', mimeType: 'application/zip', buffer: zipOf(file, images) });
         const names = file.screens.map((s) => s.name);
         const first = file.first !== undefined ? file.first : names[0];
         await waitFrames(page, 1);
@@ -118,6 +118,7 @@ async function previewEveryScreen(file) {
             assert.strictEqual(await page.locator('[data-hmi-title]').textContent(), screen.title || screen.name);
         }
         assert.deepStrictEqual(errors, []);
+        if (onPage) await onPage(page);
         const frames = await framesOf(page);
         assert.strictEqual(frames.length, n, 'one frame per screen shown');
         return frames.map((f) => ({ screen: f.screen, words: Buffer.from(f.words, 'base64') }));
@@ -126,11 +127,11 @@ async function previewEveryScreen(file) {
     }
 }
 
-async function assertSameAsNode(file) {
-    const frames = await previewEveryScreen(file);
+async function assertSameAsNode(file, images, onPage) {
+    const frames = await previewEveryScreen(file, images, onPage);
     const draw = freshNode();
     for (const f of frames) {
-        const want = draw(file, f.screen);
+        const want = draw(file, f.screen, images);
         assert.ok(want.length > 0);
         assert.ok(f.words.equals(want), `preview of ${f.screen}: ${f.words.length} bytes differ from Node's ${want.length}`);
     }
@@ -144,4 +145,24 @@ test('a schema 1 screen file previews in the browser exactly as Node draws it', 
 test('every Store iDrive 7 screen previews in the browser exactly as Node draws it', { skip }, async () => {
     const { compact } = require(path.join(__dirname, 'fixtures', 'mgu-store', 'store_compact.js'));
     await assertSameAsNode(JSON.parse(JSON.stringify(compact(1796, 632))));
+});
+
+test('pictures under images/ preview in the browser exactly as Node draws them', { skip }, async () => {
+    const { Canvas } = require(path.join(ROOT, 'kit', 'kit_canvas.js'));
+    const red = new Canvas(16, 16);
+    for (let i = 0; i < red.d.length; i += 4) red.d.set([255, 0, 0, 255], i);
+    const file = {
+        schema: 1, first: 'main', design: { w: 1796, h: 632 },
+        screens: [{ name: 'main', kind: 'gpu', title: 'Main', theme: 'm_tricolour', bg: '#000000', components: [
+            { name: 'logo', rtype: 'gpu', gpu: 'image', x: 100, y: 100, w: 200, h: 100, opts: { src: 'images/red.png', radius: 0 } },
+            { name: 'app', rtype: 'gpu', gpu: 'appIcon', x: 400, y: 100, w: 187, h: 187, opts: { icon: 'images/red.png', vicon: 'gauge' } },
+            { name: 'lost', rtype: 'gpu', gpu: 'image', x: 700, y: 100, w: 200, h: 100, opts: { src: 'images/lost.png', radius: 0 } },
+        ] }],
+    };
+    await assertSameAsNode(file, { 'images/red.png': new Uint8Array(red.png()) }, async (page) => {
+        // the PNG is on the canvas, and the picture the design lacks is reported
+        const px = await page.evaluate(() => Array.from(document.querySelector('.hmi-page canvas').getContext('2d').getImageData(200, 150, 1, 1).data));
+        assert.deepStrictEqual(px, [255, 0, 0, 255]);
+        assert.match(await page.locator('[data-missing]').textContent(), /images\/lost\.png.*main \/ lost/);
+    });
 });

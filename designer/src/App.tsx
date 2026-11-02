@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import {
-    createHistory, dispatch, exportZip, firstScreenOf, importZip, newDocument, themeOf, titleOf,
+    createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, missingImages, newDocument, themeOf, titleOf,
     type Doc, type Element, type History, type Op, type Screen,
 } from './model/index.ts';
 import { THEMES, WIDGETS, widget } from './catalog.ts';
 import { previewScreen } from './preview';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
+import { ImagesPanel } from './Pictures';
 
 const W = 1796, H = 632;   // iDrive 7, embedded in the HMI page
 
@@ -69,8 +70,8 @@ export function App() {
 
     useEffect(() => {
         if (!screen || !canvas.current) return;
-        setLog(previewScreen(file, screen.name, canvas.current));
-    }, [file, screen]);
+        setLog(previewScreen(file, screen.name, canvas.current, doc.images));
+    }, [file, screen, doc.images]);
 
     function addElement(type: string) {
         if (!screen) return;
@@ -163,8 +164,15 @@ export function App() {
                             onDelete={() => { if (edit({ type: 'deleteElement', screen: screen.name, element: el.name })) setElement(null); }}
                             onOption={(key, value) => edit({ type: 'setOption', screen: screen.name, element: el.name, key, value })}
                             onRows={(e) => edit({ ...e, screen: screen.name, element: el.name })}
+                            images={doc.images}
+                            onUploadPicture={(key, name, bytes) => edit({
+                                type: 'uploadPicture', screen: screen.name, element: el.name, key, path: imagePathFor(name), bytes,
+                            })}
                         />
                     )}
+                    <ImagesPanel doc={doc} missing={missingImages(doc)}
+                        onAdd={(name, bytes) => edit({ type: 'addImage', path: imagePathFor(name), bytes })}
+                        onRemove={(p) => edit({ type: 'removeImage', path: p })} />
                 </aside>
             </main>
         </div>

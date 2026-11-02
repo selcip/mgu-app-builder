@@ -1,8 +1,10 @@
 // The property panel: exactly the selected element's widget options, from the widget catalog, each with the input
 // its kind needs. Every change goes to the document model as a setOption operation.
 import { useEffect, useState } from 'react';
-import { COLOURS, ICONS, widget, type WidgetOption } from './catalog.ts';
+import { COLOURS, widget, type WidgetOption } from './catalog.ts';
 import { rowsOf, type Element } from './model/index.ts';
+import { IconPicker } from './IconPicker';
+import { PictureInput } from './Pictures';
 import { RowsEditor, type RowEdit } from './RowsEditor';
 
 /** A text input that commits on Enter or when it loses focus (one edit, not one per keystroke). */
@@ -24,10 +26,14 @@ interface Props {
     onRename(name: string): void;
     onDelete(): void;
     onOption(key: string, value: unknown): void;
+    /** The design's PNGs, for picture options. */
+    images: Readonly<Record<string, Uint8Array>>;
+    /** A PNG uploaded for picture option `key`. */
+    onUploadPicture(key: string, fileName: string, bytes: Uint8Array): void;
     onRows?(edit: RowEdit): void;       // row by row editing of a rows option, when the rows are lines of text
 }
 
-export function PropertyPanel({ element, onRename, onDelete, onOption, onRows }: Props) {
+export function PropertyPanel({ element, onRename, onDelete, onOption, images, onUploadPicture, onRows }: Props) {
     const wd = widget(element.gpu);
     const opts = element.opts || {};
     return (
@@ -45,7 +51,10 @@ export function PropertyPanel({ element, onRename, onDelete, onOption, onRows }:
                 <div className="option" key={o.key} data-option={o.key}>
                     <label>
                         <span>{o.label}</span>
-                        <OptionInput option={o} value={o.key in opts ? opts[o.key] : o.default} onChange={(v) => onOption(o.key, v)} />
+                        {o.kind === 'image'
+                            ? <PictureInput value={String(o.key in opts ? opts[o.key] : o.default)} images={images}
+                                onChange={(v) => onOption(o.key, v)} onUpload={(n, b) => onUploadPicture(o.key, n, b)} />
+                            : <OptionInput option={o} value={o.key in opts ? opts[o.key] : o.default} onChange={(v) => onOption(o.key, v)} />}
                     </label>
                 </div>
             )))}
@@ -69,12 +78,7 @@ function OptionInput({ option: o, value, onChange }: { option: WidgetOption; val
                 </select>
             );
         case 'icon':
-            return (
-                <select value={String(value)} onChange={(e) => onChange(e.target.value)}>
-                    <option value="">(none)</option>
-                    {ICONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-            );
+            return <IconPicker value={String(value)} onChange={onChange} />;
         case 'colour':
             return <ColourInput value={String(value)} onChange={onChange} />;
         case 'rows':

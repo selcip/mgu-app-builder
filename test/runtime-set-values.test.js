@@ -177,3 +177,25 @@ test('every widget that shows a text, a state, a number, rows or a picture takes
         assert.ok(!last(sink).equals(sink.frames[0]), gpu + ': the value changed the drawing');
     }
 });
+
+test('setting a picture by its images/ path draws that PNG, as the same path in the screen file does', () => {
+    const { Canvas } = require(path.join(ROOT, 'kit', 'kit_canvas.js'));
+    const cv = new Canvas(8, 8);
+    cv.fillRect(0, 0, 8, 8, '#27ae60');
+    const files = { 'images/logo.png': cv.png() };
+    const readImage = (p) => files[p] || null;
+    const run = (file) => {
+        const sink = bufferSink(), log = captureLog();
+        const rt = createRuntime({ kit, sink, log, readImage });
+        rt.load(file);
+        rt.start();
+        return { rt, sink, log };
+    };
+    const { rt, sink, log } = run(fixture());
+    assert.strictEqual(rt.set('live', 'logo', 'images/logo.png'), true);
+    const file = fixture();
+    file.screens[0].components.find((c) => c.name === 'logo').opts.src = 'images/logo.png';
+    assert.ok(last(sink).equals(run(file).sink.frames[0]));
+    assert.ok(!last(sink).equals(sink.frames[0]), 'the picture draws instead of the empty outline');
+    assert.deepStrictEqual(log.lines, []);
+});

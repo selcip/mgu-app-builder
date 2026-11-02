@@ -193,7 +193,8 @@ const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3]);
 const zipOf = (entries) => zipSync(Object.fromEntries(Object.entries(entries).map(([k, v]) => [k, typeof v === 'string' ? strToU8(v) : v])));
 
 test('download gives a zip with screens.json at the root and the PNGs under images/', () => {
-    const d = edit([{ type: 'addElement', screen: 'main', widget: 'image' }], M.importZip(zipOf({
+    const d = edit([{ type: 'addElement', screen: 'main', widget: 'image' },
+        { type: 'setOption', screen: 'main', element: 'image1', key: 'src', value: 'images/logo.png' }], M.importZip(zipOf({
         'screens.json': JSON.stringify(M.newDocument().file), 'images/logo.png': PNG,
     })));
     const entries = unzipSync(M.exportZip(d));
@@ -204,6 +205,7 @@ test('download gives a zip with screens.json at the root and the PNGs under imag
 
 test('uploading then downloading a design gives the same design', () => {
     const file = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'screens', 'two-screens.json'), 'utf8'));
+    file.screens[0].components.push({ name: 'logo', rtype: 'gpu', gpu: 'image', x: 0, y: 0, w: 80, h: 80, opts: { src: 'images/a.png' } });
     const d = M.importZip(zipOf({ 'my-app/screens.json': JSON.stringify(file), 'my-app/images/a.png': PNG, 'my-app/notes.txt': 'x' }));
     assert.deepStrictEqual(d.file, file);
     assert.deepStrictEqual(Object.keys(d.images), ['images/a.png']);

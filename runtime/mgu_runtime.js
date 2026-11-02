@@ -12,15 +12,19 @@
  *
  * sink.frame(recorder): a kit Recorder (kit_record.js) per frame; returns false if it could not take it
  * (the render client's frame() has this contract). log: console-like (error, warn, info).
+ * readImage(path) (optional): the bytes of a PNG the screen file names by its path ('images/logo.png'), or null
+ * when there is none; a missing or unreadable picture is logged and its element drawn without it.
  *
  * Values set from code (set): text (text, buttons, fields, titles), on/off (toggle, choice, a row's switch), a number
  * (slider, a row's slider, progress, metric), rows (list, appList, appGrid, sideNav: a list of objects or lines
- * of text) and pictures. Pictures are what the kit draws today: a PNG data URL or 'key:<name>'; paths to the
- * screen file's images/ come with the runtime reading them. An element shows its screen-file options until set.
+ * of text) and pictures ('images/x.png' read through readImage, as in the screen file, or a PNG data URL or
+ * 'key:<name>'). An element shows its screen-file options until set.
  *
  * Screen file: schema 1 (design, first, screens[], languages, per screen focus and nav), or a Store screen
  * file (no schema, no first: the first listed screen is the first screen). Any other schema is refused.
  */
+
+const { createPictures } = require('./mgu_pictures.js');
 
 const SCHEMA = 1;
 const DESIGN = { w: 1796, h: 632 };     // iDrive 7, embedded in the HMI page
@@ -30,6 +34,7 @@ function createRuntime(opts) {
     const kit = opts.kit || require('./am_gpu.js');
     const sink = opts.sink;
     const log = opts.log || console;
+    let pictures = createPictures(opts.readImage, log);
 
     let file = null;        // the loaded screen file
     let current = null;     // the screen shown
@@ -58,6 +63,7 @@ function createRuntime(opts) {
         file = f;
         current = null;
         values = Object.create(null);
+        pictures = createPictures(opts.readImage, log);      // a new file: read its pictures afresh
         return true;
     }
 
@@ -69,7 +75,7 @@ function createRuntime(opts) {
 
     function draw() {
         const design = file.design || DESIGN;
-        const rec = kit.record(withValues(current, values[current.name]), {
+        const rec = kit.record(pictures.resolve(withValues(current, values[current.name])), {
             textScale: 1,
             design: design,
             area: { x: 0, y: 0, w: design.w, h: design.h },     // embedded: the whole box is the app's
@@ -106,8 +112,8 @@ function createRuntime(opts) {
 }
 
 /**
- * What an element's value is: the option it sets and how a value is checked (and normalised) for it. Pictures
- * are what the kit draws today: 'data:image/png;base64,...' or 'key:<name>' (a picture the app gave the kit).
+ * What an element's value is: the option it sets and how a value is checked (and normalised) for it. Pictures:
+ * 'images/x.png' (mgu_pictures.js), 'data:image/png;base64,...' or 'key:<name>' (a picture the app gave the kit).
  */
 const KINDS = {
     text: { what: 'text', ok: function (v) { return typeof v === 'string' || (typeof v === 'number' && isFinite(v)); }, to: String },
@@ -116,7 +122,7 @@ const KINDS = {
     rows: { what: 'rows (a list of { badge, title, sub } or lines of text)', ok: function (v) {
         return typeof v === 'string' || (Array.isArray(v) && v.every(function (r) { return r && typeof r === 'object'; }));
     } },
-    picture: { what: 'a picture (PNG data URL or key:<name>)', ok: function (v) { return typeof v === 'string'; } },
+    picture: { what: 'a picture (images/x.png, a PNG data URL or key:<name>)', ok: function (v) { return typeof v === 'string'; } },
 };
 
 const VALUES = {
