@@ -96,6 +96,9 @@ function zipOf(file) {
 async function previewEveryScreen(file) {
     const { page, errors } = await openDesigner();
     try {
+        // the Designer opens on a new screen file and previews it; count the frames from the upload on
+        await waitFrames(page, 1);
+        await page.evaluate(() => { window.__frames = []; });
         await page.setInputFiles('input[type=file]', { name: 'design.zip', mimeType: 'application/zip', buffer: zipOf(file) });
         const names = file.screens.map((s) => s.name);
         const first = file.first !== undefined ? file.first : names[0];

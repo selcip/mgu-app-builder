@@ -2,7 +2,7 @@
 // in software onto a canvas. Each frame is also announced as a 'mgu-preview-frame' event on window, with the
 // screen's name and the draw commands as bytes (little-endian words, what the renderer would receive).
 import mgu from 'virtual:mgu-runtime';
-import type { ScreenFile } from './screenFile';
+import type { ScreenFile } from './model/index.ts';
 
 export interface PreviewFrame {
     screen: string;

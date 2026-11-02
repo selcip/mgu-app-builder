@@ -6,12 +6,12 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Every screen and element edit above is an operation on the document model and is tested there
-- [ ] New elements get a unique name per screen; renaming to a name already used on that screen is refused
-- [ ] The theme is chosen once and written on every screen so the Store's drawing code reads it unchanged
-- [ ] The palette offers every widget in the catalog, and the property panel shows exactly the selected widget's options
-- [ ] Option values set in the Designer are what the preview shows
-- [ ] Download gives a zip with `screens.json` at the root; uploading then downloading a file gives the same file; Store screen files import unchanged
-- [ ] A test fails when a widget or option exists in the catalog and not in the vendored kit, or the other way round, and draws every catalog widget with its defaults without errors
+- [x] Every screen and element edit above is an operation on the document model and is tested there
+- [x] New elements get a unique name per screen; renaming to a name already used on that screen is refused
+- [x] The theme is chosen once and written on every screen so the Store's drawing code reads it unchanged
+- [x] The palette offers every widget in the catalog, and the property panel shows exactly the selected widget's options
+- [x] Option values set in the Designer are what the preview shows
+- [x] Download gives a zip with `screens.json` at the root; uploading then downloading a file gives the same file; Store screen files import unchanged
+- [x] A test fails when a widget or option exists in the catalog and not in the vendored kit, or the other way round, and draws every catalog widget with its defaults without errors
