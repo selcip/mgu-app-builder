@@ -6,9 +6,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The sync script copies the kit from a named mgu-store commit and records the commit beside the copy
-- [ ] The vendored files are byte-identical to mgu-store at that commit, and their MIT notices are kept
-- [ ] A test draws every Store iDrive 7 screen through the vendored kit into a recording without errors
-- [ ] The recording of at least one Store screen is checked in as a golden file and the test compares against it
+- [x] The sync script copies the kit from a named mgu-store commit and records the commit beside the copy
+- [x] The vendored files are byte-identical to mgu-store at that commit, and their MIT notices are kept
+- [x] A test draws every Store iDrive 7 screen through the vendored kit into a recording without errors
+- [x] The recording of at least one Store screen is checked in as a golden file and the test compares against it

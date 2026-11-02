@@ -1,0 +1,13 @@
+{
+  "name": "mgu-ui-builder",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Designer for iDrive 7 app screens drawn by mgu-render through the kit",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "sync-kit": "node scripts/sync-kit.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

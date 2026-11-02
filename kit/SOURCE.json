@@ -1,0 +1,95 @@
+{
+  "repo": "mgu-store",
+  "commit": "a4d98b79c995c033dc3045e266623a02e8f4f804",
+  "path": "apps/robertn_store/src",
+  "files": [
+    {
+      "name": "kit_canvas.js",
+      "blob": "cdad9786bd7048c8672b8779e7b818a1847afa3c"
+    },
+    {
+      "name": "kit_record.js",
+      "blob": "d7109113da04bdfb13322050b9cc0daa40ae9716"
+    },
+    {
+      "name": "kit_fonts.js",
+      "blob": "76676a6c8a9da99b21f0193e29c9516d86a1e3c8"
+    },
+    {
+      "name": "kit_themes.js",
+      "blob": "f9ea5b3d2323319f469bc715647a54e3621e2f5e"
+    },
+    {
+      "name": "kit_vicons.js",
+      "blob": "87c53f4c087a5c4de30a2737c80cd96d9c51236b"
+    },
+    {
+      "name": "kit_png.js",
+      "blob": "b4927dc56eabdb1bad9d8c28c5be983b4f8ae38c"
+    },
+    {
+      "name": "font_regular.js",
+      "blob": "6ab66176c066786b4b434d3284e0a34c258cabd0"
+    },
+    {
+      "name": "font_semibold.js",
+      "blob": "f17b1a2611f7b34fd15de08d01ff01cd317a3591"
+    },
+    {
+      "name": "font_chinese.js",
+      "blob": "15dd60ebf80a8522427e33ddde9049c253a5709c"
+    },
+    {
+      "name": "i18n.js",
+      "blob": "5af95a994fd769b0e038508ab5386947c64bbd37"
+    },
+    {
+      "name": "locales.js",
+      "blob": "a0808433b7a2d0a1d95aab2c171b97d2d120c08c"
+    },
+    {
+      "name": "am_gpu.js",
+      "blob": "1b422ac88b9fb4f7433dc60d07f631aa2c971f03"
+    },
+    {
+      "name": "am_elements.js",
+      "blob": "374ca7ad6669617a37a843623de7e8814e8bdbd8"
+    },
+    {
+      "name": "am_widgets.js",
+      "blob": "7e2cbd180d6290c97941280dbe0a32419b2c917d"
+    },
+    {
+      "name": "am_store_widgets.js",
+      "blob": "3bd0dd36a0d056a3f20c263b3c8481117446328a"
+    },
+    {
+      "name": "store_elements.js",
+      "blob": "77d47d4da3cc97fc36e9a2487f24cd36a8188f51"
+    },
+    {
+      "name": "qr.js",
+      "blob": "3ba45e7bda7a11c4c6a0fde9f9a549eefde408f1"
+    },
+    {
+      "name": "qrcodegen.js",
+      "blob": "16de9b8ac0be1cb4a96be6cefdd0e7e2ccac88f0"
+    },
+    {
+      "name": "LICENSE-kit.txt",
+      "blob": "4bd5906e99579be628bd5d97e0c824447bfc4857"
+    },
+    {
+      "name": "LICENSE-Inter.txt",
+      "blob": "9b2ca37b3ffc77391d8b2ebef4a974ef32bf46ea"
+    },
+    {
+      "name": "LICENSE-NotoSansSC.txt",
+      "blob": "1c9f43281b8f216c5461fe9ac729afbade7724e4"
+    },
+    {
+      "name": "LICENSE-qrcodegen.txt",
+      "blob": "608138b85085ce77b89c4bb4a170027b7bb1aebd"
+    }
+  ]
+}

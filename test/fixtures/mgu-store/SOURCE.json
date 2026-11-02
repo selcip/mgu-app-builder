@@ -1,0 +1,11 @@
+{
+  "repo": "mgu-store",
+  "commit": "a4d98b79c995c033dc3045e266623a02e8f4f804",
+  "path": "apps/robertn_store/src",
+  "files": [
+    {
+      "name": "store_compact.js",
+      "blob": "d8d26645429176edad5ea6b5cbc561f865056483"
+    }
+  ]
+}
