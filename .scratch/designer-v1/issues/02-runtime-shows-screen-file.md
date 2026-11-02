@@ -6,10 +6,10 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Loading a valid `schema: 1` screen file and showing it produces the recording of its `first` screen
-- [ ] The theme named in the screen file is the one drawn
-- [ ] An unknown `schema` value is refused with a log message naming the value; nothing is drawn
-- [ ] A Store screen file draws unchanged, starting from its first listed screen
-- [ ] Tests drive the runtime through its public interface only and compare recordings with golden files
+- [x] Loading a valid `schema: 1` screen file and showing it produces the recording of its `first` screen
+- [x] The theme named in the screen file is the one drawn
+- [x] An unknown `schema` value is refused with a log message naming the value; nothing is drawn
+- [x] A Store screen file draws unchanged, starting from its first listed screen
+- [x] Tests drive the runtime through its public interface only and compare recordings with golden files

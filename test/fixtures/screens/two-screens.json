@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "languages": ["en"],
+  "first": "settings",
+  "design": { "w": 1796, "h": 632 },
+  "screens": [
+    {
+      "name": "home", "kind": "gpu", "title": "Home", "theme": "m_red", "bg": "theme",
+      "components": [
+        { "name": "hello", "rtype": "gpu", "gpu": "text", "x": 40, "y": 40, "w": 800, "h": 80, "opts": { "text": "Home screen", "size": 48 } }
+      ]
+    },
+    {
+      "name": "settings", "kind": "gpu", "title": "Settings", "theme": "m_red", "bg": "theme",
+      "components": [
+        { "name": "panel", "rtype": "gpu", "gpu": "rect", "x": 24, "y": 24, "w": 1748, "h": 584, "opts": { "color": "panelTop", "radius": 20 } },
+        { "name": "heading", "rtype": "gpu", "gpu": "text", "x": 60, "y": 50, "w": 900, "h": 70, "opts": { "text": "Settings", "size": 44, "font": "bold" } },
+        { "name": "fog", "rtype": "gpu", "gpu": "row", "x": 48, "y": 150, "w": 1700, "h": 104, "opts": { "label": "Fog lights", "control": "toggle", "on": true } },
+        { "name": "volume", "rtype": "gpu", "gpu": "slider", "x": 60, "y": 300, "w": 1000, "h": 60, "opts": { "value": 65 } },
+        { "name": "apply", "rtype": "gpu", "gpu": "button", "x": 1180, "y": 500, "w": 560, "h": 84, "opts": { "text": "Apply", "style": "primary" } }
+      ]
+    }
+  ]
+}
