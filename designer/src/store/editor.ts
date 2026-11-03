@@ -10,6 +10,7 @@ import {
 import type { Lines } from '../canvas/snap.ts';
 import type { Action, ScreenChange } from '../preview.ts';
 import { centred, fitted, stepZoom, zoomAbout, type Size, type View } from '../shell/view.ts';
+import { DEFAULT_PANELS, clampWidth, leftInset, type PanelLayout, type PanelLayouts, type Side } from '../shell/panels.ts';
 
 /** The app's box on iDrive 7, inside the HMI page. */
 export const DESIGN = { w: 1796, h: 632 } as const;
@@ -55,6 +56,10 @@ export interface EditorState {
     view: View | null;
     /** The canvas's size and the HMI page's (unzoomed), as last measured; null until then. */
     measure: { canvas: Size; page: Size } | null;
+    /** Each panel docked or floating, its width, where it floats, collapsed or not. */
+    panels: PanelLayouts;
+    /** Both panels hidden (Ctrl+\), to see the screen alone. */
+    panelsHidden: boolean;
 
     /** Applies an edit; a refusal sets `problem` and changes nothing. Returns the edited document, or null if refused. */
     edit(op: Op): Doc | null;
@@ -91,6 +96,9 @@ export interface EditorState {
     /** The page as large as fits in the canvas. */
     zoomToFit(): void;
     panBy(dx: number, dy: number): void;
+    /** Changes a panel's layout; the HMI page stays where it is on screen when the canvas's left edge moves. */
+    setPanel(side: Side, patch: Partial<PanelLayout>): void;
+    togglePanelsHidden(): void;
 }
 
 export type EditorStore = StoreApi<EditorState>;
@@ -101,8 +109,19 @@ function followScreen(file: ScreenFile, selected: string, op: Op | null): string
     return file.screens.some((s) => s.name === selected) ? selected : firstScreenOf(file);
 }
 
-export function createEditorStore(doc: Doc = newDocument()): EditorStore {
+export interface EditorOptions {
+    /** The panel layouts to start with (the ones the browser kept). */
+    panels?: PanelLayouts;
+}
+
+export function createEditorStore(doc: Doc = newDocument(), options: EditorOptions = {}): EditorStore {
     return createStore<EditorState>()((set, get) => {
+        /** New panel layouts; the view moves by as much as the canvas's left edge did, so the page stays put. */
+        function layOut(panels: PanelLayouts, panelsHidden: boolean) {
+            const s = get();
+            const dx = leftInset(s.panels, s.panelsHidden) - leftInset(panels, panelsHidden);
+            set({ panels, panelsHidden, view: s.view && dx ? { ...s.view, x: s.view.x + dx } : s.view });
+        }
         /** A new history: the selected screen follows it, and the selection keeps only elements still on it. */
         function moveTo(history: History, op: Op | null) {
             const s = get();
@@ -132,6 +151,8 @@ export function createEditorStore(doc: Doc = newDocument()): EditorStore {
             walking: null,
             view: null,
             measure: null,
+            panels: options.panels || DEFAULT_PANELS,
+            panelsHidden: false,
 
             edit(op) {
                 let next: History;
@@ -197,6 +218,13 @@ export function createEditorStore(doc: Doc = newDocument()): EditorStore {
             zoomStep(dir) { const v = get().view; if (v) get().zoomTo(stepZoom(v.zoom, dir)); },
             zoomToFit() { const m = get().measure; if (m) set({ view: fitted(m.canvas, m.page) }); },
             panBy(dx, dy) { const v = get().view; if (v) set({ view: { ...v, x: v.x + dx, y: v.y + dy } }); },
+            setPanel(side, patch) {
+                const s = get();
+                const p = { ...s.panels[side], ...patch };
+                if (patch.width !== undefined) p.width = clampWidth(patch.width);
+                layOut({ ...s.panels, [side]: p }, s.panelsHidden);
+            },
+            togglePanelsHidden() { layOut(get().panels, !get().panelsHidden); },
         };
     });
 }

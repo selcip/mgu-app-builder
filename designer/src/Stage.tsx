@@ -6,8 +6,8 @@ import { apply, languagesOf, textIn, titleOf, type Screen } from './model/index.
 import { WIDGETS } from './catalog.ts';
 import { startPreview, type Preview } from './preview';
 import { Canvas, WIDGET_DRAG_TYPE } from './Canvas';
-import { EditBar } from './EditBar';
 import { FocusOverlay } from './FocusOverlay';
+import { EditBar } from './EditBar';
 import { controllerKey } from './TryPanel';
 import { Viewport } from './shell/Viewport';
 import { DESIGN, docOf, fileOf, languageOf, screenOf } from './store/editor.ts';
@@ -73,7 +73,6 @@ export function Stage() {
 
     return (
         <section className="flex min-h-0 min-w-0 flex-1 flex-col" data-stage="">
-            {!trying && <div className="flex-none border-b px-3 pt-2"><EditBar /></div>}{/* trying: no canvas editing, and the keys are the controller's */}
             <Viewport overlay={log.length > 0 && <ul className="log absolute bottom-2 left-3 z-20 m-0">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}>
             <div className="hmi-page" data-hmi-page="" ref={stage} style={{ width: W }} tabIndex={0} onKeyDown={onKey} data-trying={trying}>
                 <div className="hmi-title" data-hmi-title="">{shownTitle(shownScreen)}</div>
@@ -93,6 +92,13 @@ export function Stage() {
             </Viewport>
         </section>
     );
+}
+
+/** The edit bar, across the window under the toolbar; not while trying (no canvas editing, the keys are the controller's). */
+export function EditBarRow() {
+    const trying = useEditor((s) => s.trying);
+    if (trying) return null;
+    return <div className="flex-none border-b bg-card px-3 pt-2" data-edit-bar-row=""><EditBar /></div>;
 }
 
 /** Whether the canvas numbers the elements in focus order. */

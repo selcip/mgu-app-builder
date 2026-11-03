@@ -150,3 +150,26 @@ test('the canvas starts centred at 100 % once measured; zooming keeps the canvas
     st().zoomToFit();
     assert.ok(Math.abs(st().view.zoom - (1000 - 64) / 1820) < 1e-9);
 });
+
+test('panels start as given (else docked); docking, floating, resizing or hiding the left one keeps the page still', () => {
+    const kept = { left: { mode: 'floating', width: 300, x: 5, y: 6, collapsed: true }, right: { mode: 'docked', width: 320, x: null, y: null, collapsed: false } };
+    assert.deepStrictEqual(S.createEditorStore(undefined, { panels: kept }).getState().panels, kept);
+    const store = S.createEditorStore();
+    const st = () => store.getState();
+    assert.deepStrictEqual([st().panels.left.mode, st().panels.right.mode], ['docked', 'docked']);
+    st().setMeasure({ w: 2000, h: 1000 }, { w: 1820, h: 745 });
+    const x = st().view.x;
+    st().setPanel('left', { mode: 'floating' });          // the canvas now starts 240 px further left
+    assert.strictEqual(st().view.x, x + 240);
+    st().setPanel('left', { mode: 'docked', width: 300 });
+    assert.strictEqual(st().view.x, x - 60);
+    st().setPanel('left', { width: 9999 });               // clamped to 560
+    assert.strictEqual(st().panels.left.width, 560);
+    assert.strictEqual(st().view.x, x - 320);
+    st().togglePanelsHidden();
+    assert.strictEqual(st().panelsHidden, true);
+    assert.strictEqual(st().view.x, x + 240);
+    st().setPanel('right', { mode: 'floating', x: 100, y: 50 });      // the right panel never moves the canvas's left edge
+    assert.strictEqual(st().view.x, x + 240);
+    assert.deepStrictEqual(st().panels.right, { mode: 'floating', width: 320, x: 100, y: 50, collapsed: false });
+});
