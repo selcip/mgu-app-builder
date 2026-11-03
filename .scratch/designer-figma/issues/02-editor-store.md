@@ -6,8 +6,12 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Edit, undo, redo, refusal and fall-back-to-first-screen logic is tested in Node without React
-- [ ] No panel receives the document or `edit` through props from App
-- [ ] npm test passes
+- [x] Edit, undo, redo, refusal and fall-back-to-first-screen logic is tested in Node without React
+- [x] No panel receives the document or `edit` through props from App
+- [x] npm test passes
+
+## Comments
+
+2026-11-03: `designer/src/store/editor.ts` is the store (zustand/vanilla, no React; derived selectors `docOf`, `fileOf`, `screenOf`, `elementOf`, `languageOf`, `canUndoOf`, `canRedoOf`), and `store/react.tsx` is its React binding (`EditorProvider`, `useEditor(selector)`, `useActions()`). `App` takes an optional `store`, which the Storybook decorator will use. The store now does what `App` used to: the selected screen follows a rename and falls back to the first screen when it goes, the selection follows element renames and drops deleted elements, and stopping trying returns to the walked screen. App's screen list and screen settings moved to `Screens.tsx`, its element list to `Elements.tsx`, and the stage, preview and palette to `Stage.tsx`. `CanvasSettings`, `Clipboard`, `Report` and `shownLanguage` moved into the store. `test/editor-store.test.js` has 8 Node tests. `npm test`: 207 pass, 0 fail, 3 skipped (Node 8). A Playwright smoke check of the build passed: palette add, canvas drag, Ctrl+Z/Ctrl+Shift+Z, refusal message, rename follow, try and stop, autosave restore.

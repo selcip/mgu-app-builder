@@ -1,11 +1,14 @@
 // The property panel: exactly the selected element's widget options, from the widget catalog, each with the input
-// its kind needs. Every change goes to the document model as a setOption operation.
-import { useEffect, useState, type ReactNode } from 'react';
+// its kind needs. Every change goes to the document model as an operation (setOption, setText, rows, pictures).
+import { useEffect, useState } from 'react';
 import { COLOURS, widget, type WidgetOption } from './catalog.ts';
-import { rowsOf, type Element } from './model/index.ts';
+import { imagePathFor, rowsOf } from './model/index.ts';
 import { IconPicker } from './IconPicker';
+import { TextInput } from './Languages';
 import { PictureInput } from './Pictures';
-import { RowsEditor, type RowEdit } from './RowsEditor';
+import { RowsEditor } from './RowsEditor';
+import { docOf, elementOf } from './store/editor.ts';
+import { useActions, useEditor } from './store/react.tsx';
 
 /** A text input that commits on Enter or when it loses focus (one edit, not one per keystroke). */
 export function CommitInput(props: { value: string; onCommit: (v: string) => void; type?: string; step?: string; multiline?: boolean; placeholder?: string }) {
@@ -21,44 +24,40 @@ export function CommitInput(props: { value: string; onCommit: (v: string) => voi
     );
 }
 
-interface Props {
-    element: Element;
-    onRename(name: string): void;
-    onDelete(): void;
-    onOption(key: string, value: unknown): void;
-    /** The input for a text option (languages); a plain text input when not given. */
-    renderText?(option: WidgetOption, value: unknown): ReactNode;
-    /** The design's PNGs, for picture options. */
-    images: Readonly<Record<string, Uint8Array>>;
-    /** A PNG uploaded for picture option `key`. */
-    onUploadPicture(key: string, fileName: string, bytes: Uint8Array): void;
-    onRows?(edit: RowEdit): void;       // row by row editing of a rows option, when the rows are lines of text
-}
-
-export function PropertyPanel({ element, onRename, onDelete, onOption, renderText, images, onUploadPicture, onRows }: Props) {
+/** The selected element's name and options (nothing when none or several are selected). */
+export function PropertyPanel() {
+    const screen = useEditor((s) => s.selected);
+    const element = useEditor(elementOf);
+    const images = useEditor((s) => docOf(s).images);
+    const { edit } = useActions();
+    if (!element) return null;
+    const at = { screen, element: element.name };
     const wd = widget(element.gpu);
     const opts = element.opts || {};
     return (
         <div className="properties" data-properties={element.gpu}>
             <h2>{wd ? wd.label : element.gpu}</h2>
-            <label>Name <CommitInput value={element.name} onCommit={onRename} /></label>
-            <button onClick={onDelete}>Delete element</button>
+            <label>Name <CommitInput value={element.name} onCommit={(name) => edit({ type: 'renameElement', ...at, name })} /></label>
+            <button onClick={() => edit({ type: 'deleteElement', ...at })}>Delete element</button>
             {!wd && <p className="hint">The kit can’t draw a “{element.gpu}”; its options can’t be edited here.</p>}
-            {wd && wd.options.map((o) => (o.kind === 'rows' && onRows && rowsOf(element) ? (
+            {wd && wd.options.map((o) => (o.kind === 'rows' && rowsOf(element) ? (
                 <div className="option rows" key={o.key} data-option={o.key}>
                     <span>{o.label}</span>
-                    <RowsEditor element={element} onEdit={onRows} />
+                    <RowsEditor element={element} onEdit={(e) => edit({ ...e, ...at })} />
                 </div>
             ) : (
                 <div className="option" key={o.key} data-option={o.key}>
                     <label>
                         <span>{o.label}</span>
-                        {o.kind === 'text' && renderText
-                            ? renderText(o, o.key in opts ? opts[o.key] : o.default)
+                        {o.kind === 'text'
+                            ? <TextInput value={o.key in opts ? opts[o.key] : o.default}
+                                onCommit={(value, language) => edit({ type: 'setText', ...at, key: o.key, language, value })} />
                             : o.kind === 'image'
                             ? <PictureInput value={String(o.key in opts ? opts[o.key] : o.default)} images={images}
-                                onChange={(v) => onOption(o.key, v)} onUpload={(n, b) => onUploadPicture(o.key, n, b)} />
-                            : <OptionInput option={o} value={o.key in opts ? opts[o.key] : o.default} onChange={(v) => onOption(o.key, v)} />}
+                                onChange={(v) => edit({ type: 'setOption', ...at, key: o.key, value: v })}
+                                onUpload={(n, bytes) => edit({ type: 'uploadPicture', ...at, key: o.key, path: imagePathFor(n), bytes })} />
+                            : <OptionInput option={o} value={o.key in opts ? opts[o.key] : o.default}
+                                onChange={(value) => edit({ type: 'setOption', ...at, key: o.key, value })} />}
                     </label>
                 </div>
             )))}

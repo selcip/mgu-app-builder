@@ -3,11 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { autosave, newDocument, type Doc } from './model/index.ts';
 import { indexedDbStore } from './indexedDbStore.ts';
+import { docOf } from './store/editor.ts';
+import { useActions, useEditor } from './store/react.tsx';
 import './autosave.css';
 
 const saver = autosave(indexedDbStore());
 
-export function useAutosave(doc: Doc, open: (d: Doc) => void) {
+export function useAutosave() {
+    const doc = useEditor(docOf);
+    const { open } = useActions();
     const [checked, setChecked] = useState(false);
     const [offer, setOffer] = useState<Doc | null>(null);
     const [problem, setProblem] = useState<string | null>(null);

@@ -1,8 +1,12 @@
 // The screen's focus order: reorder, leave elements out, take them back in, or go back to reading order. Every
 // change is a document-model operation.
-import { focusOrderOf, type Op, type Screen } from './model/index.ts';
+import { focusOrderOf } from './model/index.ts';
+import { screenOf } from './store/editor.ts';
+import { useActions, useEditor } from './store/react.tsx';
 
-export function FocusPanel({ screen, edit }: { screen: Screen; edit: (op: Op) => unknown }) {
+export function FocusPanel() {
+    const screen = useEditor(screenOf);
+    const { edit } = useActions();
     const order = focusOrderOf(screen);
     const out = screen.components.map((c) => c.name).filter((n) => !order.includes(n));
     const s = screen.name;

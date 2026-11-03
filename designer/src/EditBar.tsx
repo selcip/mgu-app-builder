@@ -5,32 +5,10 @@
 // +V paste, +A select all, Delete/Backspace delete, arrows move 1 px (Shift: one grid step), Alt+arrows resize,
 // Escape clears the selection.
 import { useEffect, useRef } from 'react';
-import { copyElements, pastedNames, type Box, type Edge, type Element, type Op, type Screen } from './model/index.ts';
+import { copyElements, pastedNames, type Box, type Edge } from './model/index.ts';
 import { CommitInput } from './PropertyPanel';
-import type { CanvasSettings } from './Canvas';
-
-/** What was copied, and from which screen (pasting there again moves each paste a little further). */
-export interface Clipboard {
-    screen: string;
-    elements: Element[];
-    pastes: number;
-}
-
-interface Props {
-    screen: Screen;
-    design: { w: number; h: number };
-    selection: string[];
-    settings: CanvasSettings;
-    clipboard: Clipboard | null;
-    canUndo: boolean;
-    canRedo: boolean;
-    onEdit(op: Op): boolean;
-    onUndo(): void;
-    onRedo(): void;
-    onSelect(names: string[]): void;
-    onSettings(s: CanvasSettings): void;
-    onClipboard(c: Clipboard | null): void;
-}
+import { DESIGN, canRedoOf, canUndoOf, screenOf } from './store/editor.ts';
+import { useActions, useEditor } from './store/react.tsx';
 
 const GRIDS = [0, 4, 8, 16, 32];
 const ALIGN: { edge: Edge; label: string }[] = [
@@ -41,8 +19,20 @@ const PASTE_STEP = 16;
 
 const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
 
-export function EditBar(props: Props) {
-    const { screen, selection, settings, clipboard, onEdit, onSelect } = props;
+export function EditBar() {
+    const screen = useEditor(screenOf);
+    const selection = useEditor((s) => s.selection);
+    const settings = useEditor((s) => s.settings);
+    const clipboard = useEditor((s) => s.clipboard);
+    const canUndo = useEditor(canUndoOf);
+    const canRedo = useEditor(canRedoOf);
+    const actions = useActions();
+    const onEdit = (op: Parameters<typeof actions.edit>[0]) => actions.edit(op) !== null;
+    const onSelect = actions.select;
+    const props = {
+        design: DESIGN, onUndo: actions.undo, onRedo: actions.redo,
+        onSettings: actions.setSettings, onClipboard: actions.setClipboard, canUndo, canRedo,
+    };
     const sel = selection.filter((n) => screen.components.some((c) => c.name === n));
     const one = sel.length === 1 ? screen.components.find((c) => c.name === sel[0]) : undefined;
 

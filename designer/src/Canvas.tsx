@@ -5,33 +5,16 @@
 // 8 px focus-ring margin, and the screen its own along the edges. Every change is one document-model operation:
 // during a drag the preview shows the operation applied, and releasing the mouse commits it.
 import { useEffect, useRef, useState, type ReactNode, type PointerEvent as RPointerEvent, type DragEvent } from 'react';
-import { boundsOf, newElementName, type Box, type Op, type Screen } from './model/index.ts';
+import { boundsOf, newElementName, type Box, type Op } from './model/index.ts';
 import { widget } from './catalog.ts';
 import { RING_MARGIN, snapLines, snapMove, snapResize, type Handle, type Lines } from './canvas/snap.ts';
+import { DESIGN, screenOf } from './store/editor.ts';
+import { useActions, useEditor } from './store/react.tsx';
 
 export const WIDGET_DRAG_TYPE = 'application/x-mgu-widget';
 const HANDLES: Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 const THRESHOLD = 6;
 
-export interface CanvasSettings {
-    grid: number;           // px; 0 = off
-    snap: boolean;          // to edges, centres and guides
-    guides: Lines;
-}
-
-interface Props {
-    screen: Screen;
-    design: { w: number; h: number };
-    selection: string[];
-    settings: CanvasSettings;
-    onSelect(names: string[]): void;
-    /** Commits an edit; returns false when refused. */
-    onEdit(op: Op): boolean;
-    /** The edit being dragged, shown in the preview until committed (null: none). */
-    onDrag(op: Op | null): void;
-    onGuides(guides: Lines): void;
-    children: ReactNode;            // the preview canvas
-}
 
 type Drag =
     | { kind: 'move'; names: string[]; start: { x: number; y: number }; from: Record<string, Box>; shown: Lines; op: Op | null }
@@ -42,7 +25,17 @@ type Drag =
 const boxOf = (c: Box): Box => ({ x: c.x, y: c.y, w: c.w, h: c.h });
 const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
-export function Canvas({ screen, design, selection, settings, onSelect, onEdit, onDrag, onGuides, children }: Props) {
+/** The overlay for laying out the selected screen; `children` is the preview canvas under it. */
+export function Canvas({ children }: { children: ReactNode }) {
+    const screen = useEditor(screenOf);
+    const selection = useEditor((s) => s.selection);
+    const settings = useEditor((s) => s.settings);
+    const actions = useActions();
+    const design = DESIGN;
+    const onSelect = actions.select;
+    const onEdit = (op: Op) => actions.edit(op) !== null;
+    const onDrag = actions.setDragOp;          // the edit being dragged, shown in the preview until committed
+    const onGuides = actions.setGuides;
     const layer = useRef<HTMLDivElement>(null);
     const [drag, setDrag] = useState<Drag | null>(null);
     const [boxes, setBoxes] = useState<Record<string, Box> | null>(null);  // the dragged boxes, drawn on the overlay

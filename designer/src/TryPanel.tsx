@@ -1,10 +1,8 @@
 // Trying the app in the preview: arrow keys and Enter stand in for the iDrive controller, clicks for taps, Esc for
 // BACK. The preview follows navigation links and BACK through the screens; what the runtime reports (actions, screen
 // changes, leaving the app) is listed as the app's code would receive it.
-import type { Action, ScreenChange } from './preview';
-
-/** One thing the runtime reported while trying. */
-export type Report = { action: Action } | { change: ScreenChange } | { leave: string };
+import type { Report } from './store/editor.ts';
+import { useActions, useEditor } from './store/react.tsx';
 
 const quote = (v: unknown) => JSON.stringify(v).replace(/^"(.*)"$/, "'$1'");
 
@@ -33,15 +31,18 @@ function ReportItem({ r }: { r: Report }) {
     );
 }
 
-export function TryPanel(props: { trying: boolean; onTrying: (on: boolean) => void; reports: Report[]; onClear: () => void }) {
+export function TryPanel() {
+    const trying = useEditor((s) => s.trying);
+    const reports = useEditor((s) => s.reports);
+    const { setTrying, clearReports } = useActions();
     return (
         <div className="try-panel" data-try-panel="">
             <label>
-                <input type="checkbox" data-try-toggle="" checked={props.trying} onChange={(e) => props.onTrying(e.target.checked)} />{' '}
+                <input type="checkbox" data-try-toggle="" checked={trying} onChange={(e) => setTrying(e.target.checked)} />{' '}
                 Try it: ← → (or ↑ ↓) move the highlight, Enter selects, Esc (or Backspace) is BACK, a click taps
             </label>
-            {props.reports.length > 0 && <button onClick={props.onClear}>Clear</button>}
-            <ol className="actions" aria-label="Reported to your code">{props.reports.map((r, i) => <ReportItem key={i} r={r} />)}</ol>
+            {reports.length > 0 && <button onClick={clearReports}>Clear</button>}
+            <ol className="actions" aria-label="Reported to your code">{reports.map((r, i) => <ReportItem key={i} r={r} />)}</ol>
         </div>
     );
 }

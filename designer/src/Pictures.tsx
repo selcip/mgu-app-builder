@@ -1,7 +1,9 @@
 // Pictures: the app author's PNGs, kept under images/ beside the screen file. A picture option picks one of them or
 // takes an upload; the images panel lists them (used or not) and the pictures elements name that the design lacks.
 import { useEffect, useState, type ChangeEvent } from 'react';
-import { usedImages, type Doc, type ImageUse } from './model/index.ts';
+import { imagePathFor, missingImages, usedImages } from './model/index.ts';
+import { docOf } from './store/editor.ts';
+import { useActions, useEditor } from './store/react.tsx';
 
 /** A small preview of a PNG's bytes. */
 function Thumb({ bytes }: { bytes: Uint8Array | undefined }) {
@@ -50,15 +52,13 @@ export function PictureInput({ value, images, onChange, onUpload }: PictureInput
     );
 }
 
-interface ImagesPanelProps {
-    doc: Doc;
-    missing: ImageUse[];
-    onAdd(fileName: string, bytes: Uint8Array): void;
-    onRemove(path: string): void;
-}
-
 /** The design's images, which are in use (unused ones are left out of the download), and the missing ones. */
-export function ImagesPanel({ doc, missing, onAdd, onRemove }: ImagesPanelProps) {
+export function ImagesPanel() {
+    const doc = useEditor(docOf);
+    const { edit } = useActions();
+    const missing = missingImages(doc);
+    const onAdd = (name: string, bytes: Uint8Array) => edit({ type: 'addImage', path: imagePathFor(name), bytes });
+    const onRemove = (path: string) => edit({ type: 'removeImage', path });
     const used = new Set(usedImages(doc));
     const paths = Object.keys(doc.images).sort();
     return (

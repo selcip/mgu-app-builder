@@ -1,10 +1,17 @@
 // Navigation in the Designer: the link field (the screen the selected element's action opens) and the navigation view
 // (every link of the screen file, screen by screen, with the links to screens that no longer exist flagged). Every
 // change is a document-model operation.
-import { actionOf, linkOf, linksOf, type Element, type Link, type Op, type Screen, type ScreenFile } from './model/index.ts';
+import { actionOf, linkOf, linksOf, type Link } from './model/index.ts';
+import { elementOf, fileOf, screenOf } from './store/editor.ts';
+import { useActions, useEditor } from './store/react.tsx';
 
 /** The screen the selected element's action opens: none, or one of the file's other screens. */
-export function LinkField({ file, screen, element, edit }: { file: ScreenFile; screen: Screen; element: Element; edit: (op: Op) => unknown }) {
+export function LinkField() {
+    const file = useEditor(fileOf);
+    const screen = useEditor(screenOf);
+    const element = useEditor(elementOf);
+    const { edit } = useActions();
+    if (!element) return null;
     const action = actionOf(element);
     const to = linkOf(screen, action);
     const dead = to !== undefined && !file.screens.some((s) => s.name === to);
@@ -28,9 +35,11 @@ export function LinkField({ file, screen, element, edit }: { file: ScreenFile; s
  * it opens) and the screens it is opened from; links to missing screens are flagged and counted at the top. Selecting
  * a link selects its screen and element.
  */
-export function NavigationPanel({ file, selected, onSelect }: {
-    file: ScreenFile; selected: string | undefined; onSelect: (screen: string, element: string | null) => void;
-}) {
+export function NavigationPanel() {
+    const file = useEditor(fileOf);
+    const selected = useEditor((s) => s.selected);
+    const { goTo } = useActions();
+    const onSelect = (screen: string, element: string | null) => goTo(screen, element);
     const links = linksOf(file);
     const dead = links.filter((l) => l.dead);
     const into = links.filter((l) => l.to === selected);
@@ -56,7 +65,7 @@ export function NavigationPanel({ file, selected, onSelect }: {
                     ))}</ul>
                 </div>
             ))}
-            {selected !== undefined && into.length > 0 && <>
+            {into.length > 0 && <>
                 <h3>Opened from</h3>
                 <ul>{into.map((l) => (
                     <li key={l.screen + ':' + l.action} data-link-into={`${l.screen}:${l.action}`}>

@@ -1,8 +1,11 @@
 // The focus order drawn over the canvas: each element in it numbered at its top-left corner, in the order the
 // iDrive controller moves through them (the runtime's order: an explicit list, else reading order).
-import { focusOrderOf, type Screen } from './model/index.ts';
+import { focusOrderOf } from './model/index.ts';
+import { screenOf } from './store/editor.ts';
+import { useEditor } from './store/react.tsx';
 
-export function FocusOverlay({ screen }: { screen: Screen }) {
+export function FocusOverlay() {
+    const screen = useEditor(screenOf);
     const order = focusOrderOf(screen);
     return (
         <div className="focus-overlay" aria-label="Focus order">

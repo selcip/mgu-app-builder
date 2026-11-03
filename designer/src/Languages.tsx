@@ -3,26 +3,18 @@
 // missing, and characters the kit's fonts can't draw (the head unit shows '?' for them).
 import { useState } from 'react';
 import {
-    hasText, languagesOf, missingTranslations, textIn, textsOf, type Op, type ScreenFile, type TextPlace,
+    hasText, languagesOf, missingTranslations, textIn, textsOf, type ScreenFile, type TextPlace,
 } from './model/index.ts';
+import { fileOf, languageOf } from './store/editor.ts';
+import { useActions, useEditor } from './store/react.tsx';
 import { undrawable } from './preview';
 import { CommitInput } from './PropertyPanel';
 
-/** The language shown: the one picked if the file has it, else the default (null when the file has none). */
-export function shownLanguage(file: ScreenFile, picked: string | null): string | null {
-    const langs = languagesOf(file);
-    return picked !== null && langs.includes(picked) ? picked : langs.length ? langs[0] : null;
-}
-
-interface SwitcherProps {
-    file: ScreenFile;
-    language: string | null;
-    onLanguage(code: string): void;
-    edit(op: Op): unknown;
-}
-
 /** The header's language switcher, with adding and removing languages. */
-export function LanguageSwitcher({ file, language, onLanguage, edit }: SwitcherProps) {
+export function LanguageSwitcher() {
+    const file = useEditor(fileOf);
+    const language = useEditor(languageOf);
+    const { edit, pick: onLanguage } = useActions();
     const langs = languagesOf(file);
     const [code, setCode] = useState('');
     const add = () => {
@@ -60,16 +52,18 @@ export function LanguageSwitcher({ file, language, onLanguage, edit }: SwitcherP
  * A text in the shown language. A text missing in it shows the default language's as a placeholder (what the head
  * unit draws); entering one adds the translation, clearing it removes it.
  */
-export function TextInput(props: { file: ScreenFile; language: string | null; value: unknown; onCommit(text: string): void }) {
-    const langs = languagesOf(props.file);
-    const lang = props.language || '';
+export function TextInput(props: { value: unknown; onCommit(text: string, language: string | undefined): void }) {
+    const file = useEditor(fileOf);
+    const language = useEditor(languageOf);
+    const langs = languagesOf(file);
+    const lang = language || '';
     const text = langs.length ? textIn(props.value, langs, lang) : typeof props.value === 'string' ? props.value : '';
     // a text without letters (°, empty) needs no translation: it is edited as the default language's
     const own = !langs.length || hasText(props.value, langs, lang) || !/\p{L}/u.test(text);
-    const bad = undrawable(text, props.language);
+    const bad = undrawable(text, language);
     return (
         <span className="text-input" data-missing={own ? undefined : ''}>
-            <CommitInput value={own ? text : ''} onCommit={props.onCommit} placeholder={own ? undefined : text} />
+            <CommitInput value={own ? text : ''} onCommit={(v) => props.onCommit(v, language || undefined)} placeholder={own ? undefined : text} />
             {!own && <small className="hint">Missing in {lang}: shows the default language’s text.</small>}
             {bad.length > 0 && <small className="warning">Draws {bad.join(' ')} as “?”</small>}
         </span>
@@ -104,14 +98,16 @@ export function textIssues(file: ScreenFile): Issue[] {
 const where = (p: TextPlace) => p.element === undefined ? `${p.screen} › title` : `${p.screen} › ${p.element}.${p.key}`;
 
 /** The list of texts to look at; selecting one shows its screen and element in its language. */
-export function TextIssues(props: { file: ScreenFile; onSelect(p: TextPlace, language: string | null): void }) {
-    const issues = textIssues(props.file);
+export function TextIssues() {
+    const file = useEditor(fileOf);
+    const { goTo } = useActions();
+    const issues = textIssues(file);
     const missing = issues.filter((i) => i.kind === 'missing');
     const bad = issues.filter((i) => i.kind === 'undrawable');
     if (!issues.length) return null;
     const item = (i: Issue, n: number) => (
         <li key={n} data-text-issue={i.kind}>
-            <button onClick={() => props.onSelect(i.place, i.language)}>
+            <button onClick={() => goTo(i.place.screen, i.place.element === undefined ? null : i.place.element, i.language)}>
                 {where(i.place)}{i.language ? ` (${i.language})` : ''}
                 {i.kind === 'undrawable' && <> — draws <b>{i.chars!.join(' ')}</b> as “?”</>}
             </button>
