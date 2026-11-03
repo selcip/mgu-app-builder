@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { build } from 'esbuild';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -84,7 +85,8 @@ function mguRuntime(): Plugin {
 
 export default defineConfig({
     base: './',
-    plugins: [react(), mguRuntime()],
+    plugins: [react(), tailwindcss(), mguRuntime()],
+    resolve: { alias: { '@': path.join(HERE, 'src') } },     // shadcn's imports: @/components/ui/…, @/lib/utils
     server: { fs: { allow: [ROOT] } },
     build: { chunkSizeWarningLimit: 4000 },
 });

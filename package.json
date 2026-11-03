@@ -7,7 +7,9 @@
     "test": "node --test \"test/*.test.js\"",
     "designer": "npm run dev -w designer",
     "build-designer": "npm run build -w designer",
-    "sync-kit": "node scripts/sync-kit.js"
+    "sync-kit": "node scripts/sync-kit.js",
+    "storybook": "npm run storybook -w designer",
+    "build-storybook": "npm run build-storybook -w designer"
   },
   "engines": {
     "node": ">=22"
