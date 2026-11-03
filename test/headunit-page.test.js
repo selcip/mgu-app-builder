@@ -89,3 +89,71 @@ test('the screen shows only while the HMI shows the app’s page, and touches ar
     assert.strictEqual(client.shown, false);
     assert.deepStrictEqual(client.last('claim'), []);
 });
+
+test('a link opens the next page state with the screen’s title; the HMI’s BACK closes it and the runtime goes back', () => {
+    const { client, page, rt, actions, changes } = run();
+    page.enter();
+    assert.deepStrictEqual(page.titles, { 1: 'Home' });
+    client.emit('touch', 'down', 300, 190);         // toSettings
+    client.emit('touch', 'up', 300, 190);
+    assert.strictEqual(rt.screen(), 'settings');
+    assert.deepStrictEqual(page.opened, [2]);
+    assert.strictEqual(page.titles[2], 'Settings');
+    page.emit('visible', 2, true);
+    page.emit('focus', 2, true);
+    page.emit('focus', 1, false);
+    assert.strictEqual(rt.screen(), 'settings', 'the HMI showing the new state changes nothing');
+    page.back(2);
+    assert.strictEqual(rt.screen(), 'home');
+    assert.deepStrictEqual(changes.map((c) => [c.screen, c.by]), [['settings', 'link'], ['home', 'back']]);
+    assert.deepStrictEqual(actions.map((a) => a.action), ['toSettings']);
+    assert.ok(client.shown, 'still shown on the entry state');
+});
+
+test('BACK from the app’s own screens closes the page states above, and the HMI’s focus coming back changes nothing more', () => {
+    const { client, page, rt } = run();
+    page.enter();
+    rt.open('settings');
+    rt.open('details');
+    assert.deepStrictEqual(page.opened, [2, 3]);
+    rt.open('home');                                // back to a screen the driver came through
+    assert.deepStrictEqual(page.opened, []);
+    page.emit('visible', 3, false);
+    page.emit('focus', 2, true);                    // late HMI events of the states closed
+    page.emit('focus', 1, true);
+    assert.strictEqual(rt.screen(), 'home');
+});
+
+test('the keyboard screen is a page state of its own: the HMI’s BACK cancels typing and stays on the screen', () => {
+    const { client, page, rt, actions } = run(fixture('text-entry.json'));
+    page.enter();
+    client.emit('touch', 'down', 300, 200);         // the name field
+    client.emit('touch', 'up', 300, 200);
+    assert.strictEqual(rt.depth(), 2);
+    assert.deepStrictEqual(page.opened, [2]);
+    page.back(2);
+    assert.strictEqual(rt.depth(), 1);
+    assert.strictEqual(rt.screen(), 'main');
+    assert.deepStrictEqual(actions, [], 'cancelled: nothing reported');
+    assert.ok(client.shown);
+});
+
+test('the tile opening the app again shows the entry state: the runtime returns to the first screen', () => {
+    const { page, rt } = run();
+    page.enter();
+    rt.open('settings');
+    page.emit('visible', 2, false);                 // HOME: the HMI hides the app
+    page.emit('visible', 1, false);
+    rt.open('details');                             // the app's code while hidden: no state opened
+    assert.deepStrictEqual(page.opened, [2]);
+    page.enter();
+    assert.strictEqual(rt.screen(), 'home');
+});
+
+test('BACK on the first screen from the app leaves the page', () => {
+    const { page, rt, leaves } = run();
+    page.enter();
+    rt.controller('back');
+    assert.strictEqual(leaves.length, 1);
+    assert.strictEqual(page.left, 1);
+});
