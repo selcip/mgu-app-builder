@@ -18,14 +18,26 @@ declare module 'virtual:mgu-runtime' {
         action: string;
         value?: unknown;
     }
+    export interface ScreenChange {
+        screen: string;
+        from: string | null;
+        by: 'start' | 'link' | 'back' | 'open';
+    }
     export interface Runtime {
         load(file: unknown): boolean;
-        start(): boolean;
+        /** Shows the first screen, or the one named, with nothing to go BACK to. */
+        start(screen?: string): boolean;
+        /** Opens a screen from the app's code, as a link would; false if refused (logged). */
+        open(screen: string): boolean;
+        /** The name of the screen shown; null before start. */
+        screen(): string | null;
         /** Sets what an element shows (text, on/off, number, rows, picture); false if refused (logged). */
         set(screen: string, element: string, value: unknown): boolean;
         setLanguage(code: string): boolean;
         language(): string | null;
         on(event: 'action', fn: (a: Action) => void): void;
+        on(event: 'screen', fn: (c: ScreenChange) => void): void;
+        on(event: 'leave', fn: (l: { screen: string }) => void): void;
         controller(input: 'left' | 'right' | 'press' | 'back', steps?: number): void;
         touch(phase: 'down' | 'move' | 'up', x: number, y: number): void;
     }

@@ -17,22 +17,37 @@ export interface Action {
     value?: unknown;
 }
 
-/** A running preview: the runtime showing one screen, taking the stand-ins for the controller and touch. */
+/** A screen change the runtime reported: what the app's code receives. */
+export interface ScreenChange {
+    screen: string;
+    from: string | null;
+    by: 'start' | 'link' | 'back' | 'open';
+}
+
+/** A running preview: the runtime showing a screen, taking the stand-ins for the controller and touch. */
 export interface Preview {
     lines: string[];                                            // the runtime's log lines
     controller(input: 'left' | 'right' | 'press' | 'back'): void;
     touch(phase: 'down' | 'move' | 'up', x: number, y: number): void;     // in screen px (1796 x 632)
 }
 
+export interface PreviewOptions {
+    images?: Readonly<Record<string, Uint8Array>>;              // the design's PNGs: 'images/x.png' -> bytes
+    language?: string | null;                                   // the file's default when not given
+    /** Walking through the app (Try mode): start on the first screen and open `screen` over it, so BACK walks back
+     * to the first screen. Otherwise the runtime starts on `screen` itself. */
+    walk?: boolean;
+    onAction?: (a: Action) => void;
+    onScreen?: (c: ScreenChange) => void;
+    onLeave?: (screen: string) => void;                        // BACK on the first screen: the driver leaves the app
+}
+
 /**
-/**
- * Starts the runtime on `screen` of `file`, drawing onto `canvas` as the head unit would show it, with the design's
- * PNGs ('images/x.png' -> bytes) as the pictures beside the screen file, in `language` (the file's default when not
- * given), and passing the actions it reports to `onAction`.
+ * Starts the runtime on `file`, showing `screen` and drawing onto `canvas` as the head unit would show it, and passes
+ * what it reports (actions, screen changes, leaving the app) to the options' callbacks.
  */
-export function startPreview(file: ScreenFile, screen: string, canvas: HTMLCanvasElement,
-    images: Readonly<Record<string, Uint8Array>> = {}, language?: string | null,
-    onAction?: (a: Action) => void): Preview {
+export function startPreview(file: ScreenFile, screen: string, canvas: HTMLCanvasElement, opts: PreviewOptions = {}): Preview {
+    const images = opts.images || {};
     const lines: string[] = [];
     const put = (m: string) => { lines.push(String(m)); };
     const rt = mgu.createRuntime({
@@ -44,16 +59,22 @@ export function startPreview(file: ScreenFile, screen: string, canvas: HTMLCanva
                 const w = rec.words();
                 const words = new Uint8Array(w.buffer.slice(w.byteOffset, w.byteOffset + w.byteLength));
                 paint(new Uint32Array(words.buffer), canvas);
-                window.dispatchEvent(new CustomEvent<PreviewFrame>('mgu-preview-frame', { detail: { screen, words } }));
+                const shown = rt.screen() || screen;
+                window.dispatchEvent(new CustomEvent<PreviewFrame>('mgu-preview-frame', { detail: { screen: shown, words } }));
                 return true;
             },
         },
     });
-    if (onAction) rt.on('action', onAction);
-    // the runtime shows a file's first screen: preview the chosen one by making it first
-    if (rt.load(Object.assign({}, file, { first: screen }))) {
-        if (language) rt.setLanguage(language);
-        rt.start();
+    if (opts.onAction) rt.on('action', opts.onAction);
+    if (opts.onScreen) rt.on('screen', opts.onScreen);
+    const onLeave = opts.onLeave;
+    if (onLeave) rt.on('leave', (l) => onLeave(l.screen));
+    if (rt.load(file)) {
+        if (opts.language) rt.setLanguage(opts.language);
+        if (opts.walk) {
+            rt.start();
+            rt.open(screen);        // nothing when it is the first screen
+        } else rt.start(screen);
     }
     return {
         lines,
@@ -68,7 +89,7 @@ export function startPreview(file: ScreenFile, screen: string, canvas: HTMLCanva
  */
 export function previewScreen(file: ScreenFile, screen: string, canvas: HTMLCanvasElement,
     images: Readonly<Record<string, Uint8Array>> = {}, language?: string | null): string[] {
-    return startPreview(file, screen, canvas, images, language).lines;
+    return startPreview(file, screen, canvas, { images, language }).lines;
 }
 
 function paint(words: Uint32Array, canvas: HTMLCanvasElement) {

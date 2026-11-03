@@ -39,8 +39,8 @@ function freshNode() {
             kit, log: quiet, readImage: (p) => (images && images[p]) || null,
             sink: { frame(rec) { const w = rec.words(); got = Buffer.from(w.buffer, w.byteOffset, w.byteLength); return true; } },
         });
-        assert.ok(rt.load(Object.assign({}, file, { first: screen })), `Node loads ${screen}`);
-        rt.start();
+        assert.ok(rt.load(file), `Node loads ${screen}`);
+        assert.ok(rt.start(screen), `Node starts on ${screen}`);
         return got;
     };
 }

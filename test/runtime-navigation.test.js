@@ -239,3 +239,15 @@ test('the app\'s code opening a screen while the keyboard screen is open cancels
     assertShows(s.last(), 'settings', 'name', 'back on settings, no keyboard');
     assert.strictEqual(s.actions.length, acted, 'nothing typed is reported');
 });
+
+test('the runtime tells which screen it shows', () => {
+    const s = run(null, true);
+    assert.strictEqual(s.rt.screen(), null, 'none before start');
+    s.rt.start();
+    assert.strictEqual(s.rt.screen(), 'home');
+    s.rt.controller('press');
+    assert.strictEqual(s.rt.screen(), 'settings');
+    s.rt.controller('right');
+    s.rt.controller('press');                   // the keyboard screen is the runtime's, over settings
+    assert.strictEqual(s.rt.screen(), 'settings');
+});

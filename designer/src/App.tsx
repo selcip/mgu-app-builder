@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from 'react';
 import {
-    apply, canRedo, canUndo, createHistory, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, languagesOf, missingImages, newDocument, redo,
+    apply, canRedo, canUndo, createHistory, deadLinks, dispatch, exportZip, firstScreenOf, imagePathFor, importZip, languagesOf, missingImages, newDocument, redo,
     textIn, themeOf, titleOf, undo,
     type Doc, type Element, type History, type Op, type Screen,
 } from './model/index.ts';
 import { THEMES, WIDGETS, widget } from './catalog.ts';
-import { startPreview, type Action, type Preview } from './preview';
+import { startPreview, type Preview } from './preview';
 import { FocusOverlay } from './FocusOverlay';
 import { FocusPanel } from './FocusPanel';
 import { ActionField } from './ActionField';
-import { TryPanel, controllerKey } from './TryPanel';
+import { TryPanel, controllerKey, type Report } from './TryPanel';
+import { LinkField, NavigationPanel } from './Navigation';
 import { PropertyPanel, CommitInput } from './PropertyPanel';
 import { LanguageSwitcher, TextInput, TextIssues, shownLanguage } from './Languages';
 import { Canvas, WIDGET_DRAG_TYPE, type CanvasSettings } from './Canvas';
@@ -34,7 +35,8 @@ export function App() {
     const stage = useRef<HTMLDivElement>(null);
     const [trying, setTrying] = useState(false);
     const [showFocus, setShowFocus] = useState(true);
-    const [actions, setActions] = useState<Action[]>([]);
+    const [reports, setReports] = useState<Report[]>([]);
+    const [walking, setWalking] = useState<string | null>(null);     // trying: the screen the runtime shows
     const doc = history.present;
     const file = doc.file;
     const language = shownLanguage(file, picked);
@@ -96,11 +98,20 @@ export function App() {
         if (dragOp && !trying) {
             try { shown = apply(doc, dragOp).file; } catch { /* refused: show the file as it is */ }
         }
-        const p = startPreview(shown, screen.name, canvas.current, doc.images, language,
-            (a) => setActions((l) => l.concat([a]).slice(-50)));
+        // trying walks through the app: from the first screen to this one, then wherever links and BACK lead
+        const report = (r: Report) => setReports((l) => l.concat([r]).slice(-50));
+        const p = startPreview(shown, screen.name, canvas.current, {
+            images: doc.images, language, walk: trying,
+            onScreen: (c) => { setWalking(c.screen); if (trying) report({ change: c }); },
+            onAction: trying ? (a) => report({ action: a }) : undefined,
+            onLeave: trying ? (n) => report({ leave: n }) : undefined,
+        });
         preview.current = p;
         setLog(p.lines);
     }, [doc, file, screen, dragOp, language, trying]);     // trying starts the screen afresh, and so does stopping
+    // the screen the HMI page shows: while trying, the one the walk has reached
+    const shownScreen: Screen | undefined = trying && walking !== null ? file.screens.find((s) => s.name === walking) || screen : screen;
+    const dead = deadLinks(file);
 
     // trying the screen: keys as the iDrive controller, pointer down/up on the canvas as touches (in screen px)
     function onKey(e: KeyboardEvent) {
@@ -165,6 +176,7 @@ export function App() {
                             <button data-screen={s.name} aria-current={s.name === selected}
                                 onClick={() => { setSelected(s.name); setSelection([]); }}>
                                 {s.name}{s.name === firstScreenOf(file) ? ' (first)' : ''}
+                                {dead.some((l) => l.screen === s.name) && <span className="dead-link" title="Links to a screen that no longer exists"> ⚠</span>}
                             </button>
                         </li>
                     ))}</ul>
@@ -199,7 +211,7 @@ export function App() {
                             onSelect={setSelection} onSettings={setSettings} onClipboard={setClipboard} />
                     )}
                     <div className="hmi-page" ref={stage} style={{ width: W }} tabIndex={0} onKeyDown={onKey} data-trying={trying}>
-                        <div className="hmi-title" data-hmi-title="">{screen ? shownTitle(screen) : ''}</div>
+                        <div className="hmi-title" data-hmi-title="">{shownScreen ? shownTitle(shownScreen) : ''}</div>
                         {screen && !trying ? (
                             <Canvas screen={screen} design={{ w: W, h: H }} selection={selection} settings={settings}
                                 onSelect={setSelection} onEdit={editOk} onDrag={setDragOp} onGuides={setGuides}>
@@ -217,8 +229,12 @@ export function App() {
                     <div className="row-buttons">
                         <label><input type="checkbox" checked={showFocus} onChange={(e) => setShowFocus(e.target.checked)} /> Show focus order</label>
                     </div>
-                    <TryPanel trying={trying} onTrying={(on) => { setTrying(on); setDragOp(null); if (on) stage.current?.focus(); }}
-                        actions={actions} onClear={() => setActions([])} />
+                    <TryPanel trying={trying} reports={reports} onClear={() => setReports([])}
+                        onTrying={(on) => {
+                            // stopping: back to editing the screen the walk ended on
+                            if (!on && walking !== null && walking !== selected) { setSelected(walking); setSelection([]); }
+                            setTrying(on); setDragOp(null); if (on) stage.current?.focus();
+                        }} />
                     {log.length > 0 && <ul className="log">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}
                     <div className="palette" aria-label="Widgets">
                         <h2>Add a widget</h2>
@@ -266,7 +282,10 @@ export function App() {
                         if (l) setPicked(l);
                     }} />
                     {screen && el && <ActionField screen={screen.name} element={el} edit={edit} />}
+                    {screen && el && <LinkField file={file} screen={screen} element={el} edit={edit} />}
                     {screen && <FocusPanel screen={screen} edit={edit} />}
+                    <NavigationPanel file={file} selected={screen?.name}
+                        onSelect={(s, e) => { setSelected(s); selectOnly(e); }} />
                     <ImagesPanel doc={doc} missing={missingImages(doc)}
                         onAdd={(name, bytes) => edit({ type: 'addImage', path: imagePathFor(name), bytes })}
                         onRemove={(p) => edit({ type: 'removeImage', path: p })} />

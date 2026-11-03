@@ -10,6 +10,7 @@
  *   rt.start();               // shows the first screen: one recording to sink.frame(recorder)
  *   rt.start('settings');     // ... or starts on another screen (nothing to go BACK to from it)
  *   rt.open('details');       // opens a screen from the app's code, as a link would (false + log if there is none)
+ *   rt.screen();              // the name of the screen shown (null before start)
  *   rt.set('home', 'oil', 96); // sets what an element shows; the screen redraws if shown (false + log if refused)
  *   rt.setLanguage('de');     // draws the texts in German (missing ones in the default language)
  *   rt.on('action', fn);      // fn({ screen, element, action }) when the driver selects an element;
@@ -387,7 +388,7 @@ function createRuntime(opts) {
     }
 
     return {
-        load: load, start: start, open: open, set: set, setLanguage: setLanguage, language: active,
+        load: load, start: start, open: open, screen: function () { return current ? current.name : null; }, set: set, setLanguage: setLanguage, language: active,
         on: on, controller: controller, touch: touch,
     };
 }

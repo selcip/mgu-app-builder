@@ -107,3 +107,13 @@ button:disabled { opacity: .4; cursor: default; }
 .focus-panel button { padding: 2px 8px; border: 1px solid #555; border-radius: 4px; background: #2a2d34; color: inherit; cursor: pointer; }
 .action-field { display: flex; flex-direction: column; gap: 2px; margin: 8px 0; }
 .action-field input { padding: 4px 6px; background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
+/* navigation: link field, navigation view, dead links, the walk in Try mode */
+.link-field { display: flex; flex-direction: column; gap: 2px; margin: 8px 0; }
+.link-field select { padding: 4px 6px; background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
+.dead-link { color: #ff8a65; }
+.navigation-panel h3 { margin: 6px 0 2px; font-size: 13px; }
+.navigation-panel ul { padding-left: 16px; margin: 0 0 6px; }
+.navigation-panel button { padding: 1px 6px; border: 0; background: none; color: inherit; cursor: pointer; text-align: left; }
+.navigation-panel li.dead-link button { color: #ff8a65; }
+.try-panel .screen-change { color: #8fc1ff; }
+.try-panel .leave { color: #ffd84d; }
