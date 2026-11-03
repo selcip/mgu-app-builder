@@ -2,7 +2,8 @@
 import { defaultsOf, widget } from '../../catalog.ts';
 import { EditError, checkName, elementOf, screenOf, uniqueName, type Draft, type Screen } from '../core.ts';
 import { checkOptionValue } from '../options.ts';
-import { joinFocus } from './focus.ts';
+import { actionOf, joinFocus } from './focus.ts';
+import { carryLink, dropLink } from './navigation.ts';
 
 /** The name an element of `widget` added to `screen` gets unless one is given: button1, button2, ... */
 export function newElementName(screen: Screen, type: string): string {
@@ -31,8 +32,10 @@ export const elementOps = {
         const s = screenOf(d, a.screen);
         const e = elementOf(s, a.element);
         if (a.name === e.name) return;
+        const was = actionOf(e);
         e.name = checkName(a.name, taken(s), 'element');
         if (s.focus) s.focus = s.focus.map((n) => (n === a.element ? a.name : n));
+        carryLink(s, was, actionOf(e));        // an element reporting its name: its link goes with the new name
     },
 
     deleteElement(d: Draft, a: { screen: string; element: string }) {
@@ -40,6 +43,7 @@ export const elementOps = {
         const e = elementOf(s, a.element);
         s.components.splice(s.components.indexOf(e), 1);
         if (s.focus) s.focus = s.focus.filter((n) => n !== a.element);
+        dropLink(s, actionOf(e));
     },
 
     /** Sets one of the widget's options; `value: undefined` removes it, so the widget's default applies. */

@@ -5,6 +5,7 @@
 // (runtime/mgu_focus.js); test/focus-model.test.js holds them to it.
 import { widget } from '../../catalog.ts';
 import { EditError, elementOf, screenOf, type Draft, type Element, type Screen } from '../core.ts';
+import { carryLink } from './navigation.ts';
 
 const EVENT = 'event:';
 
@@ -100,14 +101,15 @@ export const focusOps = {
 
     /** Names the action an element reports; '' or the element's own name goes back to the default (its name). */
     setAction(d: Draft, a: { screen: string; element: string; action: string }) {
-        const e = elementOf(screenOf(d, a.screen), a.element);
+        const s = screenOf(d, a.screen);
+        const e = elementOf(s, a.element);
         if (typeof a.action !== 'string') throw new EditError('An action is a name.');
         if (a.action !== a.action.trim()) throw new EditError('An action name can’t start or end with spaces.');
+        const was = actionOf(e);
         if (a.action === '' || a.action === e.name) {
             if (typeof e.onTap === 'string' && e.onTap.startsWith(EVENT)) delete e.onTap;
-            return;
-        }
-        e.onTap = EVENT + a.action;
+        } else e.onTap = EVENT + a.action;
+        carryLink(s, was, actionOf(e));        // the element's navigation link goes with its action
     },
 };
 

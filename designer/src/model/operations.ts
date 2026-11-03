@@ -8,6 +8,7 @@ import { rowOps } from './ops/rows.ts';
 import { languageOps } from './ops/languages.ts';
 import { imageOps } from './ops/images.ts';
 import { focusOps } from './ops/focus.ts';
+import { navigationOps } from './ops/navigation.ts';
 
 export const HANDLERS = {
     ...screenOps,
@@ -17,6 +18,7 @@ export const HANDLERS = {
     ...languageOps,
     ...imageOps,
     ...focusOps,
+    ...navigationOps,
 };
 
 /** An edit to the document: `{ type: 'addScreen', name: 'home' }`, `{ type: 'setOption', ... }`, ... */

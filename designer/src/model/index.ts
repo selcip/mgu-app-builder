@@ -8,6 +8,7 @@ export { copyElements, pastedNames, boundsOf, EDGES, type Box, type Edge } from 
 export { rowsOf, ROW_FIELDS } from './ops/rows.ts';
 export { imagePathFor, isImagePath, usedImages, missingImages, type ImageUse } from './ops/images.ts';
 export { focusOrderOf, actionOf } from './ops/focus.ts';
+export { linkOf, linksOf, deadLinks, type Link } from './ops/navigation.ts';
 export { createHistory, dispatch, undo, redo, canUndo, canRedo, type History } from './history.ts';
 export { importZip, importScreenFile, exportZip, screenFileProblem, ImportError } from './zip.ts';
 export { languagesOf, textIn, hasText, isTextMap, textsOf, missingTranslations, type TextPlace, type TextMap } from './texts.ts';
