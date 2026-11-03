@@ -28,7 +28,7 @@ export function FocusPanel({ screen, edit }: { screen: Screen; edit: (op: Op) =>
                 ))}</ul>
             </>}
             {Array.isArray(screen.focus) && (
-                <button onClick={() => edit({ type: 'resetFocusOrder', screen: s })}>Back to reading order</button>
+                <button data-reset-focus="" onClick={() => edit({ type: 'resetFocusOrder', screen: s })}>Back to reading order</button>
             )}
         </div>
     );

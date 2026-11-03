@@ -18,7 +18,7 @@ export function LinkField({ file, screen, element, edit }: { file: ScreenFile; s
                 {others.map((n) => <option key={n} value={n}>{n}</option>)}
                 {dead && <option value={to}>{to} (missing)</option>}
             </select>
-            {dead && <span className="dead-link" role="alert">Screen “{to}” no longer exists: the driver would hit a dead end.</span>}
+            {dead && <span className="dead-link" role="alert" data-link-problem="">Screen “{to}” no longer exists: the driver would hit a dead end.</span>}
         </label>
     );
 }

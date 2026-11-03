@@ -1,0 +1,6 @@
+# Text files are LF in the working tree on every platform. The kit, the Store fixtures and starter/vendor must be
+# byte-identical to mgu-store (test/kit-pinned.test.js hashes them), and the starter's generated files are compared
+# byte for byte with what its tools write; Git for Windows' default core.autocrlf=true would check them out as CRLF.
+* text=auto eol=lf
+*.png binary
+*.rec binary

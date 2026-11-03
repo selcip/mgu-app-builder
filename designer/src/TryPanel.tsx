@@ -35,9 +35,9 @@ function ReportItem({ r }: { r: Report }) {
 
 export function TryPanel(props: { trying: boolean; onTrying: (on: boolean) => void; reports: Report[]; onClear: () => void }) {
     return (
-        <div className="try-panel">
+        <div className="try-panel" data-try-panel="">
             <label>
-                <input type="checkbox" checked={props.trying} onChange={(e) => props.onTrying(e.target.checked)} />{' '}
+                <input type="checkbox" data-try-toggle="" checked={props.trying} onChange={(e) => props.onTrying(e.target.checked)} />{' '}
                 Try it: ← → (or ↑ ↓) move the highlight, Enter selects, Esc (or Backspace) is BACK, a click taps
             </label>
             {props.reports.length > 0 && <button onClick={props.onClear}>Clear</button>}

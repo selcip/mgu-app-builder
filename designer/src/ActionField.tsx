@@ -4,7 +4,7 @@ import { CommitInput } from './PropertyPanel';
 
 export function ActionField({ screen, element, edit }: { screen: string; element: Element; edit: (op: Op) => unknown }) {
     return (
-        <label className="action-field">
+        <label className="action-field" data-action-field="">
             Action <small>(reported to your code; empty = the element’s name)</small>
             <CommitInput value={actionOf(element)}
                 onCommit={(v) => edit({ type: 'setAction', screen, element: element.name, action: v.trim() })} />

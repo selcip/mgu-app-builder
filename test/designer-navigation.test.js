@@ -27,7 +27,7 @@ let browser;
 
 before(async () => {
     if (skip) return;
-    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe' });
+    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe', shell: process.platform === 'win32' });     // npm is npm.cmd on Windows
     browser = await playwright.chromium.launch();
 });
 
@@ -66,7 +66,7 @@ const lastFrame = async (page) => {
     return { screen: f.screen, words: Buffer.from(f.words, 'base64') };
 };
 const title = (page) => page.locator('[data-hmi-title]').textContent();
-const listed = (page, attr) => page.locator(`.try-panel [${attr}]`).evaluateAll((els, a) => els.map((e) => e.getAttribute(a)), attr);
+const listed = (page, attr) => page.locator(`[data-try-panel] [${attr}]`).evaluateAll((els, a) => els.map((e) => e.getAttribute(a)), attr);
 const deadCount = async (page) => {
     const p = page.locator('[data-dead-links]');
     return (await p.count()) ? Number(await p.getAttribute('data-dead-links')) : 0;
@@ -92,7 +92,7 @@ function nodeAfter(file, open, inputs) {
 test('walking through the app in Try mode: links and BACK, drawn as in Node, screen changes and leaving listed', { skip }, async () => {
     const { page, errors } = await openWithFile(FILE);
     try {
-        await page.locator('.try-panel input[type=checkbox]').check();
+        await page.locator('[data-try-toggle]').check();
         await page.keyboard.press('Enter');                 // toSettings -> settings
         assert.strictEqual(await title(page), 'Settings');
         let f = await lastFrame(page);
@@ -114,7 +114,7 @@ test('walking through the app in Try mode: links and BACK, drawn as in Node, scr
         assert.deepStrictEqual(await listed(page, 'data-action'), ['toSettings', 'more']);
         // stopping the walk on a screen goes on editing it
         await page.keyboard.press('Enter');                 // -> settings
-        await page.locator('.try-panel input[type=checkbox]').uncheck();
+        await page.locator('[data-try-toggle]').uncheck();
         assert.strictEqual(await page.locator('[data-screen][aria-current="true"]').getAttribute('data-screen'), 'settings');
         assert.deepStrictEqual(errors, []);
     } finally {
@@ -126,7 +126,7 @@ test('trying from a screen that is not the first: the walk starts there, BACK le
     const { page, errors } = await openWithFile(FILE);
     try {
         await page.locator('[data-screen="settings"]').click();
-        await page.locator('.try-panel input[type=checkbox]').check();
+        await page.locator('[data-try-toggle]').check();
         assert.strictEqual(await title(page), 'Settings');
         assert.ok((await lastFrame(page)).words.equals(nodeAfter(FILE, 'settings', [])), 'settings as in Node');
         await page.keyboard.press('Escape');
@@ -152,15 +152,15 @@ test('linking an element, the navigation view and dead-link warnings, also after
         assert.match(await page.locator('[data-link="home:help"]').textContent(), /helpButton \[help\] → about/);
         // deleting about leaves both links dead, flagged in the link field too
         await page.locator('[data-screen="about"]').click();
-        await page.locator('.screen-props button', { hasText: 'Delete' }).click();
+        await page.locator('[data-delete-screen]').click();
         assert.strictEqual(await deadCount(page), 3);
         await page.locator('[data-link="home:ping"] button').click();          // selects home and ping
-        assert.match(await page.locator('.link-field [role=alert]').textContent(), /“about” no longer exists/);
+        assert.match(await page.locator('[data-link-problem]').textContent(), /“about” no longer exists/);
         await page.locator('[data-link-field]').selectOption('');               // unlink
         assert.strictEqual(await deadCount(page), 2);
         // renaming settings keeps the link to it
         await page.locator('[data-screen="settings"]').click();
-        const name = page.locator('.screen-props label', { hasText: 'Name' }).locator('input');
+        const name = page.locator('[data-screen-name] input');
         await name.fill('options');
         await name.press('Enter');
         assert.match(await page.locator('[data-link="home:toSettings"]').textContent(), /→ options$/);

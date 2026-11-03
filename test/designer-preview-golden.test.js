@@ -52,7 +52,7 @@ let browser;
 
 before(async () => {
     if (skip) return;
-    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe' });
+    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe', shell: process.platform === 'win32' });     // npm is npm.cmd on Windows
     browser = await playwright.chromium.launch();
 });
 
@@ -162,7 +162,7 @@ test('pictures under images/ preview in the browser exactly as Node draws them',
     };
     await assertSameAsNode(file, { 'images/red.png': new Uint8Array(red.png()) }, async (page) => {
         // the PNG is on the canvas, and the picture the design lacks is reported
-        const px = await page.evaluate(() => Array.from(document.querySelector('.hmi-page canvas').getContext('2d').getImageData(200, 150, 1, 1).data));
+        const px = await page.evaluate(() => Array.from(document.querySelector('[data-hmi-page] canvas').getContext('2d').getImageData(200, 150, 1, 1).data));
         assert.deepStrictEqual(px, [255, 0, 0, 255]);
         assert.match(await page.locator('[data-missing]').textContent(), /images\/lost\.png.*main \/ lost/);
     });

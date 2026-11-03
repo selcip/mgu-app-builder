@@ -5,6 +5,7 @@
 const { test, before } = require('node:test');
 const assert = require('node:assert');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const ROOT = path.join(__dirname, '..');
 const { record } = require(path.join(ROOT, 'kit', 'am_gpu.js'));
@@ -16,7 +17,7 @@ const SMALLEST = 18;
 const SMALL_LABELS = { colorPicker: ['R', 'G', 'B'] };
 
 let catalog;
-before(async () => { catalog = await import(path.join(ROOT, 'designer', 'src', 'catalog.ts')); });
+before(async () => { catalog = await import(pathToFileURL(path.join(ROOT, 'designer', 'src', 'catalog.ts')).href); });
 
 /** The texts the kit draws for one element: string, left, right, top and bottom (roughly: y is the baseline), size. */
 function textsOf(element) {

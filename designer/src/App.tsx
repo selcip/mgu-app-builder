@@ -182,9 +182,9 @@ export function App() {
                     ))}</ul>
                     <button onClick={() => edit({ type: 'addScreen' })}>Add screen</button>
                     {screen && (
-                        <div className="screen-props">
+                        <div className="screen-props" data-screen-props="">
                             <h2>Screen</h2>
-                            <label>Name
+                            <label data-screen-name="">Name
                                 <CommitInput value={screen.name} onCommit={(v) => {
                                     if (edit({ type: 'renameScreen', screen: screen.name, name: v })) setSelected(v);
                                 }} />
@@ -197,7 +197,7 @@ export function App() {
                                 <button disabled={screen.name === firstScreenOf(file)}
                                     onClick={() => edit({ type: 'setFirstScreen', screen: screen.name })}>Make first</button>
                                 <button onClick={() => edit({ type: 'duplicateScreen', screen: screen.name })}>Duplicate</button>
-                                <button disabled={file.screens.length < 2}
+                                <button data-delete-screen="" disabled={file.screens.length < 2}
                                     onClick={() => edit({ type: 'deleteScreen', screen: screen.name })}>Delete</button>
                             </div>
                         </div>
@@ -210,7 +210,7 @@ export function App() {
                             onUndo={() => setHistory(undo(history))} onRedo={() => setHistory(redo(history))}
                             onSelect={setSelection} onSettings={setSettings} onClipboard={setClipboard} />
                     )}
-                    <div className="hmi-page" ref={stage} style={{ width: W }} tabIndex={0} onKeyDown={onKey} data-trying={trying}>
+                    <div className="hmi-page" data-hmi-page="" ref={stage} style={{ width: W }} tabIndex={0} onKeyDown={onKey} data-trying={trying}>
                         <div className="hmi-title" data-hmi-title="">{shownScreen ? shownTitle(shownScreen) : ''}</div>
                         {screen && !trying ? (
                             <Canvas screen={screen} design={{ w: W, h: H }} selection={selection} settings={settings}

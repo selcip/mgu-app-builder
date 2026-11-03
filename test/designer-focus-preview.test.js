@@ -27,7 +27,7 @@ let browser;
 
 before(async () => {
     if (skip) return;
-    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe' });
+    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe', shell: process.platform === 'win32' });     // npm is npm.cmd on Windows
     browser = await playwright.chromium.launch();
 });
 
@@ -89,11 +89,11 @@ test('the focus order is numbered on the screen and edited in the inspector', { 
         assert.deepStrictEqual(await badges(page), [['1', 'wifi'], ['2', 'volume'], ['3', 'save'], ['4', 'cancel']]);
         await page.locator('[data-focus-out="heading"] button').click();
         assert.deepStrictEqual((await badges(page)).map((b) => b[1]), ['wifi', 'volume', 'save', 'cancel', 'heading']);
-        await page.locator('text=Back to reading order').click();
+        await page.locator('[data-reset-focus]').click();
         assert.deepStrictEqual((await badges(page)).map((b) => b[1]), ['wifi', 'lights', 'volume', 'cancel', 'save']);
         // the action field: the element's name until another is named
         await page.locator('[data-element="cancel"]').click();
-        const action = page.locator('.action-field input');
+        const action = page.locator('[data-action-field] input');
         assert.strictEqual(await action.inputValue(), 'cancel');
         await action.fill('close');
         await action.press('Enter');
@@ -107,7 +107,7 @@ test('the focus order is numbered on the screen and edited in the inspector', { 
 test('trying the preview: arrow keys and Enter as the controller, clicks as taps, actions listed, drawn as in Node', { skip }, async () => {
     const { page, errors } = await openWithFile(FILE);
     try {
-        await page.locator('.try-panel input[type=checkbox]').check();
+        await page.locator('[data-try-toggle]').check();
         await page.keyboard.press('ArrowRight');
         await page.keyboard.press('ArrowRight');
         assert.ok((await lastFrame(page)).equals(nodeAfter(FILE, ['right', 'right'])), 'highlight on volume as in Node');
@@ -130,7 +130,7 @@ test('trying a field in the preview opens the keyboard screen, drawn as in Node;
     const TEXT = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'screens', 'text-entry.json'), 'utf8'));
     const { page, errors } = await openWithFile(TEXT);
     try {
-        await page.locator('.try-panel input[type=checkbox]').check();
+        await page.locator('[data-try-toggle]').check();
         await page.keyboard.press('Enter');                 // the field: the keyboard screen
         assert.ok((await lastFrame(page)).equals(nodeAfter(TEXT, ['press'])), 'keyboard screen as in Node');
         await page.locator('canvas').click({ position: { x: 100, y: 210 } });       // '1'

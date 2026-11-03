@@ -27,8 +27,8 @@ function scratch() {
     return { tmp, dir, done: () => fs.rmSync(tmp, { recursive: true, force: true }) };
 }
 
-const list = (tgz) => execFileSync('tar', ['-tzf', tgz], { encoding: 'utf8' }).trim().split('\n').sort();
-const member = (tgz, name, cwd) => { execFileSync('tar', ['-xzf', tgz, name], { cwd }); return fs.readFileSync(path.join(cwd, name), 'utf8'); };
+const list = (tgz) => execFileSync('tar', ['-tzf', path.basename(tgz)], { cwd: path.dirname(tgz), encoding: 'utf8' }).trim().split('\n').sort();
+const member = (tgz, name, cwd) => { execFileSync('tar', ['-xzf', path.relative(cwd, tgz), name], { cwd }); return fs.readFileSync(path.join(cwd, name), 'utf8'); };
 
 test('the starter app packs its source package and, with a donor, links the oap-sdk into its OAP tgz', () => {
     const s = scratch();

@@ -11,6 +11,7 @@
 const { test, before } = require('node:test');
 const assert = require('node:assert');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const ROOT = path.join(__dirname, '..');
 const E = require(path.join(ROOT, 'kit', 'am_elements.js'));
@@ -40,7 +41,7 @@ function kitDraws(type) {
 }
 
 let catalog;
-before(async () => { catalog = await import(path.join(ROOT, 'designer', 'src', 'catalog.ts')); });
+before(async () => { catalog = await import(pathToFileURL(path.join(ROOT, 'designer', 'src', 'catalog.ts')).href); });
 
 test('the kit has no drawing for the widgets the catalog leaves out, and draws every other one', () => {
     for (const type of Object.keys(E.ELEMENTS)) {
