@@ -1,31 +1,9 @@
-// The screens: the list to move between them (the first screen and dead links marked), adding one, and the selected
-// screen's name, title, making it first, duplicating and deleting it.
-import { deadLinks, firstScreenOf } from './model/index.ts';
+// The selected screen's name, title, making it first, duplicating and deleting it.
+import { firstScreenOf } from './model/index.ts';
 import { CommitInput } from './PropertyPanel';
 import { TextInput } from './Languages';
 import { fileOf, screenOf } from './store/editor.ts';
 import { useActions, useEditor } from './store/react.tsx';
-
-export function ScreenList() {
-    const file = useEditor(fileOf);
-    const selected = useEditor((s) => s.selected);
-    const { edit, selectScreen } = useActions();
-    const dead = deadLinks(file);
-    const first = firstScreenOf(file);
-    return (
-        <>
-            <ul>{file.screens.map((s) => (
-                <li key={s.name}>
-                    <button data-screen={s.name} aria-current={s.name === selected} onClick={() => selectScreen(s.name)}>
-                        {s.name}{s.name === first ? ' (first)' : ''}
-                        {dead.some((l) => l.screen === s.name) && <span className="dead-link" title="Links to a screen that no longer exists"> ⚠</span>}
-                    </button>
-                </li>
-            ))}</ul>
-            <button onClick={() => edit({ type: 'addScreen' })}>Add screen</button>
-        </>
-    );
-}
 
 export function ScreenProps() {
     const file = useEditor(fileOf);

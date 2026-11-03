@@ -107,7 +107,7 @@ export function Panel({ side, title, children, className }: {
                     {floating ? (side === 'left' ? <PanelLeft /> : <PanelRight />) : <SquareArrowOutUpRight />}
                 </Button>
             </div>
-            <div className={cn('min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3', collapsed && 'hidden')}>{children}</div>
+            <div className={cn('min-h-0 flex-1 overflow-y-auto overflow-x-hidden', collapsed && 'hidden')}>{children}</div>
             {!collapsed && (
                 <div data-panel-resize="" title="Drag to resize" onPointerDown={startResize} onPointerMove={move} onPointerUp={end} onPointerCancel={end}
                     className={cn('absolute top-0 bottom-0 z-10 w-1.5 cursor-ew-resize hover:bg-ring/40', side === 'left' ? '-right-0.5' : '-left-0.5',

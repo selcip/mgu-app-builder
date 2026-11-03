@@ -4,9 +4,6 @@ h1 { font-size: 16px; margin: 0; }
 .upload { padding: 6px 12px; border: 1px solid #555; border-radius: 6px; cursor: pointer; }
 .upload input { display: none; }
 .problem { color: #ff6b6b; }
-.screens ul { list-style: none; margin: 0; padding: 0; }
-.screens button { width: 100%; text-align: left; padding: 6px 10px; margin-bottom: 4px; border: 0; border-radius: 4px; background: #2a2d34; color: inherit; cursor: pointer; }
-.screens button[aria-current="true"] { background: #3d6ef5; }
 .hint { color: #999; }
 /* mock HMI page: the head unit's title bar above the app's 1796 x 632 box */
 .hmi-page { background: #000; border: 12px solid #0b0b0d; border-radius: 10px; box-sizing: content-box; }
@@ -14,7 +11,7 @@ h1 { font-size: 16px; margin: 0; }
 .hmi-page canvas { display: block; }
 .log { color: #ffb86b; font-family: monospace; }
 h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #999; margin: 16px 0 6px; }
-header .languages button, .row-buttons button, .palette button, .properties > button, .screens > button {
+header .languages button, .row-buttons button, .palette button, .properties > button {
     padding: 5px 10px; border: 1px solid #555; border-radius: 6px; background: #2a2d34; color: inherit; cursor: pointer; }
 button:disabled { opacity: .4; cursor: default; }
 .screen-props label, .properties label { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
@@ -28,8 +25,6 @@ button:disabled { opacity: .4; cursor: default; }
 .palette { display: flex; flex-wrap: wrap; gap: 6px; max-width: 1820px; }
 .palette h2 { width: 100%; }
 .inspector ul { list-style: none; margin: 0; padding: 0; }
-.inspector .elements button { width: 100%; text-align: left; padding: 4px 8px; margin-bottom: 2px; border: 0; border-radius: 4px; background: #2a2d34; color: inherit; cursor: pointer; }
-.inspector .elements button[aria-current="true"] { background: #3d6ef5; }
 .inspector small { color: #aaa; }
 .colour { display: flex; gap: 4px; }
 /* the canvas: an overlay on the preview for laying elements out */

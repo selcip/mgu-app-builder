@@ -2,13 +2,13 @@
 // the inspector panel on the right. Every part reads the editor store and edits through it (store/editor.ts); App only places them.
 import { ActionField } from './ActionField';
 import { RestorePrompt, useAutosave } from './Autosave';
-import { ElementList } from './Elements';
 import { FocusPanel } from './FocusPanel';
 import { TextIssues } from './Languages';
 import { LinkField, NavigationPanel } from './Navigation';
 import { ImagesPanel } from './Pictures';
 import { PropertyPanel } from './PropertyPanel';
-import { ScreenList, ScreenProps } from './Screens';
+import { ScreenProps } from './Screens';
+import { ElementList, ScreenList } from './panels/screens/ScreensPanel';
 import { EditBarRow, Palette, ShowFocusToggle, Stage } from './Stage';
 import { TryPanel } from './TryPanel';
 import { Panel, PanelArea, usePanelKeys } from './shell/Panel';
@@ -45,17 +45,17 @@ function Designer() {
             {saved.offer && <RestorePrompt onRestore={saved.restore} onDecline={saved.decline} />}
             <EditBarRow />
             <PanelArea>
-                <Panel side="left" title="Screens">
-                    <nav aria-label="Screens" className="screens">
-                        <ScreenList />
-                    </nav>
-                    <ScreenProps />
-                    <Palette />
+                <Panel side="left" title="Screen file">
+                    <ScreenList />
+                    <ElementList />
+                    <div className="p-3">
+                        <ScreenProps />
+                        <Palette />
+                    </div>
                 </Panel>
                 <Stage />
                 <Panel side="right" title="Inspector" className="inspector">
-                    <h2>Elements</h2>
-                    <ElementList />
+                    <div className="p-3">
                     <PropertyPanel />
                     <TextIssues />
                     <ActionField />
@@ -65,6 +65,7 @@ function Designer() {
                     <NavigationPanel />
                     <ImagesPanel />
                     <TryPanel />
+                    </div>
                 </Panel>
             </PanelArea>
         </div>
