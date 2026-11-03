@@ -132,8 +132,7 @@ function runOnHeadUnit(opts) {
     });
     if (!rt.load(opts.screens)) return null;
 
-    function send(rec) {
-        if (!ready) return false;
+    function send(rec) {        // the render client refuses a frame before the renderer is ready (false)
         sentAt = Date.now();
         return client.frame(rec) !== false;
     }
