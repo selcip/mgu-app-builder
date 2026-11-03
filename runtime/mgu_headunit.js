@@ -21,6 +21,7 @@
  *           proxyFocus(depth, i), proxyPress(depth, i)  the HMI's focus moved to / pressed a proxy of a state
  *           frontCcu(sample)                             a FrontCCU.statusRotaryEncoderState sample
  *           language(name)                               the HMI's display language (a CommonTypes.Language name)
+ *           restore()                                    the HMI lost the titles and proxies written: write them again
  *   methods open(depth), close(depth), title(depth, text), proxies(depth, labels), leave()
  * The runtime's depth (rt.depth(): screens to go BACK through, and the keyboard screen) is mirrored on those states:
  * going deeper opens the next state, so the HMI's BACK closes it, which takes the runtime BACK to the state the HMI
@@ -239,6 +240,11 @@ function runOnHeadUnit(opts) {
             if (info && info.controller) return;        // the gate's samples carry the controller
             if (hmiProxies || focusLost) { front(NO_KNOB, false, fccu.seq); return; }
             front(fccu.knob, fccu.pressed, fccu.seq);
+        });
+        page.on('restore', () => {      // the HMI lost what the app wrote on its states
+            titles = {};
+            labels = {};
+            mirror();
         });
         page.on('language', (name) => {
             const codes = languageCodes(name);

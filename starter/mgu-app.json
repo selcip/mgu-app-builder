@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "starter_app",
+  "version": "0.1.0",
+  "tree": "app",
+  "modules": [
+    "main.js",
+    "lib/mgu_focus.js",
+    "lib/mgu_headunit.js",
+    "lib/mgu_keyboard.js",
+    "lib/mgu_oap.js",
+    "lib/mgu_pictures.js",
+    "lib/mgu_runtime.js",
+    "lib/mgu_text.js",
+    "lib/am_elements.js",
+    "lib/am_gpu.js",
+    "lib/am_store_widgets.js",
+    "lib/am_widgets.js",
+    "lib/font_chinese.js",
+    "lib/font_regular.js",
+    "lib/font_semibold.js",
+    "lib/i18n.js",
+    "lib/kit_canvas.js",
+    "lib/kit_fonts.js",
+    "lib/kit_png.js",
+    "lib/kit_record.js",
+    "lib/kit_themes.js",
+    "lib/kit_vicons.js",
+    "lib/locales.js",
+    "lib/qr.js",
+    "lib/qrcodegen.js",
+    "lib/store_elements.js",
+    "vendor/mgu_render_client.js"
+  ],
+  "sdk": [
+    "oap-sdk/src/core/OnlineApp.js",
+    "oap-sdk/src/logging/logging",
+    "oap-sdk/src/someip/someipBuilders"
+  ]
+}
