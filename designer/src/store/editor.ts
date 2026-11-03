@@ -9,6 +9,7 @@ import {
 } from '../model/index.ts';
 import type { Lines } from '../canvas/snap.ts';
 import type { Action, ScreenChange } from '../preview.ts';
+import { centred, fitted, stepZoom, zoomAbout, type Size, type View } from '../shell/view.ts';
 
 /** The app's box on iDrive 7, inside the HMI page. */
 export const DESIGN = { w: 1796, h: 632 } as const;
@@ -50,6 +51,10 @@ export interface EditorState {
     reports: Report[];
     /** While trying: the screen the runtime shows. */
     walking: string | null;
+    /** The canvas's zoom and where the HMI page sits; null until the canvas is first measured (then: centred, 100 %). */
+    view: View | null;
+    /** The canvas's size and the HMI page's (unzoomed), as last measured; null until then. */
+    measure: { canvas: Size; page: Size } | null;
 
     /** Applies an edit; a refusal sets `problem` and changes nothing. Returns the edited document, or null if refused. */
     edit(op: Op): Doc | null;
@@ -77,6 +82,15 @@ export interface EditorState {
     setWalking(screen: string | null): void;
     report(r: Report): void;
     clearReports(): void;
+    setMeasure(canvas: Size, page: Size): void;
+    setView(view: View): void;
+    /** Zooms to `zoom` about a point of the canvas (its middle when none given). */
+    zoomTo(zoom: number, at?: { x: number; y: number }): void;
+    /** The next zoom level up or down, about the canvas's middle. */
+    zoomStep(dir: 1 | -1): void;
+    /** The page as large as fits in the canvas. */
+    zoomToFit(): void;
+    panBy(dx: number, dy: number): void;
 }
 
 export type EditorStore = StoreApi<EditorState>;
@@ -116,6 +130,8 @@ export function createEditorStore(doc: Doc = newDocument()): EditorStore {
             trying: false,
             reports: [],
             walking: null,
+            view: null,
+            measure: null,
 
             edit(op) {
                 let next: History;
@@ -167,6 +183,20 @@ export function createEditorStore(doc: Doc = newDocument()): EditorStore {
             setWalking(walking) { set({ walking }); },
             report(r) { set((s) => ({ reports: s.reports.concat([r]).slice(-REPORTS) })); },
             clearReports() { set({ reports: [] }); },
+            setMeasure(canvas, page) {
+                const s = get();
+                set({ measure: { canvas, page }, view: s.view || centred(canvas, page, 1) });
+            },
+            setView(view) { set({ view }); },
+            zoomTo(zoom, at) {
+                const { view, measure } = get();
+                if (!view || !measure) return;
+                const p = at || { x: measure.canvas.w / 2, y: measure.canvas.h / 2 };
+                set({ view: zoomAbout(view, zoom, p.x, p.y) });
+            },
+            zoomStep(dir) { const v = get().view; if (v) get().zoomTo(stepZoom(v.zoom, dir)); },
+            zoomToFit() { const m = get().measure; if (m) set({ view: fitted(m.canvas, m.page) }); },
+            panBy(dx, dy) { const v = get().view; if (v) set({ view: { ...v, x: v.x + dx, y: v.y + dy } }); },
         };
     });
 }

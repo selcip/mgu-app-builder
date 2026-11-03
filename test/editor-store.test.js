@@ -133,3 +133,20 @@ test('stopping trying returns to the screen the walk ended on; reports keep the 
     st().clearReports();
     assert.deepStrictEqual(st().reports, []);
 });
+
+test('the canvas starts centred at 100 % once measured; zooming keeps the canvas middle still; fitting fits', () => {
+    const store = S.createEditorStore();
+    const st = () => store.getState();
+    st().zoomStep(1);                                       // not measured yet: nothing to zoom
+    assert.strictEqual(st().view, null);
+    st().setMeasure({ w: 2000, h: 1000 }, { w: 1820, h: 745 });
+    assert.deepStrictEqual(st().view, { zoom: 1, x: 90, y: 127.5 });
+    st().setMeasure({ w: 1000, h: 1000 }, { w: 1820, h: 745 });          // measuring again keeps the view
+    assert.deepStrictEqual(st().view, { zoom: 1, x: 90, y: 127.5 });
+    st().zoomStep(-1);
+    assert.deepStrictEqual(st().view, { zoom: 0.75, x: 500 - 410 * 0.75, y: 500 - 372.5 * 0.75 });
+    st().panBy(10, -20);
+    assert.deepStrictEqual([st().view.x, st().view.y], [500 - 410 * 0.75 + 10, 500 - 372.5 * 0.75 - 20]);
+    st().zoomToFit();
+    assert.ok(Math.abs(st().view.zoom - (1000 - 64) / 1820) < 1e-9);
+});

@@ -1,6 +1,6 @@
-// The stage: the selected screen in its HMI page, drawn by the runtime and the kit, with the canvas over it for
-// laying out (or, while trying, the iDrive controller's keys and taps going to the runtime), the try panel, and the
-// widget palette.
+// The stage: the edit bar, and the selected screen in its HMI page on the zoomable canvas, drawn by the runtime and
+// the kit, with the layout overlay over it (or, while trying, the iDrive controller's keys and taps going to the
+// runtime). Also the widget palette and the focus-order toggle, which the panels show.
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { apply, languagesOf, textIn, titleOf, type Screen } from './model/index.ts';
 import { WIDGETS } from './catalog.ts';
@@ -8,7 +8,8 @@ import { startPreview, type Preview } from './preview';
 import { Canvas, WIDGET_DRAG_TYPE } from './Canvas';
 import { EditBar } from './EditBar';
 import { FocusOverlay } from './FocusOverlay';
-import { TryPanel, controllerKey } from './TryPanel';
+import { controllerKey } from './TryPanel';
+import { Viewport } from './shell/Viewport';
 import { DESIGN, docOf, fileOf, languageOf, screenOf } from './store/editor.ts';
 import { useActions, useEditor } from './store/react.tsx';
 
@@ -23,7 +24,7 @@ export function Stage() {
     const trying = useEditor((s) => s.trying);
     const walking = useEditor((s) => s.walking);
     const showFocus = useEditor((s) => s.showFocus);
-    const { setWalking, report, setShowFocus } = useActions();
+    const { setWalking, report } = useActions();
     const canvas = useRef<HTMLCanvasElement>(null);
     const preview = useRef<Preview | null>(null);
     const stage = useRef<HTMLDivElement>(null);
@@ -45,7 +46,7 @@ export function Stage() {
         preview.current = p;
         setLog(p.lines);
     }, [doc, file, screen, dragOp, language, trying, setWalking, report]);     // trying starts the screen afresh, and so does stopping
-    useEffect(() => { if (trying) stage.current?.focus(); }, [trying]);
+    useEffect(() => { if (trying) stage.current?.focus({ preventScroll: true }); }, [trying]);
 
     // the screen the HMI page shows: while trying, the one the walk has reached
     const shownScreen: Screen = trying && walking !== null ? file.screens.find((s) => s.name === walking) || screen : screen;
@@ -71,8 +72,9 @@ export function Stage() {
     }
 
     return (
-        <section className="stage">
-            {!trying && <EditBar />}{/* trying: no canvas editing, and the keys are the controller's */}
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col" data-stage="">
+            {!trying && <div className="flex-none border-b px-3 pt-2"><EditBar /></div>}{/* trying: no canvas editing, and the keys are the controller's */}
+            <Viewport overlay={log.length > 0 && <ul className="log absolute bottom-2 left-3 z-20 m-0">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}>
             <div className="hmi-page" data-hmi-page="" ref={stage} style={{ width: W }} tabIndex={0} onKeyDown={onKey} data-trying={trying}>
                 <div className="hmi-title" data-hmi-title="">{shownTitle(shownScreen)}</div>
                 {!trying ? (
@@ -88,18 +90,24 @@ export function Stage() {
                     </div>
                 )}
             </div>
-            <div className="row-buttons">
-                <label><input type="checkbox" checked={showFocus} onChange={(e) => setShowFocus(e.target.checked)} /> Show focus order</label>
-            </div>
-            <TryPanel />
-            {log.length > 0 && <ul className="log">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}
-            <Palette />
+            </Viewport>
         </section>
     );
 }
 
+/** Whether the canvas numbers the elements in focus order. */
+export function ShowFocusToggle() {
+    const showFocus = useEditor((s) => s.showFocus);
+    const { setShowFocus } = useActions();
+    return (
+        <div className="row-buttons">
+            <label><input type="checkbox" checked={showFocus} onChange={(e) => setShowFocus(e.target.checked)} /> Show focus order</label>
+        </div>
+    );
+}
+
 /** The widgets to add: click to add one to the screen, or drag it onto the screen. */
-function Palette() {
+export function Palette() {
     const { addElement } = useActions();
     return (
         <div className="palette" aria-label="Widgets">
