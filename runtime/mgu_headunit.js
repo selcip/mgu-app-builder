@@ -8,12 +8,15 @@
  *   const rt = runOnHeadUnit({ client, screens: fs.readFileSync(path.join(__dirname, 'screens.json'), 'utf8'), dir: __dirname, log });
  *
  *   rt.on('action', (a) => ...);    // taps and controller presses
+ *   rt.on('screen', (s) => ...);    // a link, BACK or the app's code changed the screen: load its data
+ *   rt.on('leave', (s) => ...);     // BACK on the first screen: the app closes its HMI page
  *
  * Embed only (inside the HMI page), 1796 x 632. Input as far as the render client carries it: touches on the app's
  * screen (claimed when the renderer is ready) and, where the renderer offers the controller gate (info.controller),
  * the iDrive controller's turns and pushes (grabbed). The HMI page itself (RHMI state on LT_State_A4A_WelcomeApp,
  * its title and BACK), the controller through FrontCCU or RHMI focus proxies when there is no gate, and the
- * keep-alive frame come with later tickets; they belong here, not in the core.
+ * keep-alive frame come with later tickets; they belong here, not in the core. Until then the HMI's BACK reaches the
+ * runtime only as the app feeds it (rt.controller('back')), and leaving the app ('leave') is the app's to handle.
  */
 const fs = require('fs');
 const path = require('path');

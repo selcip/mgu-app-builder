@@ -107,3 +107,135 @@ test('BACK on the first screen leaves the app: reported, nothing redrawn, the sc
     s.rt.controller('press');                   // still on home: its first element
     assertShows(s.last(), 'settings', 'fog', 'the app goes on from home');
 });
+
+test('the first screen shown is reported as a screen change from none', () => {
+    const s = run();
+    assert.deepStrictEqual(s.screens, [{ screen: 'home', from: null, by: 'start' }]);
+});
+
+test('the app\'s code opens any screen on top of the shown one; BACK returns from it', () => {
+    const s = run();
+    s.rt.controller('right');                   // ping
+    assert.strictEqual(s.rt.open('about'), true);
+    assertShows(s.last(), 'about', null, 'opened from code');
+    assert.deepStrictEqual(s.screens.slice(-1), [{ screen: 'about', from: 'home', by: 'open' }]);
+    s.rt.controller('back');
+    assertShows(s.last(), 'home', 'ping', 'back on home');
+});
+
+test('opening a screen that is not in the file is refused and logged; the shown screen stays', () => {
+    const s = run();
+    const n = s.frames.length;
+    assert.strictEqual(s.rt.open('nowhere'), false);
+    assert.strictEqual(s.frames.length, n);
+    assert.strictEqual(s.screens.length, 1);
+    assert.match(s.lines.join('\n'), /no screen "nowhere"/);
+});
+
+test('start(name) starts on that screen; BACK there leaves the app', () => {
+    const s = run(null, true);
+    assert.strictEqual(s.rt.start('settings'), true);
+    assertShows(s.last(), 'settings', 'fog', 'started on settings');
+    assert.deepStrictEqual(s.screens, [{ screen: 'settings', from: null, by: 'start' }]);
+    s.rt.controller('back');
+    assert.deepStrictEqual(s.leaves, [{ screen: 'settings' }]);
+    assert.strictEqual(s.rt.start('nowhere'), false, 'a screen that is not in the file');
+});
+
+test('a link to a screen the driver came through returns to it: BACK there goes on from where it was', () => {
+    const s = run();
+    s.rt.controller('press');                   // home -> settings
+    right(s, 3);                                // home button
+    s.rt.controller('press');                   // settings -> home (linked)
+    assertShows(s.last(), 'home', 'toSettings', 'back on home through the link, highlight where it was');
+    assert.deepStrictEqual(s.screens.slice(-1), [{ screen: 'home', from: 'settings', by: 'link' }]);
+    s.rt.controller('back');
+    assert.deepStrictEqual(s.leaves, [{ screen: 'home' }], 'home is the first screen again');
+});
+
+test('opening the shown screen changes nothing', () => {
+    const s = run();
+    const n = s.frames.length;
+    assert.strictEqual(s.rt.open('home'), true);
+    assert.strictEqual(s.frames.length, n);
+    assert.strictEqual(s.screens.length, 1);
+});
+
+test('tapping a linked element follows its link; an action named by onTap links by that name', () => {
+    const s = run();
+    tap(s, BOX.helpButton);                     // reports 'help', linked to about
+    assert.deepStrictEqual(s.actions, [{ screen: 'home', element: 'helpButton', action: 'help' }]);
+    assertShows(s.last(), 'about', null, 'about');
+    s.rt.controller('back');
+    assertShows(s.last(), 'home', 'helpButton', 'back on home, highlight on the tapped element');
+});
+
+test('an unlinked element only reports its action', () => {
+    const s = run();
+    s.rt.controller('right');
+    const n = s.frames.length;
+    s.rt.controller('press');                   // ping
+    assert.deepStrictEqual(s.actions, [{ screen: 'home', element: 'ping', action: 'ping' }]);
+    assert.strictEqual(s.frames.length, n);
+});
+
+test('a link to a screen that is not in the file is logged and the screen stays', () => {
+    const s = run();
+    s.rt.open('details');
+    const n = s.frames.length;
+    s.rt.controller('press');                   // gone -> nowhere
+    assert.deepStrictEqual(s.actions.slice(-1), [{ screen: 'details', element: 'gone', action: 'gone' }]);
+    assert.strictEqual(s.frames.length, n);
+    assert.match(s.lines.join('\n'), /details: action "gone" links to "nowhere", which is not a screen/);
+});
+
+test('an action handler that opens a screen itself wins over the link', () => {
+    const s = run();
+    s.rt.on('action', (a) => { if (a.action === 'toSettings') s.rt.open('about'); });
+    s.rt.controller('press');
+    assertShows(s.last(), 'about', null, 'the code\'s screen');
+    assert.deepStrictEqual(s.screens.slice(1).map((x) => x.screen), ['about']);
+    s.rt.controller('back');
+    assertShows(s.last(), 'home', 'toSettings', 'back on home');
+});
+
+test('BACK on the keyboard screen cancels it and stays on the field\'s screen; the next BACK leaves that screen', () => {
+    const s = run();
+    s.rt.controller('press');                   // home -> settings
+    s.rt.controller('right');                   // name (a field)
+    s.rt.controller('press');                   // keyboard screen
+    const changes = s.screens.length;
+    s.rt.controller('back');
+    assertShows(s.last(), 'settings', 'name', 'back on the field');
+    assert.strictEqual(s.screens.length, changes, 'the keyboard screen is no screen change');
+    s.rt.controller('back');
+    assertShows(s.last(), 'home', 'toSettings', 'back on home');
+    assert.deepStrictEqual(s.leaves, []);
+});
+
+test('a field whose action is linked opens the linked screen once its text is confirmed, not when cancelled', () => {
+    const s = run();
+    s.rt.controller('press');                   // home -> settings
+    s.rt.controller('right');
+    s.rt.controller('press');                   // keyboard screen on "Bob"
+    s.rt.controller('back');                    // cancel
+    assert.deepStrictEqual(s.screens.slice(-1).map((x) => x.screen), ['settings']);
+    s.rt.controller('press');                   // keyboard again
+    s.rt.touch('down', 1700, 590); s.rt.touch('up', 1700, 590);     // the keyboard's go key ('OK'), bottom right
+    assert.deepStrictEqual(s.actions.slice(-1), [{ screen: 'settings', element: 'name', action: 'name', value: 'Bob' }]);
+    assertShows(s.last(), 'details', 'gone', 'the linked screen');
+    assert.deepStrictEqual(s.screens.slice(-1), [{ screen: 'details', from: 'settings', by: 'link' }]);
+});
+
+test('the app\'s code opening a screen while the keyboard screen is open cancels the typing', () => {
+    const s = run();
+    s.rt.controller('press');                   // home -> settings
+    s.rt.controller('right');
+    s.rt.controller('press');                   // keyboard screen
+    const acted = s.actions.length;
+    assert.strictEqual(s.rt.open('about'), true);
+    assertShows(s.last(), 'about', null, 'about');
+    s.rt.controller('back');
+    assertShows(s.last(), 'settings', 'name', 'back on settings, no keyboard');
+    assert.strictEqual(s.actions.length, acted, 'nothing typed is reported');
+});

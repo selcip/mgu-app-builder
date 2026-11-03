@@ -8,10 +8,16 @@
  *   const rt = createRuntime({ sink, log, kit });
  *   rt.load(screenFile);      // parsed object or JSON text; false (and a log line) if refused
  *   rt.start();               // shows the first screen: one recording to sink.frame(recorder)
+ *   rt.start('settings');     // ... or starts on another screen (nothing to go BACK to from it)
+ *   rt.open('details');       // opens a screen from the app's code, as a link would (false + log if there is none)
  *   rt.set('home', 'oil', 96); // sets what an element shows; the screen redraws if shown (false + log if refused)
  *   rt.setLanguage('de');     // draws the texts in German (missing ones in the default language)
  *   rt.on('action', fn);      // fn({ screen, element, action }) when the driver selects an element;
  *                             // fn({ screen, element, action, value }) when the driver types a field's text
+ *   rt.on('screen', fn);      // fn({ screen, from, by }) whenever the shown screen changes: by 'start' (from null),
+ *                             // 'link' (a nav link), 'back' or 'open' (the app's code)
+ *   rt.on('leave', fn);       // fn({ screen }) on BACK from the first screen: the driver leaves the app (the app or
+ *                             // the head-unit adapter closes its HMI page; the runtime stays on that screen)
  *   rt.controller(input, n);  // 'left' | 'right' (move the highlight n steps, default 1), 'press' (select the
  *                             // highlighted element), 'back'
  *   rt.touch(phase, x, y);    // 'down' | 'move' | 'up', in screen px: down and up on one element selects it
@@ -32,9 +38,16 @@
  * Focus and actions (mgu_focus.js): the highlight moves in the screen's focus order and is drawn by the runtime as a
  * ring on top of the kit's recording; a press or a tap reports the element's action.
  *
+ * Navigation: a screen's `nav` maps an action to the name of the screen it opens. Selecting an element reports its
+ * action first, then opens the linked screen (unless an action handler opened a screen itself); a link to a screen
+ * that is not in the file is logged and goes nowhere. The runtime keeps the screens the driver came through: BACK
+ * returns to the previous one with the highlight where it was. Opening a screen the driver came through (by a link or
+ * from code) returns to it rather than stacking it again; opening the shown screen changes nothing.
+ *
  * Text entry (mgu_keyboard.js): selecting a field opens the keyboard screen over the shown screen with the field's
  * text. It takes the controller and touch while open (BACK cancels); confirming returns to the field, which shows
- * the typed text from then on, and reports it as the field's action value; cancelling returns and reports nothing.
+ * the typed text from then on, and reports it as the field's action value (then follows the action's link, if any);
+ * cancelling returns and reports nothing. Opening another screen closes it unconfirmed.
  * The keyboard screen is the runtime's, not a screen of the file: it reports no screen change.
  */
 
@@ -88,15 +101,42 @@ function createRuntime(opts) {
         file = f;
         current = null;
         typing = null;
+        stack = [];
         values = Object.create(null);
         pictures = createPictures(opts.readImage, log);      // a new file: read its pictures afresh
         return true;
     }
 
-    function start() {
+    /** Shows the first screen (or the screen named `name`) with no screen to go BACK to, and reports it. */
+    function start(name) {
         if (!file) return false;
-        show(file.first !== undefined ? screenNamed(file, file.first) : file.screens[0]);
-        return draw();
+        let s = file.first !== undefined ? screenNamed(file, file.first) : file.screens[0];
+        if (name !== undefined) {
+            s = screenNamed(file, name);
+            if (!s) return refuseOpen(name);
+        }
+        stack = [];
+        show(s);
+        const ok = draw();
+        emit('screen', { screen: s.name, from: null, by: 'start' });
+        return ok;
+    }
+
+    /** Opens the screen named `name` from the app's code, as a link would; false (and a log line) if refused. */
+    function open(name) {
+        if (!current) {
+            log.error('mgu-runtime: screen ' + JSON.stringify(name) + ' not opened: start() first');
+            return false;
+        }
+        const s = screenNamed(file, name);
+        if (!s) return refuseOpen(name);
+        go(s, 'open');
+        return true;
+    }
+
+    function refuseOpen(name) {
+        log.error('mgu-runtime: screen not opened: the screen file has no screen ' + JSON.stringify(name));
+        return false;
     }
 
     /** The language drawn: the one asked for if the file has it, else the file's default (its first). */
@@ -137,6 +177,7 @@ function createRuntime(opts) {
         const a = { screen: from.name, element: c.name, action: action };
         if (arguments.length > 1) a.value = value;
         emit('action', a);
+        if (current !== from) return;       // the app's code opened a screen itself
         const to = from.nav && typeof from.nav === 'object' && Object.prototype.hasOwnProperty.call(from.nav, action) ? from.nav[action] : undefined;
         if (to === undefined) return;
         const s = typeof to === 'string' ? screenNamed(file, to) : null;
@@ -161,11 +202,25 @@ function createRuntime(opts) {
         emit('screen', { screen: current.name, from: from.name, by: 'back' });
     }
 
-    /** Opens screen `s` on top of the shown one (BACK returns to it), and reports the change. */
+    /**
+     * Opens screen `s` on top of the shown one (BACK returns to the shown one), and reports the change. A screen the
+     * driver came through is returned to instead (the screens above it are dropped, its highlight is where it was),
+     * so going round in circles never grows the stack; the shown screen itself changes nothing.
+     */
     function go(s, by) {
         const from = current;
-        stack.push({ screen: from, focused: focused });
-        show(s);
+        if (s === from) return;
+        let k = stack.length - 1;
+        while (k >= 0 && stack[k].screen !== s) k--;
+        if (k >= 0) {
+            const was = stack[k];
+            stack = stack.slice(0, k);
+            show(s);
+            focused = Math.min(was.focused, Math.max(0, items.length - 1));
+        } else {
+            stack.push({ screen: from, focused: focused });
+            show(s);
+        }
         draw();
         emit('screen', { screen: s.name, from: from.name, by: by });
     }
@@ -228,7 +283,7 @@ function createRuntime(opts) {
     }
 
     /** Controller input: 'left' / 'right' move the highlight `steps` elements (default 1; stops at the ends, no
-     * wrap), 'press' selects, 'back' (on the keyboard screen: cancel; elsewhere not yet handled). */
+     * wrap), 'press' selects, 'back' (on the keyboard screen: cancel; elsewhere the previous screen, or leave). */
     function controller(input, steps) {
         if (!current) return;
         if (typing) return keyboardController(input, typeof steps === 'number' && steps > 0 ? Math.floor(steps) : 1);
@@ -332,7 +387,7 @@ function createRuntime(opts) {
     }
 
     return {
-        load: load, start: start, set: set, setLanguage: setLanguage, language: active,
+        load: load, start: start, open: open, set: set, setLanguage: setLanguage, language: active,
         on: on, controller: controller, touch: touch,
     };
 }
