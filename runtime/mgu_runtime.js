@@ -13,6 +13,7 @@
  *   rt.screen();              // the name of the screen shown (null before start)
  *   rt.set('home', 'oil', 96); // sets what an element shows; the screen redraws if shown (false + log if refused)
  *   rt.setLanguage('de');     // draws the texts in German (missing ones in the default language)
+ *   rt.languages();           // the screen file's languages, the default first ([] for a file without)
  *   rt.on('action', fn);      // fn({ screen, element, action }) when the driver selects an element;
  *                             // fn({ screen, element, action, value }) when the driver types a field's text
  *   rt.on('screen', fn);      // fn({ screen, from, by }) whenever the shown screen changes: by 'start' (from null),
@@ -22,6 +23,13 @@
  *   rt.controller(input, n);  // 'left' | 'right' (move the highlight n steps, default 1), 'press' (select the
  *                             // highlighted element), 'back'
  *   rt.touch(phase, x, y);    // 'down' | 'move' | 'up', in screen px: down and up on one element selects it
+ *
+ * For the head-unit adapter (mgu_headunit.js), which mirrors the screens on the HMI's page states:
+ *   rt.depth();               // how deep the driver is: 1 on the first screen, +1 per screen to go BACK through and
+ *                             // +1 while the keyboard screen is open (BACK closes one level)
+ *   rt.title();               // the shown screen's title in the active language ('' without one)
+ *   rt.focusItems();          // what the highlight moves over now, in focus order: element names (keys on the keyboard)
+ *   rt.highlight(i);          // highlights item i of focusItems() (false if there is none)
  *
  * sink.frame(recorder): a kit Recorder (kit_record.js) per frame; returns false if it could not take it
  * (the render client's frame() has this contract). log: console-like (error, warn, info).
@@ -387,7 +395,35 @@ function createRuntime(opts) {
         return true;
     }
 
+    function depth() {
+        if (!current) return 0;
+        return stack.length + 1 + (typing ? 1 : 0);
+    }
+
+    function title() {
+        if (!current) return '';
+        const t = shownScreen().title;
+        return typeof t === 'string' ? t : '';
+    }
+
+    function focusItems() {
+        if (!current) return [];
+        if (typing) return typing.items.map((it) => (it.go ? 'go' : it.key || it.name));
+        return items.map((c) => c.name);
+    }
+
+    function highlight(i) {
+        const list = typing ? typing.items : items;
+        if (!current || typeof i !== 'number' || i < 0 || i >= list.length || Math.floor(i) !== i) return false;
+        if (typing) {
+            if (typing.focused !== i) { typing.focused = i; draw(); }
+        } else if (focused !== i) { focused = i; draw(); }
+        return true;
+    }
+
     return {
+        languages: function () { return file ? languagesOf(file) : []; },
+        depth: depth, title: title, focusItems: focusItems, highlight: highlight,
         load: load, start: start, open: open, screen: function () { return current ? current.name : null; }, set: set, setLanguage: setLanguage, language: active,
         on: on, controller: controller, touch: touch,
     };
