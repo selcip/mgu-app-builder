@@ -62,7 +62,8 @@ function createRuntime(opts) {
     let touched = null;     // the element a touch went down on
     // the keyboard screen, open over `current` while the driver types a field's text: { field, k, items, focused }
     let typing = null;
-    const listeners = { action: [] };
+    let stack = [];         // the screens the driver came through to `current`: [{ screen, focused }], oldest first
+    const listeners = { action: [], screen: [], leave: [] };
 
     function refuse(why) {
         log.error('mgu-runtime: screen file refused: ' + why);
@@ -126,7 +127,47 @@ function createRuntime(opts) {
 
     function select(c) {
         if (c.gpu === 'field') return openKeyboard(c);
-        emit('action', { screen: current.name, element: c.name, action: focus.actionOf(c) });
+        report(c);
+    }
+
+    /** Reports the element's action (with the typed text as its value, if any), then follows the action's link. */
+    function report(c, value) {
+        const from = current;
+        const action = focus.actionOf(c);
+        const a = { screen: from.name, element: c.name, action: action };
+        if (arguments.length > 1) a.value = value;
+        emit('action', a);
+        const to = from.nav && typeof from.nav === 'object' && Object.prototype.hasOwnProperty.call(from.nav, action) ? from.nav[action] : undefined;
+        if (to === undefined) return;
+        const s = typeof to === 'string' ? screenNamed(file, to) : null;
+        if (!s) {
+            log.warn('mgu-runtime: ' + from.name + ': action ' + JSON.stringify(action) + ' links to ' + JSON.stringify(to) + ', which is not a screen of the file');
+            return;
+        }
+        go(s, 'link');
+    }
+
+    /** BACK: the previous screen, highlight where it was; on the first screen the driver leaves the app. */
+    function back() {
+        const from = current;
+        if (!stack.length) {
+            emit('leave', { screen: from.name });
+            return;
+        }
+        const was = stack.pop();
+        show(was.screen);
+        focused = Math.min(was.focused, Math.max(0, items.length - 1));
+        draw();
+        emit('screen', { screen: current.name, from: from.name, by: 'back' });
+    }
+
+    /** Opens screen `s` on top of the shown one (BACK returns to it), and reports the change. */
+    function go(s, by) {
+        const from = current;
+        stack.push({ screen: from, focused: focused });
+        show(s);
+        draw();
+        emit('screen', { screen: s.name, from: from.name, by: by });
     }
 
     /** The screen as drawn now: values set from code over its options, text maps in the active language. */
@@ -150,7 +191,7 @@ function createRuntime(opts) {
         const own = values[current.name] || (values[current.name] = Object.create(null));
         own[c.name] = Object.assign({}, own[c.name], { text: typed });     // the field shows what was typed
         draw();
-        emit('action', { screen: current.name, element: c.name, action: focus.actionOf(c), value: typed });
+        report(c, typed);
     }
 
     function pressKey(item) {
@@ -199,7 +240,9 @@ function createRuntime(opts) {
             draw();
         } else if (input === 'press') {
             if (items[focused]) select(items[focused]);
-        } else if (input !== 'back') {
+        } else if (input === 'back') {
+            back();
+        } else {
             log.warn('mgu-runtime: unknown controller input ' + JSON.stringify(input));
         }
     }

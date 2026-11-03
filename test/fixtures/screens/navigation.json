@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "languages": ["en"],
+  "first": "home",
+  "design": { "w": 1796, "h": 632 },
+  "screens": [
+    {
+      "name": "home", "kind": "gpu", "title": "Home", "theme": "m_red", "bg": "theme",
+      "nav": { "toSettings": "settings", "help": "about" },
+      "components": [
+        { "name": "heading", "rtype": "gpu", "gpu": "text", "x": 40, "y": 30, "w": 900, "h": 70, "opts": { "text": "Home", "size": 44, "font": "bold" } },
+        { "name": "toSettings", "rtype": "gpu", "gpu": "button", "x": 40, "y": 150, "w": 560, "h": 84, "opts": { "text": "Settings" } },
+        { "name": "ping", "rtype": "gpu", "gpu": "button", "x": 640, "y": 150, "w": 560, "h": 84, "opts": { "text": "Ping", "style": "outline" } },
+        { "name": "helpButton", "rtype": "gpu", "gpu": "button", "x": 1240, "y": 150, "w": 500, "h": 84, "opts": { "text": "Help", "style": "secondary" }, "onTap": "event:help" }
+      ]
+    },
+    {
+      "name": "settings", "kind": "gpu", "title": "Settings", "theme": "m_red", "bg": "theme",
+      "nav": { "more": "details", "home": "home", "name": "details" },
+      "components": [
+        { "name": "heading", "rtype": "gpu", "gpu": "text", "x": 40, "y": 30, "w": 900, "h": 70, "opts": { "text": "Settings", "size": 44, "font": "bold" } },
+        { "name": "fog", "rtype": "gpu", "gpu": "row", "x": 48, "y": 150, "w": 1700, "h": 104, "opts": { "label": "Fog lights", "control": "toggle", "on": true } },
+        { "name": "name", "rtype": "gpu", "gpu": "field", "x": 48, "y": 290, "w": 1000, "h": 100, "opts": { "text": "Bob", "label": "Driver name" } },
+        { "name": "more", "rtype": "gpu", "gpu": "button", "x": 48, "y": 500, "w": 560, "h": 84, "opts": { "text": "More" } },
+        { "name": "home", "rtype": "gpu", "gpu": "button", "x": 1180, "y": 500, "w": 560, "h": 84, "opts": { "text": "Home", "style": "outline" } }
+      ]
+    },
+    {
+      "name": "details", "kind": "gpu", "title": "Details", "theme": "m_red", "bg": "theme",
+      "nav": { "gone": "nowhere" },
+      "components": [
+        { "name": "heading", "rtype": "gpu", "gpu": "text", "x": 40, "y": 30, "w": 900, "h": 70, "opts": { "text": "Details", "size": 44, "font": "bold" } },
+        { "name": "gone", "rtype": "gpu", "gpu": "button", "x": 40, "y": 150, "w": 560, "h": 84, "opts": { "text": "Dead end" } }
+      ]
+    },
+    {
+      "name": "about", "kind": "gpu", "title": "About", "theme": "m_red", "bg": "theme",
+      "components": [
+        { "name": "heading", "rtype": "gpu", "gpu": "text", "x": 40, "y": 30, "w": 900, "h": 70, "opts": { "text": "About", "size": 44, "font": "bold" } }
+      ]
+    }
+  ]
+}
