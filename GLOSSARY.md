@@ -79,3 +79,29 @@ _Avoid_: SDK, framework, toolkit
 **Runtime**:
 The library the app author's code calls to show screens, set element values and receive actions.
 _Avoid_: engine, glue, framework
+
+## In the Designer
+
+**Canvas**:
+The Designer's area that shows the selected screen in its HMI page, which the app author pans and zooms and lays elements out on.
+_Avoid_: stage, artboard, frame
+
+**Panel**:
+One of the Designer's two side areas: the screen and element list on the left, and the inspector on the right.
+_Avoid_: sidebar, side menu, drawer
+
+**Docked**:
+A panel that runs the full height beside the canvas and takes its space from it.
+_Avoid_: fixed, pinned
+
+**Floating**:
+A panel that sits over the canvas where the app author dragged it, and can be collapsed to its header.
+_Avoid_: detached, popout, overlay
+
+**Trying**:
+Running the app's screens on the canvas as the driver would, with the controller and touch, from the first screen along links and BACK.
+_Avoid_: preview mode, present, play mode
+
+**Appearance**:
+The Designer's own colours, separate from the theme the screen file is drawn in.
+_Avoid_: theme, skin, dark mode (for the setting itself)
