@@ -10,7 +10,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const blobId = (buf) => crypto.createHash('sha1').update(`blob ${buf.length}\0`).update(buf).digest('hex');
 
-for (const dir of ['kit', path.join('test', 'fixtures', 'mgu-store')]) {
+for (const dir of ['kit', path.join('test', 'fixtures', 'mgu-store'), path.join('starter', 'vendor')]) {
     test(`${dir} is byte-identical to the mgu-store commit recorded beside it`, () => {
         const rec = JSON.parse(fs.readFileSync(path.join(ROOT, dir, 'SOURCE.json'), 'utf8'));
         assert.match(rec.commit, /^[0-9a-f]{40}$/);

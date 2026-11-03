@@ -1,0 +1,26 @@
+{
+  "repo": "mgu-store",
+  "commit": "a4d98b79c995c033dc3045e266623a02e8f4f804",
+  "files": [
+    {
+      "name": "mgu_render_client.js",
+      "path": "native/mgu-render/js/mgu_render_client.js",
+      "blob": "87f47f4aff9391f8fdfbcec063c683753c98d3f8"
+    },
+    {
+      "name": "LICENSE.mgu-renderd",
+      "path": "native/mgu-render/LICENSE.mgu-renderd",
+      "blob": "4bd5906e99579be628bd5d97e0c824447bfc4857"
+    },
+    {
+      "name": "oap_pack.js",
+      "path": "tools/oap_pack.js",
+      "blob": "f9690bbf6e012bc439ec5999bec487c86b9d71d4"
+    },
+    {
+      "name": "oap_link.js",
+      "path": "tools/oap_link.js",
+      "blob": "db0ed8489b8f05be95f707055558b9d4771874dd"
+    }
+  ]
+}

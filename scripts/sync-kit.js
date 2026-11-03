@@ -1,8 +1,8 @@
 'use strict';
 /**
- * Copies the kit from a named mgu-store commit into kit/ (and the Store's iDrive 7 screens into
- * test/fixtures/mgu-store/), byte for byte, read with `git show <commit>:<path>` so the clone's
- * working tree never leaks in. Each destination gets a SOURCE.json beside the copy: the full
+ * Copies the kit from a named mgu-store commit into kit/ (the Store's iDrive 7 screens into
+ * test/fixtures/mgu-store/, the render client, packer and linker into starter/vendor/), byte for
+ * byte, read with `git show <commit>:<path>` so the clone's working tree never leaks in. Each destination gets a SOURCE.json beside the copy: the full
  * commit and every file with its git blob id. Files no longer in the list are removed.
  *
  *   node scripts/sync-kit.js --from <mgu-store clone> --commit <rev> [--out <this repo's root>]
@@ -25,10 +25,19 @@ const KIT = [
 ];
 // The Store's screens laid out for iDrive 7 (1796 x 632): test input only, never shipped.
 const FIXTURES = ['store_compact.js'];
+// What the starter app packs and draws with besides the kit: the render client (MIT, its notice beside it) and the
+// packer and linker (tools/oap_pack.js, tools/oap_link.js), each from its own folder of the repo.
+const STARTER_VENDOR = [
+    { name: 'mgu_render_client.js', from: 'native/mgu-render/js/mgu_render_client.js' },
+    { name: 'LICENSE.mgu-renderd', from: 'native/mgu-render/LICENSE.mgu-renderd' },
+    { name: 'oap_pack.js', from: 'tools/oap_pack.js' },
+    { name: 'oap_link.js', from: 'tools/oap_link.js' },
+];
 
 const DESTS = [
-    { dir: 'kit', files: KIT },
-    { dir: path.join('test', 'fixtures', 'mgu-store'), files: FIXTURES },
+    { dir: 'kit', path: SRC, files: KIT },
+    { dir: path.join('test', 'fixtures', 'mgu-store'), path: SRC, files: FIXTURES },
+    { dir: path.join('starter', 'vendor'), files: STARTER_VENDOR },
 ];
 
 function args(argv) {
@@ -51,17 +60,20 @@ function sync(from, rev, out) {
     for (const d of DESTS) {
         const dir = path.join(out, d.dir);
         fs.mkdirSync(dir, { recursive: true });
+        const names = d.files.map((f) => (typeof f === 'string' ? f : f.name));
         for (const name of fs.readdirSync(dir)) {
-            if (name !== 'SOURCE.json' && d.files.indexOf(name) < 0) {
+            if (name !== 'SOURCE.json' && names.indexOf(name) < 0) {
                 fs.rmSync(path.join(dir, name), { recursive: true, force: true });
             }
         }
-        const files = d.files.map((name) => {
-            const p = `${SRC}/${name}`;
+        const files = d.files.map((f) => {
+            const name = typeof f === 'string' ? f : f.name;
+            const p = typeof f === 'string' ? `${d.path}/${f}` : f.from;
             fs.writeFileSync(path.join(dir, name), git('show', `${commit}:${p}`));
-            return { name, blob: git('rev-parse', `${commit}:${p}`).toString().trim() };
+            const blob = git('rev-parse', `${commit}:${p}`).toString().trim();
+            return typeof f === 'string' ? { name, blob } : { name, path: p, blob };
         });
-        const rec = { repo: 'mgu-store', commit, path: SRC, files };
+        const rec = d.path ? { repo: 'mgu-store', commit, path: d.path, files } : { repo: 'mgu-store', commit, files };
         fs.writeFileSync(path.join(dir, 'SOURCE.json'), JSON.stringify(rec, null, 2) + '\n');
     }
     return commit;
