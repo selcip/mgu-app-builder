@@ -157,3 +157,78 @@ test('BACK on the first screen from the app leaves the page', () => {
     assert.strictEqual(leaves.length, 1);
     assert.strictEqual(page.left, 1);
 });
+
+test('while shown, the last frame is sent again after a second without one, so the renderer keeps the app', (t) => {
+    t.mock.timers.enable({ apis: ['setInterval', 'Date'] });
+    const { client, page } = run();
+    page.enter();
+    const shownAt = client.frames;
+    t.mock.timers.tick(999);
+    assert.strictEqual(client.frames, shownAt);
+    t.mock.timers.tick(1);
+    assert.strictEqual(client.frames, shownAt + 1);
+    for (let i = 0; i < 3; i++) t.mock.timers.tick(1000);
+    assert.strictEqual(client.frames, shownAt + 4);
+    page.back(1);
+    for (let i = 0; i < 5; i++) t.mock.timers.tick(1000);
+    assert.strictEqual(client.frames, shownAt + 4, 'hidden: silent');
+});
+
+test('the HMI’s focus on the proxy buttons moves the highlight and its press selects; the proxies list the focus items', () => {
+    const { page, actions } = run(fixture('focus.json'));
+    page.enter();
+    const items = page.labels[1];
+    assert.ok(items.length > 2);
+    assert.ok(items.indexOf('volume') >= 0);
+    page.emit('proxyFocus', 1, items.indexOf('volume'));
+    page.emit('proxyPress', 1, items.indexOf('save'));
+    page.emit('proxyPress', 2, 0);                  // a state not on top: ignored
+    assert.deepStrictEqual(actions.map((a) => a.element), ['save']);
+});
+
+const fccu = (seq, knob, push) => ({ frontSequenceNumberOperatingElement: seq, frontRotaryEncoderOperation: knob,
+    frontRotaryEncoderPushButton: push });
+
+test('without the controller gate, FrontCCU turns and pushes drive the highlight while the page has the HMI’s focus', () => {
+    const { page, actions } = run(fixture('focus.json'));
+    page.emit('frontCcu', fccu(1, 10, 'KEINE_BETAETIGUNG'));
+    page.emit('frontCcu', fccu(2, 11, 'DREHGEBER_KURZ_GEDRUECKT'));     // not shown yet: nothing
+    page.enter();
+    page.emit('frontCcu', fccu(3, 11, 'KEINE_BETAETIGUNG'));
+    page.emit('frontCcu', fccu(4, 13, 'KEINE_BETAETIGUNG'));          // two detents
+    page.emit('frontCcu', fccu(5, 13, 'DREHGEBER_KURZ_GEDRUECKT'));
+    page.emit('frontCcu', fccu(6, 0xffff, 'DREHGEBER_KURZ_GEDRUECKT')); // a new push, no counter reading
+    assert.deepStrictEqual(actions.map((a) => a.element), ['volume', 'volume']);
+    page.emit('focus', 1, false);                   // an HMI popup over the page
+    page.emit('frontCcu', fccu(7, 14, 'KEINE_BETAETIGUNG'));
+    page.emit('frontCcu', fccu(8, 14, 'DREHGEBER_KURZ_GEDRUECKT'));
+    assert.strictEqual(actions.length, 2);
+});
+
+test('once the HMI presses a proxy itself, FrontCCU stands down; with the gate only the gate counts', () => {
+    const a = run(fixture('focus.json'));
+    a.page.enter();
+    a.page.emit('proxyPress', 1, 0);
+    a.page.emit('frontCcu', fccu(1, 10, 'KEINE_BETAETIGUNG'));
+    a.page.emit('frontCcu', fccu(2, 10, 'DREHGEBER_KURZ_GEDRUECKT'));
+    assert.strictEqual(a.actions.length, 1);
+    const b = run(fixture('focus.json'), Object.assign({}, INFO, { controller: true }));
+    b.page.enter();
+    assert.strictEqual(b.client.last('grab'), true);
+    b.page.emit('frontCcu', fccu(1, 10, 'KEINE_BETAETIGUNG'));
+    b.page.emit('frontCcu', fccu(2, 10, 'DREHGEBER_KURZ_GEDRUECKT'));
+    assert.strictEqual(b.actions.length, 0);
+    b.page.back(1);
+    assert.strictEqual(b.client.last('grab'), false, 'the controller is let go while hidden');
+});
+
+test('the HMI’s display language picks the screen file’s language, a regional one falling back to its language', () => {
+    const { page, rt } = run(fixture('text-entry.json'));
+    page.emit('language', 'DEUTSCH');
+    assert.strictEqual(rt.language(), 'de');
+    page.emit('language', 'ENGLISCH__UK');
+    assert.strictEqual(rt.language(), 'en');
+    page.emit('language', 'DEUTSCH');
+    page.emit('language', 'KLINGONISCH');           // not in the file: its default language
+    assert.strictEqual(rt.language(), 'en');
+});
