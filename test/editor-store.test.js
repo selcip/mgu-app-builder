@@ -134,6 +134,12 @@ test('stopping trying returns to the screen the walk ended on; reports keep the 
     assert.deepStrictEqual(st().reports, []);
 });
 
+test('a canvas too small for the page at 100 % starts with it fitted', () => {
+    const store = S.createEditorStore();
+    store.getState().setMeasure({ w: 1000, h: 800 }, { w: 1820, h: 745 });
+    assert.ok(Math.abs(store.getState().view.zoom - (1000 - 64) / 1820) < 1e-9);
+});
+
 test('the canvas starts centred at 100 % once measured; zooming keeps the canvas middle still; fitting fits', () => {
     const store = S.createEditorStore();
     const st = () => store.getState();

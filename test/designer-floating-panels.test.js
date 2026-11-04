@@ -84,7 +84,7 @@ test('each panel floats and docks on its own; floating, it drags by its header, 
         await drag(page, { x: r.x + r.width / 2, y: r.y + 300 }, { x: r.x + r.width / 2 - 80, y: r.y + 300 });
         assert.strictEqual(Math.round((await boxOf(panel(page, 'right'))).width), 400);
         const l = await boxOf(panel(page, 'left').locator('[data-panel-resize]'));
-        await drag(page, { x: l.x + l.width / 2, y: l.y + 200 }, { x: l.x + l.width / 2 + 60, y: l.y + 200 });
+        await drag(page, { x: l.x + l.width / 2, y: l.y + l.height / 2 }, { x: l.x + l.width / 2 + 60, y: l.y + l.height / 2 });
         assert.strictEqual(Math.round((await boxOf(panel(page, 'left'))).width), 300);
         // collapse it to its header
         await panel(page, 'left').locator('[data-panel-collapse]').click();

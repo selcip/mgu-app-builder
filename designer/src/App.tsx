@@ -2,7 +2,8 @@
 // the inspector panel on the right. Every part reads the editor store and edits through it (store/editor.ts); App only places them.
 import { RestorePrompt, useAutosave } from './Autosave';
 import { ElementList, ScreenList } from './panels/screens/ScreensPanel';
-import { EditBarRow, Palette, Stage } from './Stage';
+import { Stage } from './Stage';
+import { useEditKeys } from './shell/keys.ts';
 import { Inspector } from './panels/inspector/Inspector';
 import { TryPanel } from './TryPanel';
 import { Panel, PanelArea, usePanelKeys } from './shell/Panel';
@@ -33,18 +34,15 @@ function defaultStore(): EditorStore {
 function Designer() {
     const saved = useAutosave();
     usePanelKeys();
+    useEditKeys();
     return (
         <div className="app flex h-screen flex-col overflow-hidden">
             <Toolbar autosaveProblem={saved.problem} />
             {saved.offer && <RestorePrompt onRestore={saved.restore} onDecline={saved.decline} />}
-            <EditBarRow />
             <PanelArea>
                 <Panel side="left" title="Screen file">
                     <ScreenList />
                     <ElementList />
-                    <div className="p-3">
-                        <Palette />
-                    </div>
                 </Panel>
                 <Stage />
                 <Panel side="right" title="Inspector" className="inspector">

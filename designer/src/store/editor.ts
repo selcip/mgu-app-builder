@@ -52,7 +52,7 @@ export interface EditorState {
     reports: Report[];
     /** While trying: the screen the runtime shows. */
     walking: string | null;
-    /** The canvas's zoom and where the HMI page sits; null until the canvas is first measured (then: centred, 100 %). */
+    /** The canvas's zoom and where the HMI page sits; null until the canvas is first measured (then: centred at 100 %, or fitted when that is too big). */
     view: View | null;
     /** The canvas's size and the HMI page's (unzoomed), as last measured; null until then. */
     measure: { canvas: Size; page: Size } | null;
@@ -210,7 +210,9 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
             clearReports() { set({ reports: [] }); },
             setMeasure(canvas, page) {
                 const s = get();
-                set({ measure: { canvas, page }, view: s.view || centred(canvas, page, 1) });
+                // first measured: 100 %, centred, when the page fits; else as large as fits
+                const fits = page.w <= canvas.w && page.h <= canvas.h;
+                set({ measure: { canvas, page }, view: s.view || (fits ? centred(canvas, page, 1) : fitted(canvas, page)) });
             },
             setView(view) { set({ view }); },
             zoomTo(zoom, at) {

@@ -1,13 +1,10 @@
-// The stage: the edit bar, and the selected screen in its HMI page on the zoomable canvas, drawn by the runtime and
-// the kit, with the layout overlay over it (or, while trying, the iDrive controller's keys and taps going to the
-// runtime). Also the widget palette, which the left panel shows.
+// The stage: the selected screen in its HMI page on the zoomable canvas, drawn by the runtime and the kit, with the
+// layout overlay over it (or, while trying, the iDrive controller's keys and taps going to the runtime).
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { apply, languagesOf, textIn, titleOf, type Screen } from './model/index.ts';
-import { WIDGETS } from './catalog.ts';
 import { startPreview, type Preview } from './preview';
-import { Canvas, WIDGET_DRAG_TYPE } from './Canvas';
+import { Canvas } from './Canvas';
 import { FocusOverlay } from './FocusOverlay';
-import { EditBar } from './EditBar';
 import { controllerKey } from './TryPanel';
 import { Viewport } from './shell/Viewport';
 import { DESIGN, docOf, fileOf, languageOf, screenOf } from './store/editor.ts';
@@ -91,29 +88,5 @@ export function Stage() {
             </div>
             </Viewport>
         </section>
-    );
-}
-
-/** The edit bar, across the window under the toolbar; not while trying (no canvas editing, the keys are the controller's). */
-export function EditBarRow() {
-    const trying = useEditor((s) => s.trying);
-    if (trying) return null;
-    return <div className="flex-none border-b bg-card px-3 pt-2" data-edit-bar-row=""><EditBar /></div>;
-}
-
-/** The widgets to add: click to add one to the screen, or drag it onto the screen. */
-export function Palette() {
-    const { addElement } = useActions();
-    return (
-        <div className="palette" aria-label="Widgets">
-            <h2>Add a widget</h2>
-            {WIDGETS.map((wd) => (
-                <button key={wd.type} data-widget={wd.type} onClick={() => addElement(wd.type)} draggable
-                    title="Click to add, or drag onto the screen"
-                    onDragStart={(e) => { e.dataTransfer.setData(WIDGET_DRAG_TYPE, wd.type); e.dataTransfer.effectAllowed = 'copy'; }}>
-                    {wd.label}
-                </button>
-            ))}
-        </div>
     );
 }

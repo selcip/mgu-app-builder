@@ -1,22 +1,11 @@
 * { box-sizing: border-box; }
 body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: #1b1d22; color: #e8e8ea; }
-h1 { font-size: 16px; margin: 0; }
-.upload { padding: 6px 12px; border: 1px solid #555; border-radius: 6px; cursor: pointer; }
-.upload input { display: none; }
 .problem { color: #ff6b6b; }
-.hint { color: #999; }
 /* mock HMI page: the head unit's title bar above the app's 1796 x 632 box */
 .hmi-page { background: #000; border: 12px solid #0b0b0d; border-radius: 10px; box-sizing: content-box; }
 .hmi-title { height: 88px; display: flex; align-items: center; padding: 0 48px; font-size: 34px; color: #fff; border-bottom: 1px solid #2c2c30; }
 .hmi-page canvas { display: block; }
 .log { color: #ffb86b; font-family: monospace; }
-h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #999; margin: 16px 0 6px; }
-.row-buttons button, .palette button {
-    padding: 5px 10px; border: 1px solid #555; border-radius: 6px; background: #2a2d34; color: inherit; cursor: pointer; }
-button:disabled { opacity: .4; cursor: default; }
-.row-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
-.palette { display: flex; flex-wrap: wrap; gap: 6px; max-width: 1820px; }
-.palette h2 { width: 100%; }
 /* the canvas: an overlay on the preview for laying elements out */
 .canvas-wrap { position: relative; }
 .canvas-layer { position: absolute; inset: 0; cursor: default; touch-action: none; user-select: none; }
@@ -38,11 +27,6 @@ button:disabled { opacity: .4; cursor: default; }
 .canvas-layer .snap.v { top: 0; bottom: 0; width: 1px; }
 .canvas-layer .snap.h { left: 0; right: 0; height: 1px; }
 .canvas-layer .marquee { position: absolute; border: 1px solid #3d8bff; background: rgba(61, 139, 255, .12); pointer-events: none; }
-.edit-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px; max-width: 1820px; }
-.edit-bar .group { display: flex; gap: 4px; align-items: center; }
-.edit-bar button { padding: 4px 9px; border: 1px solid #555; border-radius: 6px; background: #2a2d34; color: inherit; cursor: pointer; }
-.edit-bar .box input { width: 70px; padding: 3px 5px; background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
-.edit-bar select { background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
 /* focus order and trying the preview */
 .canvas-wrap { position: relative; }
 .focus-overlay { position: absolute; inset: 0; pointer-events: none; }
