@@ -48,7 +48,7 @@ export function PropertyPanel() {
     const opts = element.opts || {};
     const valueOf = (o: WidgetOption) => (o.key in opts ? opts[o.key] : o.default);
     return (
-        <Section title={wd ? wd.label : element.gpu} data-properties={element.gpu}
+        <Section key={element.name} title={wd ? wd.label : element.gpu} data-properties={element.gpu}
             actions={<Button variant="ghost" size="icon-xs" title="Delete element" data-delete-element=""
                 onClick={() => edit({ type: 'deleteElement', ...at })}><Trash2 /></Button>}>
             <Row label="Name"><CommitInput value={element.name} onCommit={(name) => edit({ type: 'renameElement', ...at, name })} /></Row>

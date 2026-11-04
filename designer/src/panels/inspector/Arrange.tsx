@@ -56,7 +56,7 @@ export function Arrange() {
                 ))}
             </div>
             {one && (
-                <div className="grid grid-cols-2 gap-1.5" data-box={one.name}>
+                <div className="grid grid-cols-2 gap-1.5" data-box={one.name} key={one.name}>{/* afresh per element: no flash of the last one's box */}
                     {(['x', 'y', 'w', 'h'] as const).map((k) => (
                         <label key={k} className="flex items-center gap-1.5 text-xs">
                             <span className="w-3 text-muted-foreground">{k.toUpperCase()}</span>
