@@ -18,7 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { addGuide, clearGuides, copy, cut, deleteSelection, duplicate, paste, selectAll } from './commands.ts';
+import { STACKING, addGuide, clearGuides, copy, cut, deleteSelection, duplicate, paste, selectAll, stack, stackableOf } from './commands.ts';
 import { canRedoOf, canUndoOf, docOf } from '../store/editor.ts';
 import { useActions, useEditor, useEditorStore } from '../store/react.tsx';
 
@@ -76,6 +76,7 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
     const any = useEditor((s) => s.selection.length > 0);
     const clip = useEditor((s) => s.clipboard !== null);
     const trying = useEditor((s) => s.trying);
+    const stackable = useEditor(stackableOf);
     const { open, undo, redo } = useActions();
     function download() {
         const bytes = exportZip(docOf(store.getState()));
@@ -110,6 +111,15 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
                     <DropdownMenuItem disabled={!edits || !any} data-menu-duplicate="" onClick={() => duplicate(store)}>Duplicate <DropdownMenuShortcut>{MOD}D</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !any} variant="destructive" data-menu-delete="" onClick={() => deleteSelection(store)}>Delete <DropdownMenuShortcut>Del</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits} onClick={() => selectAll(store)}>Select all <DropdownMenuShortcut>{MOD}A</DropdownMenuShortcut></DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    <DropdownMenuLabel>Arrange</DropdownMenuLabel>
+                    {STACKING.map((c, i) => (
+                        <DropdownMenuItem key={c.place} disabled={!edits || stackable[i] !== '1'} data-menu-stack={c.hook} onClick={() => stack(store, c.place)}>
+                            {c.label} <DropdownMenuShortcut>{MOD}{c.keys}</DropdownMenuShortcut>
+                        </DropdownMenuItem>
+                    ))}
                 </DropdownMenuGroup>
             </DropdownMenuContent>
         </DropdownMenu>

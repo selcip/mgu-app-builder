@@ -95,3 +95,29 @@ test('guides go across the middle of the screen, and clear', () => {
     C.clearGuides(st);
     assert.deepStrictEqual(st.getState().settings.guides, { xs: [], ys: [] });
 });
+
+test('stacking: forward, backward, front and back on the selection; nothing at an end, and no undo step', () => {
+    const st = store();
+    assert.ok(st.getState().edit({ type: 'addElement', screen: 'main', widget: 'button', name: 'c', x: 100, y: 300 }));
+    assert.strictEqual(C.stackableOf(st.getState()), '0000', 'nothing selected');
+    st.getState().select(['a']);
+    // STACKING lists front, forward, backward, back
+    assert.deepStrictEqual(C.STACKING.map((c) => c.place), ['front', 'forward', 'backward', 'back']);
+    assert.strictEqual(C.stackableOf(st.getState()), '1100');
+    const h = st.getState().history;
+    assert.strictEqual(C.stack(st, 'back'), false);
+    assert.strictEqual(st.getState().history, h);
+    assert.ok(C.stack(st, 'forward'));
+    assert.deepStrictEqual(names(st), ['b', 'a', 'c']);
+    assert.ok(C.stack(st, 'front'));
+    assert.deepStrictEqual(names(st), ['b', 'c', 'a']);
+    assert.strictEqual(C.stackableOf(st.getState()), '0011');
+    st.getState().select(['a', 'b']);
+    assert.ok(C.stack(st, 'back'));
+    assert.deepStrictEqual(names(st), ['b', 'a', 'c']);
+    assert.strictEqual(C.stack(st, 5), false, 'a drop place past the end');
+    assert.ok(C.stack(st, 1));
+    assert.deepStrictEqual(names(st), ['c', 'b', 'a']);
+    st.getState().undo();
+    assert.deepStrictEqual(names(st), ['b', 'a', 'c']);
+});

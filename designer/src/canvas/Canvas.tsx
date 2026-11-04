@@ -9,7 +9,9 @@ import { boundsOf, newElementName, type Box, type Op } from '../model/index.ts';
 import { widget } from '../catalog.ts';
 import { RING_MARGIN, snapLines, snapMove, snapResize, type Handle, type Lines } from './snap.ts';
 import { DESIGN, screenOf } from '../store/editor.ts';
-import { useActions, useEditor } from '../store/react.tsx';
+import { useActions, useEditor, useEditorStore } from '../store/react.tsx';
+import { STACKING, copy, cut, deleteSelection, duplicate, paste, stack, stackableOf } from '../shell/commands.ts';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuTrigger } from '@/components/ui/context-menu';
 
 export const WIDGET_DRAG_TYPE = 'application/x-mgu-widget';
 const HANDLES: Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -51,6 +53,10 @@ export function Canvas({ children }: { children: ReactNode }) {
 
     function startMove(e: RPointerEvent, name: string) {
         e.stopPropagation();
+        if (e.button === 2) {                   // right-click: select it for the menu (keeping a selection it is in)
+            if (!selection.includes(name)) onSelect([name]);
+            return;
+        }
         if (e.shiftKey || e.metaKey || e.ctrlKey) {
             onSelect(selection.includes(name) ? selection.filter((n) => n !== name) : selection.concat([name]));
             return;
@@ -177,7 +183,8 @@ export function Canvas({ children }: { children: ReactNode }) {
     const shown = drag && (drag.kind === 'move' || drag.kind === 'resize') ? drag.shown : null;
 
     return (
-        <div className="canvas-wrap">
+        <ContextMenu>
+        <ContextMenuTrigger render={<div className="canvas-wrap" />}>
             {children}
             <div ref={layer} className="canvas-layer" data-canvas="" onPointerDown={startMarquee} onPointerMove={pointerMove}
                 onPointerUp={pointerUp} onPointerCancel={pointerUp}
@@ -215,6 +222,33 @@ export function Canvas({ children }: { children: ReactNode }) {
                         w: Math.abs(drag.at.x - drag.start.x), h: Math.abs(drag.at.y - drag.start.y) })} />
                 )}
             </div>
-        </div>
+        </ContextMenuTrigger>
+        <CanvasMenu />
+        </ContextMenu>
+    );
+}
+
+const MOD = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+';
+
+/** The canvas's right-click menu: the editing and stacking commands on the selection. */
+function CanvasMenu() {
+    const store = useEditorStore();
+    const any = useEditor((s) => s.selection.length > 0);
+    const clip = useEditor((s) => s.clipboard !== null);
+    const stackable = useEditor(stackableOf);
+    return (
+        <ContextMenuContent className="w-56" data-canvas-menu="">
+            <ContextMenuItem disabled={!any} onClick={() => copy(store)}>Copy <ContextMenuShortcut>{MOD}C</ContextMenuShortcut></ContextMenuItem>
+            <ContextMenuItem disabled={!any} onClick={() => cut(store)}>Cut <ContextMenuShortcut>{MOD}X</ContextMenuShortcut></ContextMenuItem>
+            <ContextMenuItem disabled={!clip} onClick={() => paste(store)}>Paste <ContextMenuShortcut>{MOD}V</ContextMenuShortcut></ContextMenuItem>
+            <ContextMenuItem disabled={!any} onClick={() => duplicate(store)}>Duplicate <ContextMenuShortcut>{MOD}D</ContextMenuShortcut></ContextMenuItem>
+            <ContextMenuItem disabled={!any} variant="destructive" onClick={() => deleteSelection(store)}>Delete <ContextMenuShortcut>Del</ContextMenuShortcut></ContextMenuItem>
+            <ContextMenuSeparator />
+            {STACKING.map((c, i) => (
+                <ContextMenuItem key={c.place} disabled={stackable[i] !== '1'} data-canvas-stack={c.hook} onClick={() => stack(store, c.place)}>
+                    {c.label} <ContextMenuShortcut>{MOD}{c.keys}</ContextMenuShortcut>
+                </ContextMenuItem>
+            ))}
+        </ContextMenuContent>
     );
 }

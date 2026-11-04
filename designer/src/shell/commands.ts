@@ -1,15 +1,20 @@
 // The editing commands the menus, the toolbar and the keyboard share: copy, cut, paste, duplicate, delete, select
-// all, nudge and resize by the arrow keys, and guides. Each works on the store's selection on the selected screen
-// and edits through the store (so a refusal shows as its problem). Plain TypeScript, no React or DOM: Node tests it.
-import { copyElements, pastedNames, type Box } from '../model/index.ts';
-import { DESIGN, screenOf, type EditorStore } from '../store/editor.ts';
+// all, nudge and resize by the arrow keys, stacking order (bring forward, send backward, to front, to back), and
+// guides. Each works on the store's selection on the selected screen and edits through the store (so a refusal
+// shows as its problem). Plain TypeScript, no React or DOM: Node tests it.
+import { canRestack, copyElements, pastedNames, type Box, type Place } from '../model/index.ts';
+import { DESIGN, screenOf, type EditorState, type EditorStore } from '../store/editor.ts';
 
 /** How far each paste on the same screen moves from the one before. */
 const PASTE_STEP = 16;
 
 /** The selection, without names no longer on the selected screen. */
 export function selected(store: EditorStore): string[] {
-    const s = store.getState(), screen = screenOf(s);
+    return selectedIn(store.getState());
+}
+
+export function selectedIn(s: EditorState): string[] {
+    const screen = screenOf(s);
     return s.selection.filter((n) => screen.components.some((c) => c.name === n));
 }
 
@@ -74,6 +79,32 @@ export function nudge(store: EditorStore, key: 'ArrowLeft' | 'ArrowRight' | 'Arr
         if (sel.includes(c.name)) boxes[c.name] = { w: Math.max(0, c.w + dx), h: Math.max(0, c.h + dy) };
     }
     return s.edit({ type: 'setBoxes', screen: s.selected, boxes }) !== null;
+}
+
+/** The stacking commands as the menus list them, with their keys (after Ctrl/Cmd) and test hooks. */
+export const STACKING = [
+    { place: 'front', label: 'Bring to front', keys: '⇧]', hook: 'front' },
+    { place: 'forward', label: 'Bring forward', keys: ']', hook: 'forward' },
+    { place: 'backward', label: 'Send backward', keys: '[', hook: 'backward' },
+    { place: 'back', label: 'Send to back', keys: '⇧[', hook: 'back' },
+] as const;
+
+/** Whether moving the selection to `place` in the stacking order would change it (for disabling a command). */
+export function canStack(s: EditorState, place: Place): boolean {
+    return canRestack(screenOf(s), selectedIn(s), place);
+}
+
+/** Which of the STACKING commands would change anything, as a string of 1s and 0s (a stable store selector). */
+export const stackableOf = (s: EditorState): string => STACKING.map((c) => (canStack(s, c.place) ? '1' : '0')).join('');
+
+/**
+ * Moves the selection to `place` in the stacking order: 'forward', 'backward', 'front', 'back' or a drop index among
+ * the other elements. Does nothing (and makes no undo step) when that changes nothing.
+ */
+export function stack(store: EditorStore, place: Place): boolean {
+    const s = store.getState(), sel = selected(store);
+    if (!canStack(s, place)) return false;
+    return s.edit({ type: 'restackElements', screen: s.selected, elements: sel, place }) !== null;
 }
 
 /** A guide across the middle of the screen: vertical ('xs') or horizontal ('ys'). */

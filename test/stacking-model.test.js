@@ -68,6 +68,8 @@ test('moving past an end changes nothing, and canRestack says so', () => {
     assert.strictEqual(M.canRestack(s, ['a'], 'forward'), true);
     assert.strictEqual(M.canRestack(s, ['a', 'c'], 'back'), true);
     assert.strictEqual(M.canRestack(s, [], 'front'), false);
+    assert.strictEqual(M.canRestack(s, ['a'], 9), false);
+    assert.strictEqual(M.canRestack(s, ['nope'], 'front'), false);
 });
 
 test('restacking leaves boxes, options and the focus order alone, and refuses unknown elements', () => {

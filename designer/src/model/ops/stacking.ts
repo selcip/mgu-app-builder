@@ -35,10 +35,17 @@ export function restacked(screen: Screen, names: readonly string[], place: Place
     return rest.slice(0, at).concat(moved, rest.slice(at));
 }
 
-/** Whether moving `names` to `place` would change the stacking order (Bring forward on the top element would not). */
+/**
+ * Whether moving `names` to `place` would change the stacking order (Bring forward on the top element would not, nor
+ * would a place or name that doesn't exist).
+ */
 export function canRestack(screen: Screen, names: readonly string[], place: Place): boolean {
     if (!names.length) return false;
-    const next = restacked(screen, names, place);
+    let next: Element[];
+    try { next = restacked(screen, names, place); } catch (e) {
+        if (e instanceof EditError) return false;
+        throw e;
+    }
     return next.some((e, i) => e !== screen.components[i]);
 }
 
