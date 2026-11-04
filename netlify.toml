@@ -1,0 +1,7 @@
+# Netlify builds the Designer (a static site with relative paths) and publishes designer/dist on every push to main.
+[build]
+  command = "npm run build-designer"
+  publish = "designer/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
