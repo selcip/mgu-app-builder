@@ -151,6 +151,25 @@ test('the main menu duplicates, copies and pastes, deletes, and downloads the de
     }
 });
 
+test('"From design to car" opens from Help and from beside Download, and Escape closes it', { skip }, async () => {
+    const { context, page, errors } = await open();
+    try {
+        for (const item of ['guide', 'to-car']) {
+            await page.locator('[data-main-menu]').click();
+            await page.locator(`[data-menu-${item}]`).click();
+            const guide = page.locator('[data-guide]');
+            await guide.waitFor();
+            assert.match(await guide.textContent(), /From design to car/);
+            assert.match(await guide.textContent(), /node tools\/build\.js/);
+            await page.keyboard.press('Escape');
+            await guide.waitFor({ state: 'detached' });
+        }
+        assert.deepStrictEqual(errors, []);
+    } finally {
+        await context.close();
+    }
+});
+
 test('Play tries the app: the panels step aside (the page stays put) for a report card; Stop brings them back as they were', { skip }, async () => {
     const { context, page, errors } = await open();
     try {

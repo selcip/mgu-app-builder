@@ -9,6 +9,7 @@ import { WIDGET_DRAG_TYPE } from '../canvas/Canvas';
 import { AutosaveProblem } from './Autosave';
 import { ShownLanguage } from '../panels/inspector/Languages';
 import { PlayButton } from './Try';
+import { Guide } from './Guide';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
     DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel,
@@ -77,6 +78,7 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
     const clip = useEditor((s) => s.clipboard !== null);
     const trying = useEditor((s) => s.trying);
     const stackable = useEditor(stackableOf);
+    const [guide, setGuide] = useState(false);
     const { open, undo, redo } = useActions();
     function download() {
         const bytes = exportZip(docOf(store.getState()));
@@ -89,6 +91,7 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
     }
     const edits = !trying;
     return (
+        <>
         <DropdownMenu>
             <DropdownMenuTrigger className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'gap-1 font-semibold')} data-main-menu="">
                 mgu Designer <ChevronDown className="size-3.5 opacity-60" />
@@ -99,6 +102,7 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
                     <DropdownMenuItem data-menu-new="" onClick={() => open(newDocument())}>New design</DropdownMenuItem>
                     <DropdownMenuItem data-menu-open="" onClick={onOpen}>Open… <DropdownMenuShortcut>.zip</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem data-menu-download="" onClick={download}>Download <DropdownMenuShortcut>.zip</DropdownMenuShortcut></DropdownMenuItem>
+                    <DropdownMenuItem data-menu-to-car="" onClick={() => setGuide(true)}>From design to car…</DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
@@ -121,8 +125,15 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
                         </DropdownMenuItem>
                     ))}
                 </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    <DropdownMenuLabel>Help</DropdownMenuLabel>
+                    <DropdownMenuItem data-menu-guide="" onClick={() => setGuide(true)}>From design to car</DropdownMenuItem>
+                </DropdownMenuGroup>
             </DropdownMenuContent>
         </DropdownMenu>
+        <Guide open={guide} onOpenChange={setGuide} />
+        </>
     );
 }
 

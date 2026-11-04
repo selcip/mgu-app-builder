@@ -6,7 +6,11 @@
 
 **Blocked by:** none
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Reachable from Help and from Download (each with a `data-*` hook, covered in Playwright)
-- [ ] Wording follows `GLOSSARY.md` (screen file, not screens.json, except as the file's name)
+- [x] Reachable from Help and from Download (each with a `data-*` hook, covered in Playwright)
+- [x] Wording follows `GLOSSARY.md` (screen file, not screens.json, except as the file's name)
+
+## Comments
+
+2026-11-04: `designer/src/shell/Guide.tsx` is a shadcn dialog (`components/ui/dialog.tsx`, added with `npx shadcn add dialog`; hook `data-guide`). It opens from the main menu, both under Help (`data-menu-guide`) and right under Download (`data-menu-to-car`). It covers download → unzip into the starter's `app/` → `rt.on('action')`, `rt.on('screen')`, `rt.set` → id, title and tile → `node tools/build.js`, and points to `starter/README.md`. Checked by eye in the dev server. A Playwright test in `test/designer-toolbar.test.js` skipped here (no Playwright). AGENTS.md mentions the guide and the canvas's right-click menu.

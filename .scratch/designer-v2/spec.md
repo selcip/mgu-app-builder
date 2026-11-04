@@ -1,6 +1,6 @@
 # Spec: Designer v2: readable dropdowns, stacking order, design to car
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 
@@ -45,3 +45,7 @@ Three things get in the app author's way in the Designer:
 
 - Importing idrive7-apps (`.scratch/import-idrive7/`), Export app (`.scratch/export-app/`).
 - Groups or nested elements.
+
+## Comments
+
+2026-11-04: All five tickets are resolved. Not verified: the Playwright browser tests (Playwright isn't installed in this checkout, so they skipped) and a real mouse drag in the element list (checked with drag events fired from script).
