@@ -1,6 +1,6 @@
 # Spec: Designer layout like Figma (shadcn, Storybook, floating panels)
 
-Status: ready-for-agent
+Status: resolved
 
 ## Problem Statement
 

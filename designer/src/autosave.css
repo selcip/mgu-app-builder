@@ -1,4 +1,0 @@
-.restore-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; z-index: 10; }
-.restore { background: #1e1f24; color: inherit; border: 1px solid #444; border-radius: 8px; padding: 20px 24px; max-width: 460px; }
-.restore h2 { margin-top: 0; }
-.autosave-problem { margin-left: 8px; }

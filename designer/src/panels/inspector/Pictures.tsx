@@ -1,9 +1,9 @@
 // Pictures: the app author's PNGs, kept under images/ beside the screen file. A picture option picks one of them or
 // takes an upload; the images panel lists them (used or not) and the pictures elements name that the design lacks.
 import { useEffect, useState, type ChangeEvent } from 'react';
-import { imagePathFor, missingImages, usedImages } from './model/index.ts';
-import { docOf } from './store/editor.ts';
-import { useActions, useEditor } from './store/react.tsx';
+import { imagePathFor, missingImages, usedImages } from '../../model/index.ts';
+import { docOf } from '../../store/editor.ts';
+import { useActions, useEditor } from '../../store/react.tsx';
 import { ImagePlus, Upload, X } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Section, selectClass } from '@/components/designer/form';
@@ -54,7 +54,7 @@ export function PictureInput({ value, images, onChange, onUpload }: PictureInput
                     <input type="file" accept="image/png,.png" className="hidden" onChange={(e) => readUpload(e, onUpload)} />
                 </label>
             </span>
-            {missing && <span className="problem text-xs text-destructive">{value} is not in the design</span>}
+            {missing && <span className="text-xs text-destructive">{value} is not in the design</span>}
         </span>
     );
 }

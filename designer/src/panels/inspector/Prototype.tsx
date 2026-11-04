@@ -6,7 +6,7 @@
 // Every change is a document-model operation.
 import { ArrowDown, ArrowUp, Plus, RotateCcw, TriangleAlert, X } from 'lucide-react';
 import { actionOf, focusOrderOf, linkOf, linksOf, type Link } from '../../model/index.ts';
-import { CommitInput } from '../../PropertyPanel';
+import { CommitInput } from '@/components/designer/CommitInput';
 import { Button } from '@/components/ui/button';
 import { Hint, Row, Section, checkboxClass, listRowClass, selectClass } from '@/components/designer/form';
 import { cn } from '@/lib/utils';

@@ -4,11 +4,11 @@
 import { useState } from 'react';
 import {
     hasText, languagesOf, missingTranslations, textIn, textsOf, type ScreenFile, type TextPlace,
-} from './model/index.ts';
-import { fileOf, languageOf } from './store/editor.ts';
-import { useActions, useEditor } from './store/react.tsx';
-import { undrawable } from './preview';
-import { CommitInput } from './PropertyPanel';
+} from '../../model/index.ts';
+import { fileOf, languageOf } from '../../store/editor.ts';
+import { useActions, useEditor } from '../../store/react.tsx';
+import { undrawable } from '../../preview';
+import { CommitInput } from '@/components/designer/CommitInput';
 import { Languages, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -1,14 +1,14 @@
 // The stage: the selected screen in its HMI page on the zoomable canvas, drawn by the runtime and the kit, with the
 // layout overlay over it (or, while trying, the iDrive controller's keys and taps going to the runtime).
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
-import { apply, languagesOf, textIn, titleOf, type Screen } from './model/index.ts';
-import { startPreview, type Preview } from './preview';
+import { apply, languagesOf, textIn, titleOf, type Screen } from '../model/index.ts';
+import { startPreview, type Preview } from '../preview';
 import { Canvas } from './Canvas';
 import { FocusOverlay } from './FocusOverlay';
-import { controllerKey } from './TryPanel';
-import { Viewport } from './shell/Viewport';
-import { DESIGN, docOf, fileOf, languageOf, screenOf } from './store/editor.ts';
-import { useActions, useEditor } from './store/react.tsx';
+import { controllerKey } from '../shell/Try';
+import { Viewport } from '../shell/Viewport';
+import { DESIGN, docOf, fileOf, languageOf, screenOf } from '../store/editor.ts';
+import { useActions, useEditor } from '../store/react.tsx';
 
 const { w: W, h: H } = DESIGN;
 
@@ -70,7 +70,7 @@ export function Stage() {
 
     return (
         <section className="flex min-h-0 min-w-0 flex-1 flex-col" data-stage="">
-            <Viewport overlay={log.length > 0 && <ul className="log absolute bottom-2 left-3 z-20 m-0">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}>
+            <Viewport overlay={log.length > 0 && <ul className="absolute bottom-2 left-3 z-20 m-0 list-none p-0 font-mono text-xs text-amber-300">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}>
             <div className="hmi-page" data-hmi-page="" ref={stage} style={{ width: W }} tabIndex={0} onKeyDown={onKey} data-trying={trying}>
                 <div className="hmi-title" data-hmi-title="">{shownTitle(shownScreen)}</div>
                 {!trying ? (

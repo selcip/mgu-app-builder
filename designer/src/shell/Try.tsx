@@ -1,8 +1,8 @@
 // Trying the app in the preview: arrow keys and Enter stand in for the iDrive controller, clicks for taps, Esc for
 // BACK. The preview follows navigation links and BACK through the screens; what the runtime reports (actions, screen
 // changes, leaving the app) is listed as the app's code would receive it.
-import type { Report } from './store/editor.ts';
-import { useActions, useEditor } from './store/react.tsx';
+import type { Report } from '../store/editor.ts';
+import { useActions, useEditor } from '../store/react.tsx';
 import { useEffect, useRef } from 'react';
 import { Play, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';

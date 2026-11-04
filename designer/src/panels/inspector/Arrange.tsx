@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import type { Box, Edge } from '../../model/index.ts';
 import { distribute, type Axis } from '../../canvas/arrange.ts';
-import { CommitInput } from '../../PropertyPanel';
+import { CommitInput } from '@/components/designer/CommitInput';
 import { Button } from '@/components/ui/button';
 import { Section } from '@/components/designer/form';
 import { screenOf } from '../../store/editor.ts';

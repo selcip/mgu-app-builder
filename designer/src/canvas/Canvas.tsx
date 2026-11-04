@@ -5,11 +5,11 @@
 // 8 px focus-ring margin, and the screen its own along the edges. Every change is one document-model operation:
 // during a drag the preview shows the operation applied, and releasing the mouse commits it.
 import { useEffect, useRef, useState, type ReactNode, type PointerEvent as RPointerEvent, type DragEvent } from 'react';
-import { boundsOf, newElementName, type Box, type Op } from './model/index.ts';
-import { widget } from './catalog.ts';
-import { RING_MARGIN, snapLines, snapMove, snapResize, type Handle, type Lines } from './canvas/snap.ts';
-import { DESIGN, screenOf } from './store/editor.ts';
-import { useActions, useEditor } from './store/react.tsx';
+import { boundsOf, newElementName, type Box, type Op } from '../model/index.ts';
+import { widget } from '../catalog.ts';
+import { RING_MARGIN, snapLines, snapMove, snapResize, type Handle, type Lines } from './snap.ts';
+import { DESIGN, screenOf } from '../store/editor.ts';
+import { useActions, useEditor } from '../store/react.tsx';
 
 export const WIDGET_DRAG_TYPE = 'application/x-mgu-widget';
 const HANDLES: Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];

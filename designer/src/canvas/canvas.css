@@ -1,11 +1,10 @@
-* { box-sizing: border-box; }
-body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: #1b1d22; color: #e8e8ea; }
-.problem { color: #ff6b6b; }
+/* The canvas: the mock HMI page around the screen, and the overlay for laying elements out over the preview (handles,
+   guides, snap lines, focus-ring margins, the marquee, the focus numbers). Kept as CSS: pixel-exact and drawn per
+   element, it reads better here than as utility classes. Everything else in the Designer is Tailwind. */
 /* mock HMI page: the head unit's title bar above the app's 1796 x 632 box */
 .hmi-page { background: #000; border: 12px solid #0b0b0d; border-radius: 10px; box-sizing: content-box; }
 .hmi-title { height: 88px; display: flex; align-items: center; padding: 0 48px; font-size: 34px; color: #fff; border-bottom: 1px solid #2c2c30; }
 .hmi-page canvas { display: block; }
-.log { color: #ffb86b; font-family: monospace; }
 /* the canvas: an overlay on the preview for laying elements out */
 .canvas-wrap { position: relative; }
 .canvas-layer { position: absolute; inset: 0; cursor: default; touch-action: none; user-select: none; }

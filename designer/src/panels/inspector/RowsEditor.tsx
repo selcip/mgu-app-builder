@@ -3,8 +3,8 @@
 // screen file holds as a list of objects (a Store file) are shown as they are, not edited here.
 import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ROW_FIELDS, rowsOf, type Element } from './model/index.ts';
-import { CommitInput } from './PropertyPanel';
+import { ROW_FIELDS, rowsOf, type Element } from '../../model/index.ts';
+import { CommitInput } from '@/components/designer/CommitInput';
 
 /** A row operation without its screen and element (the panel adds them). */
 export type RowEdit =

@@ -5,10 +5,10 @@ import { useRef, useState, type ChangeEvent, type ReactNode, type Ref } from 're
 import { ChevronDown, Maximize, Minus, Plus, Redo2, Search, Undo2 } from 'lucide-react';
 import { exportZip, importZip, newDocument } from '../model/index.ts';
 import { WIDGETS } from '../catalog.ts';
-import { WIDGET_DRAG_TYPE } from '../Canvas';
-import { AutosaveProblem } from '../Autosave';
-import { ShownLanguage } from '../Languages';
-import { PlayButton } from '../TryPanel';
+import { WIDGET_DRAG_TYPE } from '../canvas/Canvas';
+import { AutosaveProblem } from './Autosave';
+import { ShownLanguage } from '../panels/inspector/Languages';
+import { PlayButton } from './Try';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
     DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel,
@@ -41,7 +41,7 @@ export function Toolbar({ autosaveProblem, children }: { autosaveProblem: string
             <Button variant="ghost" size="icon-sm" data-undo="" title={`Undo (${MOD}Z)`} disabled={!canUndo || trying} onClick={undo}><Undo2 /></Button>
             <Button variant="ghost" size="icon-sm" data-redo="" title={`Redo (${MOD}Shift+Z)`} disabled={!canRedo || trying} onClick={redo}><Redo2 /></Button>
             <span className="min-w-0 flex-1 truncate px-2 text-xs">
-                {problem && <span className="problem text-destructive" role="alert">{problem}</span>}
+                {problem && <span className="text-destructive" role="alert">{problem}</span>}
                 <AutosaveProblem problem={autosaveProblem} />
             </span>
             {children}

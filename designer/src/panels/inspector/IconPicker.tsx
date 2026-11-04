@@ -1,7 +1,7 @@
 // The icon picker: the kit's vector icons (kit_vicons.js), each drawn by the kit itself, to set an element's icon.
 import { useEffect, useRef, useState } from 'react';
 import mgu from 'virtual:mgu-runtime';
-import { ICONS } from './catalog.ts';
+import { ICONS } from '../../catalog.ts';
 
 const SIZE = 28;
 

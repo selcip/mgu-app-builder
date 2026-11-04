@@ -7,7 +7,7 @@ import { empty } from '../src/fixtures/screen-files.ts';
 import { createEditorStore, type EditorState, type EditorStore } from '../src/store/editor.ts';
 import { EditorProvider } from '../src/store/react.tsx';
 import '../src/index.css';
-import '../src/styles.css';
+import '../src/canvas/canvas.css';
 
 document.documentElement.classList.add('dark');
 

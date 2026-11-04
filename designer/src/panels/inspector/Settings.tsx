@@ -3,9 +3,9 @@
 import { Copy, Home, Trash2 } from 'lucide-react';
 import { firstScreenOf, themeOf } from '../../model/index.ts';
 import { THEMES } from '../../catalog.ts';
-import { CommitInput } from '../../PropertyPanel';
-import { LanguageSwitcher, TextInput, TextIssues } from '../../Languages';
-import { ImagesPanel } from '../../Pictures';
+import { CommitInput } from '@/components/designer/CommitInput';
+import { LanguageSwitcher, TextInput, TextIssues } from './Languages';
+import { ImagesPanel } from './Pictures';
 import { Button } from '@/components/ui/button';
 import { Row, Section, selectClass } from '@/components/designer/form';
 import { fileOf, screenOf } from '../../store/editor.ts';
