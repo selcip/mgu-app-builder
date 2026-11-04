@@ -1,0 +1,1365 @@
+{
+ "schema": 1,
+ "first": "tach",
+ "design": {
+  "w": 1796,
+  "h": 632
+ },
+ "screens": [
+  {
+   "name": "tach",
+   "kind": "gpu",
+   "title": "Redline",
+   "theme": "m_tricolour",
+   "bg": "theme",
+   "nav": {
+    "toLog": "log",
+    "toSettings": "settings"
+   },
+   "components": [
+    {
+     "name": "frameTop1",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 27,
+     "y": 112,
+     "w": 343,
+     "h": 0,
+     "opts": {
+      "color": "dim",
+      "width": 2
+     }
+    },
+    {
+     "name": "frameTop2",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 370,
+     "y": 112,
+     "w": 45,
+     "h": 36,
+     "opts": {
+      "color": "dim",
+      "width": 2
+     }
+    },
+    {
+     "name": "frameTop3",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 415,
+     "y": 148,
+     "w": 965,
+     "h": 0,
+     "opts": {
+      "color": "accent",
+      "width": 3
+     }
+    },
+    {
+     "name": "frameTop4",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 1381,
+     "y": 148,
+     "w": 45,
+     "h": -36,
+     "opts": {
+      "color": "dim",
+      "width": 2
+     }
+    },
+    {
+     "name": "frameTop5",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 1426,
+     "y": 112,
+     "w": 343,
+     "h": 0,
+     "opts": {
+      "color": "dim",
+      "width": 2
+     }
+    },
+    {
+     "name": "frameBottom1",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 27,
+     "y": 622,
+     "w": 343,
+     "h": 0,
+     "opts": {
+      "color": "dim",
+      "width": 2
+     }
+    },
+    {
+     "name": "frameBottom2",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 370,
+     "y": 622,
+     "w": 45,
+     "h": -32,
+     "opts": {
+      "color": "dim",
+      "width": 2
+     }
+    },
+    {
+     "name": "frameBottom3",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 415,
+     "y": 591,
+     "w": 965,
+     "h": 0,
+     "opts": {
+      "color": "accent",
+      "width": 3
+     }
+    },
+    {
+     "name": "frameBottom4",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 1381,
+     "y": 591,
+     "w": 45,
+     "h": 32,
+     "opts": {
+      "color": "dim",
+      "width": 2
+     }
+    },
+    {
+     "name": "frameBottom5",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 1426,
+     "y": 622,
+     "w": 343,
+     "h": 0,
+     "opts": {
+      "color": "dim",
+      "width": 2
+     }
+    },
+    {
+     "name": "toLog",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 27,
+     "y": 22,
+     "w": 300,
+     "h": 62,
+     "opts": {
+      "text": "Shift log",
+      "vicon": "stopwatch",
+      "style": "outline",
+      "color": "",
+      "disabled": false,
+      "size": 0
+     }
+    },
+    {
+     "name": "toSettings",
+     "rtype": "gpu",
+     "gpu": "vbutton",
+     "x": 1469,
+     "y": 22,
+     "w": 300,
+     "h": 62,
+     "opts": {
+      "text": "Settings",
+      "vicon": "gear",
+      "style": "outline",
+      "color": "",
+      "disabled": false,
+      "size": 0
+     }
+    },
+    {
+     "name": "resetMax",
+     "rtype": "gpu",
+     "gpu": "button",
+     "x": 1150,
+     "y": 22,
+     "w": 300,
+     "h": 62,
+     "opts": {
+      "text": "Reset max",
+      "style": "ghost",
+      "size": 0,
+      "radius": 16,
+      "color": ""
+     }
+    },
+    {
+     "name": "rpm",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 640,
+     "y": 158,
+     "w": 400,
+     "h": 76,
+     "opts": {
+      "text": "6420",
+      "size": 72,
+      "font": "num",
+      "align": "center",
+      "color": "text"
+     }
+    },
+    {
+     "name": "rpmUnit",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1010,
+     "y": 196,
+     "w": 100,
+     "h": 30,
+     "opts": {
+      "text": "RPM",
+      "size": 22,
+      "font": "bold",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "light1",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 455,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#2fd27a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light2",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 530,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#2fd27a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light3",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 605,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#2fd27a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light4",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 680,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#2fd27a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light5",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 755,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#2fd27a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light6",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 830,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#ffc21a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light7",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 905,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#ffc21a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light8",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 980,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#ffc21a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light9",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1055,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#ffc21a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light10",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1130,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "#ff2a2a",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light11",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1205,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "track",
+      "radius": 4
+     }
+    },
+    {
+     "name": "light12",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1280,
+     "y": 236,
+     "w": 62,
+     "h": 14,
+     "opts": {
+      "color": "track",
+      "radius": 4
+     }
+    },
+    {
+     "name": "seg1",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 449,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#1c69d4",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg2",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 505,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#1c69d4",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg3",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 562,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#1c69d4",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg4",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 618,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#1c69d4",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg5",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 675,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#1c69d4",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg6",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 731,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#1c69d4",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg7",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 787,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#3d8bff",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg8",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 844,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#3d8bff",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg9",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 900,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#3d8bff",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg10",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 956,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#3d8bff",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg11",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1013,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#3d8bff",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg12",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1069,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#3d8bff",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg13",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1126,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#ffc21a",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg14",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1182,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "track",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg15",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1238,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#4a1418",
+      "radius": 3
+     }
+    },
+    {
+     "name": "seg16",
+     "rtype": "gpu",
+     "gpu": "rect",
+     "x": 1295,
+     "y": 262,
+     "w": 52,
+     "h": 72,
+     "opts": {
+      "color": "#4a1418",
+      "radius": 3
+     }
+    },
+    {
+     "name": "scale0",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 419,
+     "y": 346,
+     "w": 60,
+     "h": 34,
+     "opts": {
+      "text": "0",
+      "size": 26,
+      "font": "bold",
+      "align": "center",
+      "color": "text"
+     }
+    },
+    {
+     "name": "scale1",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 531,
+     "y": 346,
+     "w": 60,
+     "h": 34,
+     "opts": {
+      "text": "1",
+      "size": 26,
+      "font": "bold",
+      "align": "center",
+      "color": "text"
+     }
+    },
+    {
+     "name": "scale2",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 644,
+     "y": 346,
+     "w": 60,
+     "h": 34,
+     "opts": {
+      "text": "2",
+      "size": 26,
+      "font": "bold",
+      "align": "center",
+      "color": "text"
+     }
+    },
+    {
+     "name": "scale3",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 756,
+     "y": 346,
+     "w": 60,
+     "h": 34,
+     "opts": {
+      "text": "3",
+      "size": 26,
+      "font": "bold",
+      "align": "center",
+      "color": "text"
+     }
+    },
+    {
+     "name": "scale4",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 868,
+     "y": 346,
+     "w": 60,
+     "h": 34,
+     "opts": {
+      "text": "4",
+      "size": 26,
+      "font": "bold",
+      "align": "center",
+      "color": "text"
+     }
+    },
+    {
+     "name": "scale5",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 980,
+     "y": 346,
+     "w": 60,
+     "h": 34,
+     "opts": {
+      "text": "5",
+      "size": 26,
+      "font": "bold",
+      "align": "center",
+      "color": "text"
+     }
+    },
+    {
+     "name": "scale6",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1093,
+     "y": 346,
+     "w": 60,
+     "h": 34,
+     "opts": {
+      "text": "6",
+      "size": 26,
+      "font": "bold",
+      "align": "center",
+      "color": "text"
+     }
+    },
+    {
+     "name": "scale7",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1205,
+     "y": 346,
+     "w": 60,
+     "h": 34,
+     "opts": {
+      "text": "7",
+      "size": 26,
+      "font": "bold",
+      "align": "center",
+      "color": "crit"
+     }
+    },
+    {
+     "name": "scale8",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1317,
+     "y": 346,
+     "w": 60,
+     "h": 34,
+     "opts": {
+      "text": "8",
+      "size": 26,
+      "font": "bold",
+      "align": "center",
+      "color": "crit"
+     }
+    },
+    {
+     "name": "gear",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 748,
+     "y": 384,
+     "w": 300,
+     "h": 230,
+     "opts": {
+      "text": "3",
+      "size": 200,
+      "font": "gear",
+      "align": "center",
+      "color": "text"
+     }
+    },
+    {
+     "name": "speedLabel",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 45,
+     "y": 182,
+     "w": 200,
+     "h": 30,
+     "opts": {
+      "text": "SPEED",
+      "size": 22,
+      "font": "bold",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "speed",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 40,
+     "y": 214,
+     "w": 220,
+     "h": 124,
+     "opts": {
+      "text": "128",
+      "size": 116,
+      "font": "num",
+      "align": "left",
+      "color": "text"
+     }
+    },
+    {
+     "name": "speedUnit",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 262,
+     "y": 290,
+     "w": 100,
+     "h": 34,
+     "opts": {
+      "text": "km/h",
+      "size": 26,
+      "font": "label",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "leftRule",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 45,
+     "y": 362,
+     "w": 337,
+     "h": 0,
+     "opts": {
+      "color": "dim",
+      "width": 1
+     }
+    },
+    {
+     "name": "oilLabel",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 45,
+     "y": 392,
+     "w": 120,
+     "h": 30,
+     "opts": {
+      "text": "OIL",
+      "size": 22,
+      "font": "bold",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "oil",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 45,
+     "y": 424,
+     "w": 140,
+     "h": 50,
+     "opts": {
+      "text": "92°",
+      "size": 40,
+      "font": "bold",
+      "align": "left",
+      "color": "text"
+     }
+    },
+    {
+     "name": "waterLabel",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 213,
+     "y": 392,
+     "w": 140,
+     "h": 30,
+     "opts": {
+      "text": "WATER",
+      "size": 22,
+      "font": "bold",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "water",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 213,
+     "y": 424,
+     "w": 140,
+     "h": 50,
+     "opts": {
+      "text": "88°",
+      "size": 40,
+      "font": "bold",
+      "align": "left",
+      "color": "text"
+     }
+    },
+    {
+     "name": "peak",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 45,
+     "y": 560,
+     "w": 420,
+     "h": 30,
+     "opts": {
+      "text": "PEAK 6880  ·  LIMITER 0x",
+      "size": 22,
+      "font": "bold",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "shiftAtLabel",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1414,
+     "y": 182,
+     "w": 337,
+     "h": 30,
+     "opts": {
+      "text": "SHIFT AT",
+      "size": 22,
+      "font": "bold",
+      "align": "right",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "shiftAt",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1414,
+     "y": 214,
+     "w": 337,
+     "h": 80,
+     "opts": {
+      "text": "6700",
+      "size": 64,
+      "font": "num",
+      "align": "right",
+      "color": "text"
+     }
+    },
+    {
+     "name": "rightRule",
+     "rtype": "gpu",
+     "gpu": "line",
+     "x": 1414,
+     "y": 362,
+     "w": 337,
+     "h": 0,
+     "opts": {
+      "color": "dim",
+      "width": 1
+     }
+    },
+    {
+     "name": "lastShiftLabel",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1414,
+     "y": 392,
+     "w": 337,
+     "h": 30,
+     "opts": {
+      "text": "LAST SHIFT",
+      "size": 22,
+      "font": "bold",
+      "align": "right",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "lastShift",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1534,
+     "y": 424,
+     "w": 217,
+     "h": 64,
+     "opts": {
+      "text": "6610",
+      "size": 52,
+      "font": "num",
+      "align": "right",
+      "color": "text"
+     }
+    },
+    {
+     "name": "lastGears",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1474,
+     "y": 446,
+     "w": 110,
+     "h": 30,
+     "opts": {
+      "text": "2 > 3",
+      "size": 22,
+      "font": "bold",
+      "align": "right",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "verdict",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 1414,
+     "y": 500,
+     "w": 337,
+     "h": 34,
+     "opts": {
+      "text": "SPOT ON",
+      "size": 24,
+      "font": "bold",
+      "align": "right",
+      "color": "#2fd27a"
+     }
+    }
+   ]
+  },
+  {
+   "name": "log",
+   "kind": "gpu",
+   "title": "Shift log",
+   "theme": "m_tricolour",
+   "bg": "theme",
+   "components": [
+    {
+     "name": "recentCard",
+     "rtype": "gpu",
+     "gpu": "card",
+     "x": 27,
+     "y": 20,
+     "w": 856,
+     "h": 592,
+     "opts": {
+      "title": "Recent upshifts",
+      "badge": "",
+      "link": "",
+      "selected": false,
+      "radius": 20,
+      "size": 34,
+      "color": ""
+     }
+    },
+    {
+     "name": "reset",
+     "rtype": "gpu",
+     "gpu": "button",
+     "x": 603,
+     "y": 34,
+     "w": 260,
+     "h": 60,
+     "opts": {
+      "text": "Reset max",
+      "style": "outline",
+      "size": 0,
+      "radius": 16,
+      "color": ""
+     }
+    },
+    {
+     "name": "shifts",
+     "rtype": "gpu",
+     "gpu": "list",
+     "x": 51,
+     "y": 112,
+     "w": 808,
+     "h": 480,
+     "opts": {
+      "items": "SPOT ON, 2 > 3 · 6610 rpm, 14:02:11 · target 6700\nEARLY, 3 > 4 · 6120 rpm, 14:02:16 · target 6700\nSPOT ON, 4 > 5 · 6650 rpm, 14:02:23 · target 6700\nLATE, 1 > 2 · 6980 rpm, 14:05:40 · target 6700\nLIMITER, 2 > 3 · 7000 rpm, 14:05:44 · target 6700",
+      "sel": -1,
+      "top": 0,
+      "rowH": 96,
+      "chevron": false,
+      "empty": "No shifts yet: go and use the rev range.",
+      "size": 0,
+      "color": ""
+     }
+    },
+    {
+     "name": "accuracyCard",
+     "rtype": "gpu",
+     "gpu": "card",
+     "x": 913,
+     "y": 20,
+     "w": 856,
+     "h": 592,
+     "opts": {
+      "title": "Shift accuracy",
+      "badge": "",
+      "link": "",
+      "selected": false,
+      "radius": 20,
+      "size": 34,
+      "color": ""
+     }
+    },
+    {
+     "name": "spotOn",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 945,
+     "y": 110,
+     "w": 400,
+     "h": 120,
+     "opts": {
+      "text": "67%",
+      "size": 110,
+      "font": "num",
+      "align": "left",
+      "color": "#2fd27a"
+     }
+    },
+    {
+     "name": "spotOnLabel",
+     "rtype": "gpu",
+     "gpu": "text",
+     "x": 950,
+     "y": 236,
+     "w": 500,
+     "h": 30,
+     "opts": {
+      "text": "SPOT ON  (12 SHIFTS)",
+      "size": 22,
+      "font": "bold",
+      "align": "left",
+      "color": "dim"
+     }
+    },
+    {
+     "name": "early",
+     "rtype": "gpu",
+     "gpu": "progress",
+     "x": 945,
+     "y": 290,
+     "w": 790,
+     "h": 96,
+     "opts": {
+      "label": "Early",
+      "right": "2",
+      "sub": "",
+      "min": 0,
+      "max": 12,
+      "value": 2,
+      "percent": false,
+      "size": 0,
+      "color": "warn"
+     }
+    },
+    {
+     "name": "late",
+     "rtype": "gpu",
+     "gpu": "progress",
+     "x": 945,
+     "y": 396,
+     "w": 790,
+     "h": 96,
+     "opts": {
+      "label": "Late",
+      "right": "1",
+      "sub": "",
+      "min": 0,
+      "max": 12,
+      "value": 1,
+      "percent": false,
+      "size": 0,
+      "color": "crit"
+     }
+    },
+    {
+     "name": "limiter",
+     "rtype": "gpu",
+     "gpu": "progress",
+     "x": 945,
+     "y": 502,
+     "w": 790,
+     "h": 96,
+     "opts": {
+      "label": "Limiter",
+      "right": "1",
+      "sub": "",
+      "min": 0,
+      "max": 12,
+      "value": 1,
+      "percent": false,
+      "size": 0,
+      "color": "crit"
+     }
+    }
+   ]
+  },
+  {
+   "name": "settings",
+   "kind": "gpu",
+   "title": "Settings",
+   "theme": "m_tricolour",
+   "bg": "theme",
+   "components": [
+    {
+     "name": "redline",
+     "rtype": "gpu",
+     "gpu": "row",
+     "x": 48,
+     "y": 16,
+     "w": 1700,
+     "h": 80,
+     "opts": {
+      "label": "Redline",
+      "sub": "",
+      "subColor": "",
+      "control": "value",
+      "on": false,
+      "text": "7000 rpm",
+      "min": 0,
+      "max": 100,
+      "value": 70,
+      "unit": "",
+      "boxed": false,
+      "divider": true,
+      "size": 0,
+      "color": ""
+     }
+    },
+    {
+     "name": "shiftBefore",
+     "rtype": "gpu",
+     "gpu": "row",
+     "x": 48,
+     "y": 102,
+     "w": 1700,
+     "h": 80,
+     "opts": {
+      "label": "Shift point before redline",
+      "sub": "",
+      "subColor": "",
+      "control": "value",
+      "on": false,
+      "text": "300 rpm",
+      "min": 0,
+      "max": 100,
+      "value": 70,
+      "unit": "",
+      "boxed": false,
+      "divider": true,
+      "size": 0,
+      "color": ""
+     }
+    },
+    {
+     "name": "lights",
+     "rtype": "gpu",
+     "gpu": "row",
+     "x": 48,
+     "y": 188,
+     "w": 1700,
+     "h": 80,
+     "opts": {
+      "label": "Shift light style",
+      "sub": "",
+      "subColor": "",
+      "control": "dropdown",
+      "on": false,
+      "text": "M (green-yellow-red)",
+      "min": 0,
+      "max": 100,
+      "value": 70,
+      "unit": "",
+      "boxed": false,
+      "divider": true,
+      "size": 0,
+      "color": ""
+     }
+    },
+    {
+     "name": "flash",
+     "rtype": "gpu",
+     "gpu": "row",
+     "x": 48,
+     "y": 274,
+     "w": 1700,
+     "h": 80,
+     "opts": {
+      "label": "Blink and flash at shift point",
+      "sub": "",
+      "subColor": "",
+      "control": "toggle",
+      "on": false,
+      "text": "",
+      "min": 0,
+      "max": 100,
+      "value": 70,
+      "unit": "",
+      "boxed": false,
+      "divider": true,
+      "size": 0,
+      "color": ""
+     }
+    },
+    {
+     "name": "coldGuard",
+     "rtype": "gpu",
+     "gpu": "row",
+     "x": 48,
+     "y": 360,
+     "w": 1700,
+     "h": 80,
+     "opts": {
+      "label": "Cold-engine rev guard",
+      "sub": "Shift point pulled down until the oil is warm",
+      "subColor": "",
+      "control": "toggle",
+      "on": true,
+      "text": "",
+      "min": 0,
+      "max": 100,
+      "value": 70,
+      "unit": "",
+      "boxed": false,
+      "divider": true,
+      "size": 0,
+      "color": ""
+     }
+    },
+    {
+     "name": "speedUnit",
+     "rtype": "gpu",
+     "gpu": "row",
+     "x": 48,
+     "y": 446,
+     "w": 1700,
+     "h": 80,
+     "opts": {
+      "label": "Units",
+      "sub": "",
+      "subColor": "",
+      "control": "dropdown",
+      "on": false,
+      "text": "km/h",
+      "min": 0,
+      "max": 100,
+      "value": 70,
+      "unit": "",
+      "boxed": false,
+      "divider": true,
+      "size": 0,
+      "color": ""
+     }
+    },
+    {
+     "name": "theme",
+     "rtype": "gpu",
+     "gpu": "row",
+     "x": 48,
+     "y": 532,
+     "w": 1700,
+     "h": 80,
+     "opts": {
+      "label": "Colour theme",
+      "sub": "",
+      "subColor": "",
+      "control": "dropdown",
+      "on": false,
+      "text": "M Tricolour",
+      "min": 0,
+      "max": 100,
+      "value": 70,
+      "unit": "",
+      "boxed": false,
+      "divider": false,
+      "size": 0,
+      "color": ""
+     }
+    }
+   ]
+  }
+ ]
+}
