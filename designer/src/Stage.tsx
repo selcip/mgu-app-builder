@@ -1,6 +1,6 @@
 // The stage: the edit bar, and the selected screen in its HMI page on the zoomable canvas, drawn by the runtime and
 // the kit, with the layout overlay over it (or, while trying, the iDrive controller's keys and taps going to the
-// runtime). Also the widget palette and the focus-order toggle, which the panels show.
+// runtime). Also the widget palette, which the left panel shows.
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
 import { apply, languagesOf, textIn, titleOf, type Screen } from './model/index.ts';
 import { WIDGETS } from './catalog.ts';
@@ -99,17 +99,6 @@ export function EditBarRow() {
     const trying = useEditor((s) => s.trying);
     if (trying) return null;
     return <div className="flex-none border-b bg-card px-3 pt-2" data-edit-bar-row=""><EditBar /></div>;
-}
-
-/** Whether the canvas numbers the elements in focus order. */
-export function ShowFocusToggle() {
-    const showFocus = useEditor((s) => s.showFocus);
-    const { setShowFocus } = useActions();
-    return (
-        <div className="row-buttons">
-            <label><input type="checkbox" checked={showFocus} onChange={(e) => setShowFocus(e.target.checked)} /> Show focus order</label>
-        </div>
-    );
 }
 
 /** The widgets to add: click to add one to the screen, or drag it onto the screen. */

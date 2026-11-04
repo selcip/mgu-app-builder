@@ -36,3 +36,8 @@ export const TextIssues: Story = { parameters: { screenFile: textIssues, editor:
 export const MissingTranslation: Story = {
     parameters: { screenFile: textIssues, editor: (s: EditorState) => { s.pick('de'); s.selectOnly('toAbout'); } },
 };
+
+/** The Prototype tab with a linked button selected: its action, the screen it opens, focus order, navigation. */
+export const PrototypeTab: Story = {
+    parameters: { screenFile: typical, editor: (s: EditorState) => { s.setInspectorTab('prototype'); s.selectOnly('toSettings'); } },
+};

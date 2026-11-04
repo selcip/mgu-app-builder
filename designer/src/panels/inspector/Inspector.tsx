@@ -2,11 +2,8 @@
 //   Design: the selection's layout (box, align, distribute) and the element's options; with nothing selected, the
 //           screen's and the screen file's settings.
 //   Prototype: the element's action and the screen it opens, the screen's focus order, and the navigation view.
-import { ActionField } from '../../ActionField';
-import { FocusPanel } from '../../FocusPanel';
-import { LinkField, NavigationPanel } from '../../Navigation';
 import { PropertyPanel } from '../../PropertyPanel';
-import { ShowFocusToggle } from '../../Stage';
+import { FocusOrder, Interaction, NavigationPanel } from './Prototype';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Arrange } from './Arrange';
 import { FileSettings, ScreenSettings } from './Settings';
@@ -28,13 +25,9 @@ export function Inspector() {
                 {none ? <><ScreenSettings /><FileSettings /></> : <><Arrange /><PropertyPanel /></>}
             </TabsContent>
             <TabsContent value="prototype">
-                <div className="px-3">
-                    <ActionField />
-                    <LinkField />
-                    <FocusPanel />
-                    <ShowFocusToggle />
-                    <NavigationPanel />
-                </div>
+                <Interaction />
+                <FocusOrder />
+                <NavigationPanel />
             </TabsContent>
         </Tabs>
     );
