@@ -57,6 +57,7 @@ async function openWithFile(file) {
     await page.waitForFunction(() => window.__frames.length >= 1);
     const zip = Buffer.from(zipSync({ 'screens.json': strToU8(JSON.stringify(file)) }));
     await page.setInputFiles('input[type=file]', { name: 'design.zip', mimeType: 'application/zip', buffer: zip });
+    await page.locator('[data-inspector-tab="prototype"]').click();      // focus order and actions are in the inspector's Prototype tab
     await page.locator('[data-focus-item]').first().waitFor();
     return { page, errors };
 }

@@ -9,12 +9,16 @@ import { fileOf, languageOf } from './store/editor.ts';
 import { useActions, useEditor } from './store/react.tsx';
 import { undrawable } from './preview';
 import { CommitInput } from './PropertyPanel';
+import { Languages, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Hint, Section, listRowClass, selectClass } from '@/components/designer/form';
 
-/** The header's language switcher, with adding and removing languages. */
+/** The screen file's languages: the default (the first added) and the others; add or remove them. */
 export function LanguageSwitcher() {
     const file = useEditor(fileOf);
     const language = useEditor(languageOf);
-    const { edit, pick: onLanguage } = useActions();
+    const { edit, pick } = useActions();
     const langs = languagesOf(file);
     const [code, setCode] = useState('');
     const add = () => {
@@ -22,29 +26,46 @@ export function LanguageSwitcher() {
         if (!c) return;
         if (edit({ type: 'addLanguage', code: c })) {
             setCode('');
-            onLanguage(c);
+            pick(c);
         }
     };
     return (
-        <span className="languages" data-languages="">
-            {langs.length > 0 && (
-                <label>
-                    Language{' '}
-                    <select data-language-switcher="" value={language || ''} onChange={(e) => onLanguage(e.target.value)}>
-                        {langs.map((l, i) => <option key={l} value={l}>{l}{i === 0 ? ' (default)' : ''}</option>)}
-                    </select>
-                </label>
-            )}
-            {language && (
-                <button title={`Remove ${language} and its texts`} onClick={() => edit({ type: 'removeLanguage', code: language })}>
-                    Remove {language}
-                </button>
-            )}
-            <input className="language-code" placeholder={langs.length ? 'de, zh-CN…' : 'texts’ language: en…'} value={code}
-                size={9} onChange={(e) => setCode(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
-                title={langs.length ? 'A language code such as de or zh-CN' : 'The first language added is the default: the one your texts are written in'} />
-            <button onClick={add}>Add language</button>
-        </span>
+        <Section title="Languages" data-languages="">
+            {langs.length === 0 && <Hint className="mb-2">Texts have no language yet. The first language added is the default: the one your texts are written in.</Hint>}
+            <ul className="m-0 mb-2 flex list-none flex-col gap-0.5 p-0">{langs.map((l, i) => (
+                <li key={l}>
+                    <div aria-current={l === language} className={listRowClass}>
+                        <button className="flex-1 truncate text-left" title="Show and edit the texts in this language" onClick={() => pick(l)}>
+                            {l}{i === 0 ? <span className="text-muted-foreground"> (default)</span> : ''}
+                        </button>
+                        <Button variant="ghost" size="icon-xs" title={`Remove ${l} and its texts`} onClick={() => edit({ type: 'removeLanguage', code: l })}><X /></Button>
+                    </div>
+                </li>
+            ))}</ul>
+            <div className="flex gap-1">
+                <Input className="h-7 rounded-md px-2 text-xs md:text-xs" placeholder={langs.length ? 'de, zh-CN…' : 'en…'} value={code}
+                    onChange={(e) => setCode(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
+                    title="A language code such as de or zh-CN" />
+                <Button variant="outline" size="sm" onClick={add}>Add</Button>
+            </div>
+        </Section>
+    );
+}
+
+/** The language the canvas shows and the text inputs edit, for the toolbar; only when there is more than one. */
+export function ShownLanguage() {
+    const file = useEditor(fileOf);
+    const language = useEditor(languageOf);
+    const { pick } = useActions();
+    const langs = languagesOf(file);
+    if (langs.length < 2) return null;
+    return (
+        <label className="flex items-center gap-1.5 text-muted-foreground">
+            <Languages className="size-3.5" aria-label="Language shown" />
+            <select data-language-switcher="" className={selectClass + ' w-auto'} value={language || ''} onChange={(e) => pick(e.target.value)}>
+                {langs.map((l, i) => <option key={l} value={l}>{l}{i === 0 ? ' (default)' : ''}</option>)}
+            </select>
+        </label>
     );
 }
 
@@ -62,10 +83,11 @@ export function TextInput(props: { value: unknown; onCommit(text: string, langua
     const own = !langs.length || hasText(props.value, langs, lang) || !/\p{L}/u.test(text);
     const bad = undrawable(text, language);
     return (
-        <span className="text-input" data-missing={own ? undefined : ''}>
-            <CommitInput value={own ? text : ''} onCommit={(v) => props.onCommit(v, language || undefined)} placeholder={own ? undefined : text} />
-            {!own && <small className="hint">Missing in {lang}: shows the default language’s text.</small>}
-            {bad.length > 0 && <small className="warning">Draws {bad.join(' ')} as “?”</small>}
+        <span className="flex min-w-0 flex-col gap-0.5" data-missing={own ? undefined : ''}>
+            <CommitInput value={own ? text : ''} onCommit={(v) => props.onCommit(v, language || undefined)} placeholder={own ? undefined : text}
+                className={own ? undefined : 'placeholder:italic'} />
+            {!own && <small className="text-[0.7rem] text-muted-foreground">Missing in {lang}: shows the default language’s text.</small>}
+            {bad.length > 0 && <small className="text-[0.7rem] text-amber-400">Draws {bad.join(' ')} as “?”</small>}
         </span>
     );
 }
@@ -107,27 +129,26 @@ export function TextIssues() {
     if (!issues.length) return null;
     const item = (i: Issue, n: number) => (
         <li key={n} data-text-issue={i.kind}>
-            <button onClick={() => goTo(i.place.screen, i.place.element === undefined ? null : i.place.element, i.language)}>
+            <button className={listRowClass + ' h-auto min-h-7 py-1' + (i.kind === 'undrawable' ? ' border-l-2 border-amber-400' : '')}
+                onClick={() => goTo(i.place.screen, i.place.element === undefined ? null : i.place.element, i.language)}>
                 {where(i.place)}{i.language ? ` (${i.language})` : ''}
                 {i.kind === 'undrawable' && <> — draws <b>{i.chars!.join(' ')}</b> as “?”</>}
             </button>
         </li>
     );
     return (
-        <div className="text-issues">
+        <>
             {missing.length > 0 && (
-                <>
-                    <h2>Missing translations ({missing.length})</h2>
-                    <ul data-missing-translations="">{missing.map(item)}</ul>
-                </>
+                <Section title={`Missing translations (${missing.length})`}>
+                    <ul className="m-0 flex list-none flex-col gap-0.5 p-0" data-missing-translations="">{missing.map(item)}</ul>
+                </Section>
             )}
             {bad.length > 0 && (
-                <>
-                    <h2 className="warning">Characters the head unit can’t draw ({bad.length})</h2>
-                    <p className="hint">The kit’s fonts have ASCII, ° · × – — … → and, in Chinese, Chinese.</p>
-                    <ul data-undrawable-texts="">{bad.map(item)}</ul>
-                </>
+                <Section title={<span className="text-amber-400">Characters the head unit can’t draw ({bad.length})</span>}>
+                    <Hint className="mb-1.5">The kit’s fonts have ASCII, ° · × – — … → and, in Chinese, Chinese.</Hint>
+                    <ul className="m-0 flex list-none flex-col gap-0.5 p-0" data-undrawable-texts="">{bad.map(item)}</ul>
+                </Section>
             )}
-        </div>
+        </>
     );
 }

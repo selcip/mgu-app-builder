@@ -57,9 +57,13 @@ async function openWithFile(file) {
     await page.waitForFunction(() => window.__frames.length >= 1);
     const zip = Buffer.from(zipSync({ 'screens.json': strToU8(JSON.stringify(file)) }));
     await page.setInputFiles('input[type=file]', { name: 'design.zip', mimeType: 'application/zip', buffer: zip });
+    await tab(page, 'prototype');           // links, the link field and the navigation view are in the inspector's Prototype tab
     await page.locator('[data-link="home:toSettings"]').waitFor();
     return { page, errors };
 }
+
+/** Shows one of the inspector's tabs: 'design' or 'prototype'. */
+const tab = (page, name) => page.locator(`[data-inspector-tab="${name}"]`).click();
 
 const lastFrame = async (page) => {
     const f = await page.evaluate(() => window.__frames[window.__frames.length - 1]);
@@ -152,7 +156,9 @@ test('linking an element, the navigation view and dead-link warnings, also after
         assert.match(await page.locator('[data-link="home:help"]').textContent(), /helpButton \[help\] → about/);
         // deleting about leaves both links dead, flagged in the link field too
         await page.locator('[data-screen="about"]').click();
+        await tab(page, 'design');
         await page.locator('[data-delete-screen]').click();
+        await tab(page, 'prototype');
         assert.strictEqual(await deadCount(page), 3);
         await page.locator('[data-link="home:ping"] button').click();          // selects home and ping
         assert.match(await page.locator('[data-link-problem]').textContent(), /“about” no longer exists/);
@@ -160,9 +166,11 @@ test('linking an element, the navigation view and dead-link warnings, also after
         assert.strictEqual(await deadCount(page), 2);
         // renaming settings keeps the link to it
         await page.locator('[data-screen="settings"]').click();
+        await tab(page, 'design');
         const name = page.locator('[data-screen-name] input');
         await name.fill('options');
         await name.press('Enter');
+        await tab(page, 'prototype');
         assert.match(await page.locator('[data-link="home:toSettings"]').textContent(), /→ options$/);
         assert.strictEqual(await deadCount(page), 2);
         assert.deepStrictEqual(errors, []);

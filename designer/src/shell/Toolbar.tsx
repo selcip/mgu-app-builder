@@ -1,19 +1,17 @@
 // The slim bar across the top: the design (new, open, download), the theme and languages, messages, and the zoom.
 import { type ChangeEvent } from 'react';
 import { Maximize, Minus, Plus } from 'lucide-react';
-import { exportZip, importZip, newDocument, themeOf } from '../model/index.ts';
-import { THEMES } from '../catalog.ts';
+import { exportZip, importZip, newDocument } from '../model/index.ts';
 import { AutosaveProblem } from '../Autosave';
-import { LanguageSwitcher } from '../Languages';
+import { ShownLanguage } from '../Languages';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { docOf, fileOf } from '../store/editor.ts';
+import { docOf } from '../store/editor.ts';
 import { useActions, useEditor } from '../store/react.tsx';
 
 export function Toolbar({ autosaveProblem }: { autosaveProblem: string | null }) {
     const doc = useEditor(docOf);
-    const file = useEditor(fileOf);
     const problem = useEditor((s) => s.problem);
-    const { edit, open, setProblem } = useActions();
+    const { open, setProblem } = useActions();
 
     async function upload(e: ChangeEvent<HTMLInputElement>) {
         const f = e.target.files && e.target.files[0];
@@ -46,14 +44,7 @@ export function Toolbar({ autosaveProblem }: { autosaveProblem: string | null })
             </label>
             <Button variant="ghost" size="sm" onClick={download}>Download</Button>
             <span className="mx-1 h-5 w-px bg-border" />
-            <label className="flex items-center gap-1.5 text-muted-foreground">
-                Theme
-                <select className="h-7 rounded-md border bg-background px-1.5 text-foreground" value={themeOf(file)}
-                    onChange={(e) => edit({ type: 'setTheme', theme: e.target.value })}>
-                    {THEMES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-                </select>
-            </label>
-            <LanguageSwitcher />
+            <ShownLanguage />
             <span className="min-w-0 flex-1 truncate">
                 {problem && <span className="problem" role="alert">{problem}</span>}
                 <AutosaveProblem problem={autosaveProblem} />

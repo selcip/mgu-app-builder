@@ -1,20 +1,15 @@
-// The canvas's edit bar and keyboard shortcuts: undo and redo; grid, snapping and guides; the selected element's
-// exact box; align, copy, cut, paste and delete the selection. Every edit is a document-model operation.
+// The canvas's edit bar and keyboard shortcuts: undo and redo; grid, snapping and guides; copy, cut, paste and
+// delete the selection (its box, aligning and distributing are in the inspector). Every edit is a document-model operation.
 //
 // Keys (not while typing in a field): Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z or Ctrl+Y redo, Ctrl/Cmd+C copy, +X cut,
 // +V paste, +A select all, Delete/Backspace delete, arrows move 1 px (Shift: one grid step), Alt+arrows resize,
 // Escape clears the selection.
 import { useEffect, useRef } from 'react';
-import { copyElements, pastedNames, type Box, type Edge } from './model/index.ts';
-import { CommitInput } from './PropertyPanel';
+import { copyElements, pastedNames, type Box } from './model/index.ts';
 import { DESIGN, canRedoOf, canUndoOf, screenOf } from './store/editor.ts';
 import { useActions, useEditor } from './store/react.tsx';
 
 const GRIDS = [0, 4, 8, 16, 32];
-const ALIGN: { edge: Edge; label: string }[] = [
-    { edge: 'left', label: 'Left' }, { edge: 'centre', label: 'Centre' }, { edge: 'right', label: 'Right' },
-    { edge: 'top', label: 'Top' }, { edge: 'middle', label: 'Middle' }, { edge: 'bottom', label: 'Bottom' },
-];
 const PASTE_STEP = 16;
 
 const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
@@ -34,7 +29,6 @@ export function EditBar() {
         onSettings: actions.setSettings, onClipboard: actions.setClipboard, canUndo, canRedo,
     };
     const sel = selection.filter((n) => screen.components.some((c) => c.name === n));
-    const one = sel.length === 1 ? screen.components.find((c) => c.name === sel[0]) : undefined;
 
     const copy = () => { if (sel.length) props.onClipboard({ screen: screen.name, elements: copyElements(screen, sel), pastes: 0 }); };
     const del = () => { if (sel.length && onEdit({ type: 'deleteElements', screen: screen.name, elements: sel })) onSelect([]); };
@@ -49,7 +43,6 @@ export function EditBar() {
             props.onClipboard({ ...clipboard, pastes });
         }
     }
-    const align = (edge: Edge) => { if (sel.length) onEdit({ type: 'alignElements', screen: screen.name, elements: sel, edge }); };
 
     function arrow(key: string, shift: boolean, alt: boolean) {
         if (!sel.length) return;
@@ -91,10 +84,6 @@ export function EditBar() {
         return () => window.removeEventListener('keydown', on);
     }, []);
 
-    const setBox = (k: keyof Box) => (v: string) => {
-        const n = Number(v);
-        if (one && v.trim() !== '' && isFinite(n)) onEdit({ type: 'setBoxes', screen: screen.name, boxes: { [one.name]: { [k]: Math.round(n) } } });
-    };
     const addGuide = (axis: 'xs' | 'ys') => {
         const mid = Math.round((axis === 'xs' ? props.design.w : props.design.h) / 2);
         props.onSettings({ ...settings, guides: { ...settings.guides, [axis]: settings.guides[axis].concat([mid]) } });
@@ -117,21 +106,6 @@ export function EditBar() {
                 </label>
                 <button onClick={() => addGuide('xs')} title="Add a vertical guide">| guide</button>
                 <button onClick={() => addGuide('ys')} title="Add a horizontal guide">— guide</button>
-            </span>
-            {one && (
-                <span className="group box" data-box={one.name}>
-                    {(['x', 'y', 'w', 'h'] as const).map((k) => (
-                        <label key={k}>{k.toUpperCase()} <CommitInput type="number" step="1" value={String(one[k])} onCommit={setBox(k)} /></label>
-                    ))}
-                </span>
-            )}
-            <span className="group">
-                {ALIGN.map((a) => (
-                    <button key={a.edge} disabled={!sel.length} onClick={() => align(a.edge)}
-                        title={sel.length > 1 ? `Align ${a.label.toLowerCase()} edges/lines of the selection` : `Align to the screen's ${a.label.toLowerCase()}`}>
-                        {a.label}
-                    </button>
-                ))}
             </span>
             <span className="group">
                 <button disabled={!sel.length} onClick={copy} title="Ctrl+C">Copy</button>

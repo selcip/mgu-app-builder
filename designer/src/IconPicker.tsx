@@ -16,26 +16,26 @@ export function Vicon({ name, size = SIZE }: { name: string; size?: number }) {
         if (name) mgu.vicon(cv, name, 2, 2, size - 4, '#ffffff');
         ctx.putImageData(new ImageData(new Uint8ClampedArray(cv.d.buffer, cv.d.byteOffset, cv.d.byteLength), size, size), 0, 0);
     }, [name, size]);
-    return <canvas ref={ref} width={size} height={size} className="vicon" aria-hidden="true" />;
+    return <canvas ref={ref} width={size} height={size} className="block flex-none" aria-hidden="true" />;
 }
 
 export function IconPicker({ value, onChange }: { value: string; onChange: (name: string) => void }) {
     const [open, setOpen] = useState(false);
     const pick = (name: string) => { onChange(name); setOpen(false); };
     return (
-        <span className="icon-picker">
-            <button type="button" className="icon-current" aria-expanded={open} onClick={() => setOpen(!open)}>
-                <Vicon name={value} /> {value || '(none)'}
+        <span className="relative min-w-0">
+            <button type="button" aria-expanded={open} onClick={() => setOpen(!open)}
+                className="flex h-7 w-full min-w-0 items-center gap-1.5 rounded-md border border-input bg-input/30 px-1.5 text-xs">
+                <Vicon name={value} size={20} /> <span className="truncate">{value || '(none)'}</span>
             </button>
             {open && (
-                <span className="icon-grid" role="listbox" aria-label="Vector icons">
-                    <button type="button" role="option" aria-selected={value === ''} data-icon="" onClick={() => pick('')}>
-                        <Vicon name="" /><small>none</small>
-                    </button>
-                    {ICONS.map((name) => (
-                        <button type="button" role="option" key={name} aria-selected={name === value} data-icon={name} title={name}
-                            onClick={() => pick(name)}>
-                            <Vicon name={name} /><small>{name}</small>
+                <span role="listbox" aria-label="Vector icons"
+                    className="absolute right-0 z-40 mt-1 grid max-h-80 w-72 grid-cols-4 gap-1 overflow-y-auto rounded-lg border bg-popover p-1.5 shadow-xl">
+                    {['', ...ICONS].map((name) => (
+                        <button type="button" role="option" key={name || '(none)'} aria-selected={name === value} data-icon={name} title={name || 'none'}
+                            onClick={() => pick(name)}
+                            className="flex flex-col items-center gap-0.5 rounded-md border border-transparent p-1 hover:bg-accent aria-selected:border-blue-500">
+                            <Vicon name={name} /><small className="max-w-full truncate text-[0.65rem] text-muted-foreground">{name || 'none'}</small>
                         </button>
                     ))}
                 </span>

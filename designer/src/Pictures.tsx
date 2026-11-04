@@ -4,6 +4,10 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import { imagePathFor, missingImages, usedImages } from './model/index.ts';
 import { docOf } from './store/editor.ts';
 import { useActions, useEditor } from './store/react.tsx';
+import { ImagePlus, Upload, X } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Section, selectClass } from '@/components/designer/form';
+import { cn } from '@/lib/utils';
 
 /** A small preview of a PNG's bytes. */
 function Thumb({ bytes }: { bytes: Uint8Array | undefined }) {
@@ -14,7 +18,8 @@ function Thumb({ bytes }: { bytes: Uint8Array | undefined }) {
         setUrl(u);
         return () => URL.revokeObjectURL(u);
     }, [bytes]);
-    return url ? <img className="thumb" src={url} alt="" /> : <span className="thumb" />;
+    const box = 'size-7 flex-none rounded border bg-black object-contain';
+    return url ? <img className={box} src={url} alt="" /> : <span className={box} />;
 }
 
 /** Reads a chosen file and hands it on; clears the input so the same file can be chosen again. */
@@ -36,18 +41,20 @@ export function PictureInput({ value, images, onChange, onUpload }: PictureInput
     const paths = Object.keys(images).sort();
     const missing = value !== '' && !(value in images);
     return (
-        <span className="picture-input">
-            <Thumb bytes={images[value]} />
-            <select value={value} onChange={(e) => onChange(e.target.value)}>
-                <option value="">(none)</option>
-                {paths.map((p) => <option key={p} value={p}>{p}</option>)}
-                {missing && <option value={value}>{value} (missing)</option>}
-            </select>
-            <label className="upload">
-                Upload PNG…
-                <input type="file" accept="image/png,.png" onChange={(e) => readUpload(e, onUpload)} />
-            </label>
-            {missing && <span className="problem" role="alert">{value} is not in the design</span>}
+        <span className="flex min-w-0 flex-col gap-1">
+            <span className="flex min-w-0 items-center gap-1">
+                <Thumb bytes={images[value]} />
+                <select className={selectClass} value={value} onChange={(e) => onChange(e.target.value)}>
+                    <option value="">(none)</option>
+                    {paths.map((p) => <option key={p} value={p}>{p}</option>)}
+                    {missing && <option value={value}>{value} (missing)</option>}
+                </select>
+                <label className={cn(buttonVariants({ variant: 'ghost', size: 'icon-xs' }), 'flex-none cursor-pointer')} title="Upload a PNG">
+                    <Upload />
+                    <input type="file" accept="image/png,.png" className="hidden" onChange={(e) => readUpload(e, onUpload)} />
+                </label>
+            </span>
+            {missing && <span className="problem text-xs text-destructive">{value} is not in the design</span>}
         </span>
     );
 }
@@ -57,31 +64,35 @@ export function ImagesPanel() {
     const doc = useEditor(docOf);
     const { edit } = useActions();
     const missing = missingImages(doc);
-    const onAdd = (name: string, bytes: Uint8Array) => edit({ type: 'addImage', path: imagePathFor(name), bytes });
-    const onRemove = (path: string) => edit({ type: 'removeImage', path });
     const used = new Set(usedImages(doc));
     const paths = Object.keys(doc.images).sort();
     return (
-        <div className="images" data-images="">
-            <h2>Images</h2>
+        <Section title="Images" data-images=""
+            actions={
+                <label className={cn(buttonVariants({ variant: 'ghost', size: 'icon-xs' }), 'cursor-pointer')} title="Add a PNG">
+                    <ImagePlus />
+                    <input type="file" accept="image/png,.png" className="hidden"
+                        onChange={(e) => readUpload(e, (name, bytes) => edit({ type: 'addImage', path: imagePathFor(name), bytes }))} />
+                </label>
+            }>
             {missing.length > 0 && (
-                <ul className="missing" role="alert">{missing.map((m, i) => (
+                <ul className="m-0 mb-2 list-none p-0 text-xs text-destructive" role="alert">{missing.map((m, i) => (
                     <li key={i} data-missing={m.path}>Missing {m.path} ({m.screen} / {m.element})</li>
                 ))}</ul>
             )}
-            <ul>{paths.map((p) => (
-                <li key={p} data-image={p}>
+            {paths.length === 0 && missing.length === 0 && <p className="m-0 text-xs text-muted-foreground">No images yet.</p>}
+            <ul className="m-0 flex list-none flex-col gap-1 p-0">{paths.map((p) => (
+                <li key={p} data-image={p} className="flex min-w-0 items-center gap-2 text-xs">
                     <Thumb bytes={doc.images[p]} />
-                    <span>{p.slice('images/'.length)}</span>
+                    <span className="flex-1 truncate">{p.slice('images/'.length)}</span>
                     {used.has(p)
-                        ? <small>in use</small>
-                        : <><small>unused, not downloaded</small> <button onClick={() => onRemove(p)}>Remove</button></>}
+                        ? <small className="text-muted-foreground">in use</small>
+                        : <>
+                            <small className="text-muted-foreground" title="Not used, so not in the download">unused</small>
+                            <Button variant="ghost" size="icon-xs" title="Remove" onClick={() => edit({ type: 'removeImage', path: p })}><X /></Button>
+                        </>}
                 </li>
             ))}</ul>
-            <label className="upload">
-                Add PNG…
-                <input type="file" accept="image/png,.png" onChange={(e) => readUpload(e, onAdd)} />
-            </label>
-        </div>
+        </Section>
     );
 }

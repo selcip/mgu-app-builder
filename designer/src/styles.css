@@ -11,22 +11,12 @@ h1 { font-size: 16px; margin: 0; }
 .hmi-page canvas { display: block; }
 .log { color: #ffb86b; font-family: monospace; }
 h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: #999; margin: 16px 0 6px; }
-header .languages button, .row-buttons button, .palette button, .properties > button {
+.row-buttons button, .palette button {
     padding: 5px 10px; border: 1px solid #555; border-radius: 6px; background: #2a2d34; color: inherit; cursor: pointer; }
 button:disabled { opacity: .4; cursor: default; }
-.screen-props label, .properties label { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
-.screen-props input, .properties input:not([type=checkbox]):not([type=color]), .properties select, .properties textarea {
-    width: 100%; padding: 4px 6px; background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
-.properties .option label { flex-direction: row; justify-content: space-between; align-items: center; gap: 8px; }
-.properties .option label > span { flex: 1; }
-.properties .option label > :not(span) { flex: 1.3; }
-.properties .option textarea { font-family: monospace; }
 .row-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
 .palette { display: flex; flex-wrap: wrap; gap: 6px; max-width: 1820px; }
 .palette h2 { width: 100%; }
-.inspector ul { list-style: none; margin: 0; padding: 0; }
-.inspector small { color: #aaa; }
-.colour { display: flex; gap: 4px; }
 /* the canvas: an overlay on the preview for laying elements out */
 .canvas-wrap { position: relative; }
 .canvas-layer { position: absolute; inset: 0; cursor: default; touch-action: none; user-select: none; }
@@ -53,35 +43,6 @@ button:disabled { opacity: .4; cursor: default; }
 .edit-bar button { padding: 4px 9px; border: 1px solid #555; border-radius: 6px; background: #2a2d34; color: inherit; cursor: pointer; }
 .edit-bar .box input { width: 70px; padding: 3px 5px; background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
 .edit-bar select { background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
-.properties .option.rows { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-.rows-editor table { width: 100%; border-collapse: collapse; }
-.rows-editor th { text-align: left; font-weight: normal; font-size: 12px; opacity: 0.7; }
-.rows-editor td input { width: 100%; box-sizing: border-box; }
-.rows-editor .row-tools { white-space: nowrap; }
-.rows-editor .row-tools button { padding: 0 6px; }
-.languages { display: flex; gap: 6px; align-items: center; }
-.languages input, .languages select { padding: 4px 6px; background: #121418; color: inherit; border: 1px solid #444; border-radius: 4px; }
-.languages button { padding: 5px 10px; border: 1px solid #555; border-radius: 6px; background: #2a2d34; color: inherit; cursor: pointer; }
-.text-input { display: flex; flex-direction: column; gap: 2px; }
-.text-input input::placeholder { color: #8a8a90; font-style: italic; }
-.warning { color: #ffb86b; }
-.text-issues button { width: 100%; text-align: left; padding: 4px 8px; margin-bottom: 2px; border: 0; border-radius: 4px; background: #2a2d34; color: inherit; cursor: pointer; }
-.text-issues [data-text-issue="undrawable"] button { border-left: 3px solid #ffb86b; }
-/* icons and pictures */
-.icon-picker { position: relative; display: inline-block; }
-.icon-current { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border: 1px solid #444; border-radius: 4px; background: #121418; color: inherit; cursor: pointer; }
-.icon-grid { position: absolute; right: 0; z-index: 10; display: grid; grid-template-columns: repeat(4, 64px); gap: 4px; padding: 6px; background: #22252b; border: 1px solid #555; border-radius: 6px; }
-.icon-grid button { display: flex; flex-direction: column; align-items: center; padding: 4px 2px; border: 1px solid transparent; border-radius: 4px; background: #121418; color: inherit; cursor: pointer; }
-.icon-grid button[aria-selected="true"] { border-color: #3d6ef5; }
-.icon-grid small { font-size: 10px; color: #aaa; overflow: hidden; text-overflow: ellipsis; max-width: 60px; }
-.vicon { display: block; }
-.picture-input { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-.thumb { width: 32px; height: 32px; object-fit: contain; background: #000; border: 1px solid #333; display: inline-block; }
-.images ul { list-style: none; margin: 0 0 8px; padding: 0; }
-.images li { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-.images li small { color: #aaa; }
-.images .missing li { color: #ff6b6b; }
-.images li button { padding: 2px 8px; border: 1px solid #555; border-radius: 6px; background: #2a2d34; color: inherit; cursor: pointer; }
 /* focus order and trying the preview */
 .canvas-wrap { position: relative; }
 .focus-overlay { position: absolute; inset: 0; pointer-events: none; }

@@ -60,6 +60,8 @@ export interface EditorState {
     panels: PanelLayouts;
     /** Both panels hidden (Ctrl+\), to see the screen alone. */
     panelsHidden: boolean;
+    /** The inspector's tab: the element's layout and options, or its action, link and the screen's focus order. */
+    inspectorTab: 'design' | 'prototype';
 
     /** Applies an edit; a refusal sets `problem` and changes nothing. Returns the edited document, or null if refused. */
     edit(op: Op): Doc | null;
@@ -99,6 +101,7 @@ export interface EditorState {
     /** Changes a panel's layout; the HMI page stays where it is on screen when the canvas's left edge moves. */
     setPanel(side: Side, patch: Partial<PanelLayout>): void;
     togglePanelsHidden(): void;
+    setInspectorTab(tab: 'design' | 'prototype'): void;
 }
 
 export type EditorStore = StoreApi<EditorState>;
@@ -153,6 +156,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
             measure: null,
             panels: options.panels || DEFAULT_PANELS,
             panelsHidden: false,
+            inspectorTab: 'design',
 
             edit(op) {
                 let next: History;
@@ -225,6 +229,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
                 layOut({ ...s.panels, [side]: p }, s.panelsHidden);
             },
             togglePanelsHidden() { layOut(get().panels, !get().panelsHidden); },
+            setInspectorTab(inspectorTab) { set({ inspectorTab }); },
         };
     });
 }
