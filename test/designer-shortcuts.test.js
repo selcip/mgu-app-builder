@@ -122,6 +122,31 @@ test('stacking order from the keyboard, the main menu and the canvas’s right-c
     }
 });
 
+test('the element list shows the top element first, and dragging rows (one or a selection) restacks them', { skip }, async () => {
+    const { context, page, errors } = await open();
+    try {
+        const rows = () => page.locator('[data-element]').evaluateAll((els) => els.map((e) => e.getAttribute('data-element')));
+        await page.keyboard.press('Control+d');                                 // button3 on top
+        assert.deepStrictEqual(await rows(), ['button3', 'button2', 'button1']);
+        const row = (n) => page.locator(`[data-element="${n}"]`);
+        // button1 dragged onto the top half of button3's row: above it, so on top
+        await row('button1').dragTo(row('button3'), { targetPosition: { x: 20, y: 3 } });
+        assert.deepStrictEqual(await elements(page), ['button2', 'button3', 'button1']);
+        assert.deepStrictEqual(await rows(), ['button1', 'button3', 'button2']);
+        assert.deepStrictEqual(await selection(page), ['button1']);
+        // button1 and button3 selected, dragged below button2: to the bottom, button1 still over button3
+        await row('button3').click({ modifiers: ['Shift'] });
+        await row('button3').dragTo(row('button2'), { targetPosition: { x: 20, y: 24 } });
+        assert.deepStrictEqual(await elements(page), ['button3', 'button1', 'button2']);
+        await page.keyboard.press('Control+z');
+        assert.deepStrictEqual(await elements(page), ['button2', 'button3', 'button1'], 'one undo step');
+        assert.strictEqual(await page.locator('[data-drop-line]').count(), 0, 'no drop line left over');
+        assert.deepStrictEqual(errors, []);
+    } finally {
+        await context.close();
+    }
+});
+
 test('arrows move the selection 1 px, with Shift a grid step; Alt + arrows resize it', { skip }, async () => {
     const { context, page, errors } = await open();
     try {

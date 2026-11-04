@@ -50,7 +50,8 @@ async function closeMenus(page) {
     await page.waitForFunction(() => !document.querySelector('[data-slot="dropdown-menu-content"], [data-slot="popover-content"]'));
 }
 
-const elements = (page) => page.locator('[data-element]').evaluateAll((els) => els.map((e) => e.getAttribute('data-element')));
+/** The selected screen's elements in stacking order, bottom first (as the canvas lays them out). */
+const elements = (page) => page.locator('[data-canvas-element]').evaluateAll((els) => els.map((e) => e.getAttribute('data-canvas-element')));
 const box = (page) => page.locator('[data-box] input').evaluateAll((els) => els.map((e) => Number(e.value)));
 
 test('the insert menu finds widgets by name and adds one by click or by dragging it onto the screen', { skip }, async () => {

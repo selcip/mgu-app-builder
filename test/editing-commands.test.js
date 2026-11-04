@@ -121,3 +121,16 @@ test('stacking: forward, backward, front and back on the selection; nothing at a
     st.getState().undo();
     assert.deepStrictEqual(names(st), ['b', 'a', 'c']);
 });
+
+test('a drop in the element list (top first) becomes a place among the elements not moved (bottom first)', () => {
+    const shown = ['e', 'd', 'c', 'b', 'a'];                // a at the bottom
+    assert.strictEqual(C.dropPlace(shown, ['b'], 0), 4);    // above e: over all four others
+    assert.strictEqual(C.dropPlace(shown, ['b'], 5), 0);    // below a
+    assert.strictEqual(C.dropPlace(shown, ['b'], 2), 2);    // between d and c: over c and a
+    assert.strictEqual(C.dropPlace(shown, ['b', 'd'], 1), 2); // under e: over c and a
+    const st = store();                                      // a, b bottom first: shown b, a
+    st.getState().select(['b']);
+    assert.ok(C.stack(st, C.dropPlace(['b', 'a'], ['b'], 2)));
+    assert.deepStrictEqual(names(st), ['b', 'a']);
+    assert.strictEqual(C.stack(st, C.dropPlace(['a', 'b'], ['b'], 2)), false, 'dropped where it already is');
+});

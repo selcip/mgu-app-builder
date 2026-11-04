@@ -107,6 +107,14 @@ export function stack(store: EditorStore, place: Place): boolean {
     return s.edit({ type: 'restackElements', screen: s.selected, elements: sel, place }) !== null;
 }
 
+/**
+ * Where a drop at gap `gap` of the element list (`shown` top first; 0 = above the top row) puts the elements being
+ * moved: their index among the others, bottom first, which is how many of those are listed below the gap.
+ */
+export function dropPlace(shown: readonly string[], moving: readonly string[], gap: number): number {
+    return shown.slice(gap).filter((n) => !moving.includes(n)).length;
+}
+
 /** A guide across the middle of the screen: vertical ('xs') or horizontal ('ys'). */
 export function addGuide(store: EditorStore, axis: 'xs' | 'ys'): void {
     const s = store.getState();
