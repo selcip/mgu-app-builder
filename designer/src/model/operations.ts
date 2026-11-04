@@ -9,6 +9,7 @@ import { languageOps } from './ops/languages.ts';
 import { imageOps } from './ops/images.ts';
 import { focusOps } from './ops/focus.ts';
 import { navigationOps } from './ops/navigation.ts';
+import { stackingOps } from './ops/stacking.ts';
 
 export const HANDLERS = {
     ...screenOps,
@@ -19,6 +20,7 @@ export const HANDLERS = {
     ...imageOps,
     ...focusOps,
     ...navigationOps,
+    ...stackingOps,
 };
 
 /** An edit to the document: `{ type: 'addScreen', name: 'home' }`, `{ type: 'setOption', ... }`, ... */

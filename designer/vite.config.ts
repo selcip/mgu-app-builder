@@ -67,7 +67,8 @@ function mguRuntime(): Plugin {
                 metafile: true,
                 logLevel: 'silent',
             });
-            files = Object.keys(out.metafile!.inputs).filter((f) => !f.startsWith('<')).map((f) => path.resolve(f));
+            // The stdin entry is listed too but is not on disk; Vite would try to resolve it as an import.
+            files = Object.keys(out.metafile!.inputs).map((f) => path.resolve(f)).filter((f) => fs.existsSync(f));
             for (const f of files) this.addWatchFile(f);
             return out.outputFiles[0].text;
         },

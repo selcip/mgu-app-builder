@@ -117,9 +117,16 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* The browser draws native controls' open parts (a <select>'s option list) itself: tell it the appearance. */
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    }
+  option, optgroup {
+    @apply bg-popover text-popover-foreground;
     }
   body {
     @apply bg-background text-foreground;

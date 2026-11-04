@@ -150,6 +150,22 @@ test('linking an element, the navigation view and dead-link warnings, also after
         // link ping to about
         await page.locator('[data-element="ping"]').click();
         assert.strictEqual(await page.locator('[data-link-field]').inputValue(), '');
+        // the open option list is drawn by the browser: it follows the appearance, options in the popover colours
+        const look = await page.locator('[data-link-field]').evaluate((sel) => {
+            const read = () => {
+                const o = getComputedStyle(sel.options[0]);
+                return { scheme: getComputedStyle(sel).colorScheme, bg: o.backgroundColor, fg: o.color };
+            };
+            const dark = read();
+            document.documentElement.classList.remove('dark');
+            const light = read();
+            document.documentElement.classList.add('dark');
+            return { dark, light };
+        });
+        assert.strictEqual(look.dark.scheme, 'dark');
+        assert.strictEqual(look.light.scheme, 'light');
+        for (const l of [look.dark, look.light]) assert.notStrictEqual(l.bg, l.fg, 'options must not be drawn in their own colour');
+        assert.notStrictEqual(look.dark.bg, look.light.bg);
         await page.locator('[data-link-field]').selectOption('about');
         assert.match(await page.locator('[data-link="home:ping"]').textContent(), /ping → about/);
         // the help button reports 'help': the view names the element and its action

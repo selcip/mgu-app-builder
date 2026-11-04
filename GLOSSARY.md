@@ -54,6 +54,14 @@ _Avoid_: schema, registry, widget list
 One widget placed on a screen, with its own name, box and options.
 _Avoid_: component, item
 
+**Drawing area**:
+An element whose contents the app's own code draws each frame, such as a live gauge; the screen file gives only its name and box.
+_Avoid_: canvas, custom widget, slot
+
+**Stacking order**:
+The order in which a screen's elements are drawn, so that a later element covers an earlier one where they overlap; separate from focus order.
+_Avoid_: z-order, layer order, z-index
+
 **Focus order**:
 The sequence in which the iDrive controller moves the highlight between a screen's elements.
 _Avoid_: tab order
