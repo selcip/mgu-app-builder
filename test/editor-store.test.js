@@ -179,3 +179,24 @@ test('panels start as given (else docked); docking, floating, resizing or hiding
     assert.strictEqual(st().view.x, x + 240);
     assert.deepStrictEqual(st().panels.right, { mode: 'floating', width: 320, x: 100, y: 50, collapsed: false });
 });
+
+test('trying starts with no reports and moves the panels aside, keeping the page still; stopping brings them back', () => {
+    const store = S.createEditorStore();
+    const st = () => store.getState();
+    st().setMeasure({ w: 2000, h: 1000 }, { w: 1820, h: 745 });
+    const x = st().view.x;
+    st().report({ leave: 'old' });
+    st().setTrying(true);
+    assert.deepStrictEqual(st().reports, []);
+    assert.strictEqual(st().view.x, x + 240);               // the docked left panel stepped aside
+    st().setTrying(true);                                    // already trying: nothing changes
+    assert.strictEqual(st().view.x, x + 240);
+    st().setTrying(false);
+    assert.strictEqual(st().view.x, x);
+    assert.strictEqual(st().panelsHidden, false);
+    st().togglePanelsHidden();                               // hidden before trying: trying moves nothing, stopping keeps them hidden
+    st().setTrying(true);
+    st().setTrying(false);
+    assert.strictEqual(st().panelsHidden, true);
+    assert.strictEqual(st().view.x, x + 240);
+});

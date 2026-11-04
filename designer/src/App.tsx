@@ -5,7 +5,7 @@ import { ElementList, ScreenList } from './panels/screens/ScreensPanel';
 import { Stage } from './Stage';
 import { useEditKeys } from './shell/keys.ts';
 import { Inspector } from './panels/inspector/Inspector';
-import { TryPanel } from './TryPanel';
+import { TryReport } from './TryPanel';
 import { Panel, PanelArea, usePanelKeys } from './shell/Panel';
 import { readPanels, writePanels } from './shell/panels.ts';
 import { Toolbar } from './shell/Toolbar';
@@ -47,8 +47,8 @@ function Designer() {
                 <Stage />
                 <Panel side="right" title="Inspector" className="inspector">
                     <Inspector />
-                    <div className="px-3 pb-3"><TryPanel /></div>
                 </Panel>
+                <TryReport />
             </PanelArea>
         </div>
     );

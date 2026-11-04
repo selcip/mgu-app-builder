@@ -8,6 +8,7 @@ import { WIDGETS } from '../catalog.ts';
 import { WIDGET_DRAG_TYPE } from '../Canvas';
 import { AutosaveProblem } from '../Autosave';
 import { ShownLanguage } from '../Languages';
+import { PlayButton } from '../TryPanel';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
     DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel,
@@ -45,6 +46,7 @@ export function Toolbar({ autosaveProblem, children }: { autosaveProblem: string
             </span>
             {children}
             <ShownLanguage />
+            <PlayButton />
             <ViewMenu />
             <ZoomControl />
         </header>

@@ -53,7 +53,10 @@ export function Viewport({ children, overlay }: { children: ReactNode; overlay?:
         const down = (e: KeyboardEvent) => {
             if (typing(e.target)) return;
             const mod = e.ctrlKey || e.metaKey;
-            if (e.code === 'Space' && !mod) { e.preventDefault(); if (!e.repeat) setSpace(true); return; }
+            if (e.code === 'Space' && !mod) {
+                if (store.getState().trying || e.defaultPrevented) return;      // trying: Space is the controller's press
+                e.preventDefault(); if (!e.repeat) setSpace(true); return;
+            }
             let done = true;
             if (mod && e.key === '0') zoomTo(1);
             else if (mod && (e.key === '=' || e.key === '+')) zoomStep(1);
@@ -72,7 +75,7 @@ export function Viewport({ children, overlay }: { children: ReactNode; overlay?:
             window.removeEventListener('keyup', up);
             window.removeEventListener('blur', blur);
         };
-    }, [zoomTo, zoomStep, zoomToFit]);
+    }, [store, zoomTo, zoomStep, zoomToFit]);
 
     // panning by dragging: the middle button, or the left one while Space is held; nothing under it sees the drag
     function startPan(e: PointerEvent<HTMLDivElement>) {

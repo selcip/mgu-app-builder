@@ -8,11 +8,11 @@ const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
 require('./flat-layout.js');     // the runtime requires the kit by basename, as on the head unit
-const { execFileSync } = require('node:child_process');
+const { buildDesigner } = require('./designer-dist.js');
 
 const ROOT = path.join(__dirname, '..');
 const DESIGNER = path.join(ROOT, 'designer');
-const DIST = path.join(DESIGNER, 'dist');
+let DIST;     // this file's own build of the Designer (designer-dist.js)
 const ORIGIN = 'http://designer.test';
 
 let playwright = null;
@@ -27,7 +27,7 @@ let browser;
 
 before(async () => {
     if (skip) return;
-    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe', shell: process.platform === 'win32' });     // npm is npm.cmd on Windows
+    DIST = buildDesigner();
     browser = await playwright.chromium.launch();
 });
 

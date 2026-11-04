@@ -40,7 +40,7 @@ export function Panel({ side, title, children, className }: {
     className?: string;
 }) {
     const layout = useEditor((s) => s.panels[side]);
-    const hidden = useEditor((s) => s.panelsHidden);
+    const hidden = useEditor((s) => s.panelsHidden || s.trying);     // trying: out of the way
     const store = useEditorStore();
     const { setPanel } = useActions();
     const area = useContext(AreaSize);

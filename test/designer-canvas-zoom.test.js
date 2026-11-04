@@ -7,11 +7,11 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { buildDesigner } = require('./designer-dist.js');
 
 const ROOT = path.join(__dirname, '..');
 const DESIGNER = path.join(ROOT, 'designer');
-const DIST = path.join(DESIGNER, 'dist');
+let DIST;     // this file's own build of the Designer (designer-dist.js)
 const ORIGIN = 'http://designer.test';
 const W = 1796, H = 632;
 
@@ -36,7 +36,7 @@ const FILE = {
 let browser;
 before(async () => {
     if (skip) return;
-    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe', shell: process.platform === 'win32' });     // npm is npm.cmd on Windows
+    DIST = buildDesigner();
     browser = await playwright.chromium.launch();
 });
 after(async () => { if (browser) await browser.close(); });

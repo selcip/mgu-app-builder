@@ -7,10 +7,10 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { buildDesigner } = require('./designer-dist.js');
 
 const DESIGNER = path.join(__dirname, '..', 'designer');
-const DIST = path.join(DESIGNER, 'dist');
+let DIST;     // this file's own build of the Designer (designer-dist.js)
 const ORIGIN = 'http://designer.test';
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
 
@@ -21,7 +21,7 @@ const skip = playwright ? false : 'playwright is not installed';
 let browser;
 before(async () => {
     if (skip) return;
-    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe', shell: process.platform === 'win32' });     // npm is npm.cmd on Windows
+    DIST = buildDesigner();
     browser = await playwright.chromium.launch();
 });
 after(async () => { if (browser) await browser.close(); });

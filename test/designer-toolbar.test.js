@@ -1,15 +1,15 @@
 'use strict';
 // The toolbar, in the Designer's static build in real Chromium: the insert menu finds a widget and adds it by click
 // or by dragging it onto the screen; the View menu sets the grid, snapping, the focus numbers and guides; the main
-// menu's editing commands and Download. Needs Playwright's Chromium; skipped without it.
+// menu's editing commands and Download; Play tries the app with the panels out of the way and brings them back. Needs Playwright's Chromium; skipped without it.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { buildDesigner } = require('./designer-dist.js');
 
 const DESIGNER = path.join(__dirname, '..', 'designer');
-const DIST = path.join(DESIGNER, 'dist');
+let DIST;     // this file's own build of the Designer (designer-dist.js)
 const ORIGIN = 'http://designer.test';
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
 const W = 1796, H = 632;
@@ -21,7 +21,7 @@ const skip = playwright ? false : 'playwright is not installed';
 let browser;
 before(async () => {
     if (skip) return;
-    execFileSync('npm', ['run', 'build'], { cwd: DESIGNER, stdio: 'pipe', shell: process.platform === 'win32' });     // npm is npm.cmd on Windows
+    DIST = buildDesigner();
     browser = await playwright.chromium.launch();
 });
 after(async () => { if (browser) await browser.close(); });
@@ -144,6 +144,37 @@ test('the main menu duplicates, copies and pastes, deletes, and downloads the de
         assert.strictEqual((await download).suggestedFilename(), 'design.zip');
         await menu('new');
         assert.deepStrictEqual(await elements(page), []);
+        assert.deepStrictEqual(errors, []);
+    } finally {
+        await context.close();
+    }
+});
+
+test('Play tries the app: the panels step aside (the page stays put) for a report card; Stop brings them back as they were', { skip }, async () => {
+    const { context, page, errors } = await open();
+    try {
+        await page.locator('[data-panel="right"] [data-panel-float-toggle]').click();      // one docked, one floating
+        await page.locator('[data-insert]').click();
+        await page.locator('[data-insert-menu] [data-widget="button"]').click();
+        const before = await page.locator('[data-hmi-page]').boundingBox();
+        await page.locator('[data-try-toggle]').click();
+        assert.strictEqual(await page.locator('[data-try-toggle]').getAttribute('aria-checked'), 'true');
+        assert.strictEqual(await page.locator('[data-panel]').count(), 0);
+        assert.ok(await page.locator('[data-try-panel]').isVisible());
+        const during = await page.locator('[data-hmi-page]').boundingBox();
+        assert.ok(Math.abs(during.x - before.x) < 1 && Math.abs(during.y - before.y) < 1, 'the page stays put');
+        assert.strictEqual(await page.locator('[data-insert]').count(), 0, 'no adding widgets while trying');
+        await page.keyboard.press('Enter');                 // the controller presses the button
+        await page.locator('[data-try-panel] [data-action="button1"]').waitFor();
+        await page.locator('[data-try-toggle]').click();
+        assert.strictEqual(await page.locator('[data-try-toggle]').getAttribute('aria-checked'), 'false');
+        assert.strictEqual(await page.locator('[data-try-panel]').count(), 0);
+        assert.deepStrictEqual([await page.locator('[data-panel="left"]').getAttribute('data-panel-mode'), await page.locator('[data-panel="right"]').getAttribute('data-panel-mode')], ['docked', 'floating']);
+        const after = await page.locator('[data-hmi-page]').boundingBox();
+        assert.ok(Math.abs(after.x - before.x) < 1, 'and after');
+        // trying again starts with an empty report
+        await page.locator('[data-try-toggle]').click();
+        assert.strictEqual(await page.locator('[data-try-panel] [data-action]').count(), 0);
         assert.deepStrictEqual(errors, []);
     } finally {
         await context.close();

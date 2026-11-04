@@ -84,7 +84,7 @@ export interface EditorState {
     setClipboard(clipboard: Clipboard | null): void;
     setDragOp(op: Op | null): void;
     pick(language: string | null): void;
-    /** Starts or stops trying; stopping goes back to editing the screen the walk ended on. */
+    /** Starts trying (afresh: no reports; the panels step aside) or stops (back to editing the screen the walk ended on). */
     setTrying(on: boolean): void;
     setWalking(screen: string | null): void;
     report(r: Report): void;
@@ -120,10 +120,11 @@ export interface EditorOptions {
 export function createEditorStore(doc: Doc = newDocument(), options: EditorOptions = {}): EditorStore {
     return createStore<EditorState>()((set, get) => {
         /** New panel layouts; the view moves by as much as the canvas's left edge did, so the page stays put. */
-        function layOut(panels: PanelLayouts, panelsHidden: boolean) {
+        function layOut(panels: PanelLayouts, panelsHidden: boolean, trying = get().trying) {
             const s = get();
-            const dx = leftInset(s.panels, s.panelsHidden) - leftInset(panels, panelsHidden);
-            set({ panels, panelsHidden, view: s.view && dx ? { ...s.view, x: s.view.x + dx } : s.view });
+            // while trying the panels are out of the way, as if hidden
+            const dx = leftInset(s.panels, s.panelsHidden || s.trying) - leftInset(panels, panelsHidden || trying);
+            set({ panels, panelsHidden, trying, view: s.view && dx ? { ...s.view, x: s.view.x + dx } : s.view });
         }
         /** A new history: the selected screen follows it, and the selection keeps only elements still on it. */
         function moveTo(history: History, op: Op | null) {
@@ -202,8 +203,10 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
             pick(picked) { set({ picked }); },
             setTrying(on) {
                 const s = get();
+                if (on === s.trying) return;
                 if (!on && s.walking !== null && s.walking !== s.selected) s.selectScreen(s.walking);
-                set({ trying: on, dragOp: null });
+                set({ dragOp: null, reports: on ? [] : s.reports });
+                layOut(s.panels, s.panelsHidden, on);       // the panels step aside while trying, the page stays put
             },
             setWalking(walking) { set({ walking }); },
             report(r) { set((s) => ({ reports: s.reports.concat([r]).slice(-REPORTS) })); },
