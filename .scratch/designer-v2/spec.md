@@ -49,3 +49,5 @@ Three things get in the app author's way in the Designer:
 ## Comments
 
 2026-11-04: All five tickets are resolved. Not verified: the Playwright browser tests (Playwright isn't installed in this checkout, so they skipped) and a real mouse drag in the element list (checked with drag events fired from script).
+
+2026-11-04: With Playwright 1.64.1 installed (`npm install --no-save playwright`, `npx playwright install chromium`), `npm test` passes 256 with 0 failures; only the 3 Node 8 tests skip. The browser tests needed two fixes after the list flipped: selections are compared sorted (`designer-canvas-zoom`, `designer-shortcuts`), and the right-click test clicks the element drawn on top. The Playwright drag test in the element list passes with a real mouse drag.

@@ -100,7 +100,7 @@ for (const zoom of [0.5, 1, 2]) {
             assert.deepStrictEqual(await box(page), [512, 200, 440, 104]);
             // a selection rectangle from empty screen around both
             await drag(page, await at(page, layer, 480, 150), await at(page, layer, 1330, 490));
-            assert.deepStrictEqual(await page.locator('[data-element][aria-current="true"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-element'))), ['a', 'b']);
+            assert.deepStrictEqual(await page.locator('[data-element][aria-current="true"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-element')).sort()), ['a', 'b']);
             assert.deepStrictEqual(errors, []);
         } finally {
             await page.close();

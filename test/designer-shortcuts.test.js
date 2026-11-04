@@ -51,7 +51,8 @@ async function open() {
 
 /** The selected screen's elements in stacking order, bottom first (as the canvas lays them out). */
 const elements = (page) => page.locator('[data-canvas-element]').evaluateAll((els) => els.map((e) => e.getAttribute('data-canvas-element')));
-const selection = (page) => page.locator('[data-element][aria-current="true"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-element')));
+/** The selected elements' names, sorted (a selection has no order). */
+const selection = (page) => page.locator('[data-element][aria-current="true"]').evaluateAll((els) => els.map((e) => e.getAttribute('data-element')).sort());
 const box = (page) => page.locator('[data-box] input').evaluateAll((els) => els.map((e) => Number(e.value)));
 
 test('copy, cut, paste, duplicate, delete, undo, redo and select all from the keyboard', { skip }, async () => {
@@ -110,12 +111,15 @@ test('stacking order from the keyboard, the main menu and the canvas’s right-c
         assert.strictEqual(await page.locator('[data-menu-stack="back"]').getAttribute('aria-disabled'), 'true');
         await page.locator('[data-menu-stack="front"]').click();
         assert.deepStrictEqual(await elements(page), ['button2', 'button3', 'button1']);
-        // right-click an element that isn't selected: it is selected, and the menu acts on it
-        await page.locator('[data-canvas-element="button2"]').click({ button: 'right' });
-        await page.locator('[data-canvas-menu]').waitFor();
+        // right-click an element that isn't selected (button1, drawn on top): it is selected, and the menu acts on it
+        await page.locator('[data-element="button2"]').click();
         assert.deepStrictEqual(await selection(page), ['button2']);
-        await page.locator('[data-canvas-stack="forward"]').click();
-        assert.deepStrictEqual(await elements(page), ['button3', 'button2', 'button1']);
+        await page.locator('[data-canvas-element="button1"]').click({ button: 'right' });
+        await page.locator('[data-canvas-menu]').waitFor();
+        assert.deepStrictEqual(await selection(page), ['button1']);
+        assert.strictEqual(await page.locator('[data-canvas-stack="front"]').getAttribute('aria-disabled'), 'true');
+        await page.locator('[data-canvas-stack="backward"]').click();
+        assert.deepStrictEqual(await elements(page), ['button2', 'button1', 'button3']);
         assert.deepStrictEqual(errors, []);
     } finally {
         await context.close();
