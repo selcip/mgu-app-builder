@@ -20,6 +20,7 @@ import { useActions, useEditor, useEditorStore } from '../store/react.tsx';
 
 const [W, H] = cluster.TARGETS.panel;
 const REFEED = 250;
+const BUDGET_SETTLE = 120;
 
 export function ClusterStage() {
     const layout = useEditor(layoutOf);
@@ -43,6 +44,15 @@ export function ClusterStage() {
         const stage = cluster.createStage({ canvas: el, log: (level, text) => note(String(level), String(text)) });
         stage.setView('panel', cluster.TARGETS);
         let e: ClusterEngine | null = null;
+        // the Layer budget (panels/layout) comes from this engine too; its stand-in answers a moment after the engine plans
+        let budgetT = 0, budgetKey = '';
+        const publishBudget = () => {
+            if (!alive || !e) return;
+            const b = cluster.budgetOf(e);
+            const key = JSON.stringify(b);
+            if (key !== budgetKey) { budgetKey = key; store.getState().setLayerBudget(b); }
+        };
+        const budgetSoon = () => { clearTimeout(budgetT); budgetT = window.setTimeout(publishBudget, BUDGET_SETTLE); };
         const refresh = () => {
             if (!alive || !e) return;
             // the engine keeps the reason it refused a layout in hud.problem; the status row says it
@@ -51,14 +61,14 @@ export function ClusterStage() {
         };
         e = cluster.createEngine({
             name: 'design', layout: first, settings: store.getState().previewSettings,
-            onChange() { if (e) stage.setScene(e.scene()); dirty = true; },
+            onChange() { if (e) stage.setScene(e.scene()); dirty = true; budgetSoon(); },
             onPixels(l, x, y, w, h) {
                 const layer = l as { key: string; iw: number; ih: number };
                 const px = e && e.pixelRect({ key: layer.key, x, y, w, h });
                 if (px) stage.putPixels(layer.key, layer.iw, layer.ih, x, y, w, h, px);
                 dirty = true;
             },
-            onStatus() { dirty = true; Promise.resolve().then(refresh); },
+            onStatus() { dirty = true; Promise.resolve().then(refresh); budgetSoon(); },
         });
         engine.current = e;
         const live = e;
@@ -74,6 +84,7 @@ export function ClusterStage() {
         drawn.current = first;
         stage.setScene(e.scene());
         refresh();
+        budgetSoon();
         const frame = (t: number) => {
             if (!alive) return;
             if (dirty || stage.animated()) {
@@ -107,8 +118,9 @@ export function ClusterStage() {
             e!.setLayout(next);
             dirty = true;
             Promise.resolve().then(refresh);
+            budgetSoon();
         });
-        return () => { alive = false; cancelAnimationFrame(raf); clearInterval(refeed); stopWatching(); e!.stop(); engine.current = null; };
+        return () => { alive = false; clearTimeout(budgetT); cancelAnimationFrame(raf); clearInterval(refeed); stopWatching(); e!.stop(); engine.current = null; };
     }, [store, trying]);
 
     // open fitted: the cluster is wider than the canvas area at 100 %

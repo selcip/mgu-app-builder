@@ -4,7 +4,7 @@
  * cluster-render for (hud._layerRefs, one entry per layer it made, refused or not), the stand-in's view of what is drawn
  * (the scene) and the engine's pixel memory. Plain CommonJS so Node's tests and the Designer's bundle use this very file.
  *
- *   const b = budgetOf(engine);   // engine from createEngine({ layerCap: CAR.perConnection, pixelBytes: CAR.pixelBytes, ... })
+ *   const b = budgetOf(engine);   // any engine from createEngine; the limits are the car's, whatever cap the engine's stand-in has
  *   b.connections   // [{ conn: 0, layers: 8, limit: 8, over: false }, ...]  conn is 0-based, as the widget's "conn" field
  *   b.layers        // { count, limit: 32, over }   layers in all
  *   b.pixels        // { bytes, limit: 16 MiB, over }   image layers and glyph atlases, each image counted twice
@@ -40,7 +40,9 @@ function budgetOf(engine) {
         connections, layers, pixels, over,
         effects: scene.filter((l) => l.kind === 'effect').length,
         sheets: scene.filter((l) => l.kind === 'image').length,
-        waiting: scene.filter((l) => l.state === 'waiting').length,
+        // layers past a connection's limit (the car draws only the first 8): worked out from the plan, so it reads the same
+        // from an engine whose stand-in has no cap (the canvas's) as from one that holds them back
+        waiting: connections.reduce((n, c) => n + Math.max(0, c.layers - c.limit), 0),
     };
 }
 

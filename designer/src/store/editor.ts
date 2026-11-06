@@ -9,6 +9,7 @@ import {
     type Doc, type Element, type History, type Op, type Screen, type ScreenFile,
 } from '../model/index.ts';
 import type { Lines } from '../canvas/snap.ts';
+import type { LayerBudget } from 'virtual:cluster-engine';
 import type { Action, ScreenChange } from '../preview.ts';
 import { centred, fitted, stepZoom, zoomAbout, type Size, type View } from '../shell/view.ts';
 import { DRIVE_MODES, clampSignal, defaultSignals, type DriveMode, type Signals } from './signals.ts';
@@ -61,6 +62,8 @@ export interface EditorState {
     demoDrive: boolean;
     /** While designing a cluster layout: the app's settings the canvas previews (key -> value; a setting not here has its default). Never saved, never in the history. */
     previewSettings: Record<string, boolean | string>;
+    /** While designing a cluster layout: the Layer budget the canvas's engine reports (null until it has planned the layers). Never saved. */
+    layerBudget: LayerBudget | null;
     /** The canvas's zoom and where the HMI page sits; null until the canvas is first measured (then: centred at 100 %, or fitted when that is too big). */
     view: View | null;
     /** The canvas's size and the HMI page's (unzoomed), as last measured; null until then. */
@@ -100,6 +103,7 @@ export interface EditorState {
     setSignal(key: string, value: number | string): void;
     /** Starts or stops the demo drive (the kit's simulated drive) in place of the sliders. */
     setDemoDrive(on: boolean): void;
+    setLayerBudget(budget: LayerBudget | null): void;
     /** Sets a setting the canvas previews (ignored when the app has no such setting or the value is not one it takes). */
     setPreviewSetting(key: string, value: boolean | string): void;
     report(r: Report): void;
@@ -171,6 +175,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
             signals: defaultSignals(),
             demoDrive: false,
             previewSettings: {},
+            layerBudget: null,
             view: null,
             measure: null,
             panels: options.panels || DEFAULT_PANELS,
@@ -191,7 +196,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
             undo() { if (canUndo(get().history)) moveTo(undo(get().history), null); },
             redo() { if (canRedo(get().history)) moveTo(redo(get().history), null); },
             open(d) {
-                set({ history: createHistory(d), selected: firstScreenOf(screenFileOf(d)), selection: [], problem: null, dragOp: null, previewSettings: {} });
+                set({ history: createHistory(d), selected: firstScreenOf(screenFileOf(d)), selection: [], problem: null, dragOp: null, previewSettings: {}, layerBudget: null });
             },
             setProblem(problem) { set({ problem }); },
             selectScreen(screen) {
@@ -236,6 +241,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
                 if (v !== null) set((s) => ({ signals: { ...s.signals, [key]: v } }));
             },
             setDemoDrive(demoDrive) { set({ demoDrive }); },
+            setLayerBudget(layerBudget) { set({ layerBudget }); },
             setPreviewSetting(key, value) {
                 const setting = settingByKey(key);
                 if (setting && acceptsValue(setting, value)) set((s) => ({ previewSettings: { ...s.previewSettings, [key]: value } }));
