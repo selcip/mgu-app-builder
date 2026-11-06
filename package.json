@@ -8,6 +8,7 @@
     "designer": "npm run dev -w designer",
     "build-designer": "npm run build -w designer",
     "sync-kit": "node scripts/sync-kit.js",
+    "sync-engine": "node scripts/sync-engine.js",
     "storybook": "npm run storybook -w designer",
     "build-storybook": "npm run build-storybook -w designer"
   },
