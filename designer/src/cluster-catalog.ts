@@ -3,6 +3,11 @@
 // it equal to the engine (engine/shared/layouts.js TYPES and the validator, the widget reference in the header of
 // engine/shared/hud.js, the baked fonts, icons.js). No React: the model and the inspector both read it.
 //
+// Ranges: only what the engine itself enforces is a hard limit here, each cited where it is: conn 0..3 (layouts.js
+// _validate) and atext cells 1..32 (hud.js clamps them). Elsewhere the engine has no upper bound (z, light and segment
+// counts are plain numbers in the shaders, with no array or loop sized by them), so only a meaningful minimum is kept and the
+// hint says the engine sets no limit; the layer budget is what bounds a layout, not a refusal here.
+//
 // A widget in a layout file is { id, type, x, y, w, h, ...options }. `required` are the options the engine refuses a
 // widget without. An option's `default` is what the engine uses when the key is absent (shown as the placeholder);
 // putting the option back to nothing removes the key, so a file keeps only what the author set.
@@ -83,7 +88,8 @@ const colour = (def: string, label = 'Colour') => o('color', label, 'role', { de
 /** On every widget: where it is drawn (stacking class and z) and on which connection to cluster-render. */
 export const COMMON_OPTIONS: readonly ClusterOption[] = [
     o('class', 'Layer class', 'choice', { choices: CLASSES, default: 'content', hint: 'Ambient draws under content, then overlay, then alert.' }),
-    o('z', 'Layer z', 'int', { min: -100, max: 100, default: 0, hint: 'Within a class, higher draws on top.' }),
+    o('z', 'Layer z', 'int', { default: 0, hint: 'Within a class, higher draws on top. The engine sets no limit.' }),
+    // layouts.js _validate refuses a connection outside 0..3
     o('conn', 'Connection', 'int', { min: 0, max: 3, default: 0, hint: 'The car draws 8 layers per connection to cluster-render.' }),
 ];
 
@@ -95,44 +101,46 @@ const TEXT_OPTIONS: ClusterOption[] = [
 ];
 
 const MAP_WINDOW: ClusterOption[] = [
-    o('holeInset', 'Map window inset', 'int', { min: 0, max: 200, default: 6 }),
-    o('holeRadius', 'Map window corner radius', 'int', { min: 0, max: 200, default: 28 }),
+    o('holeInset', 'Map window inset', 'int', { min: 0, default: 6, hint: 'The engine sets no upper limit.' }),
+    o('holeRadius', 'Map window corner radius', 'int', { min: 0, default: 28, hint: 'The engine sets no upper limit.' }),
 ];
 
 export const CLUSTER_WIDGETS: readonly ClusterWidgetType[] = [
     { type: 'text', label: 'Text', required: ['text', 'font'], box: { w: 200, h: 40 }, start: { text: 'Text', font: 'head', color: 'fg' },
       options: [...TEXT_OPTIONS, o('color2', 'Colour at the bottom', 'role', { hint: 'A second role: a top-to-bottom gradient.' }), o('glow', 'Glow', 'boolean', { default: false })] },
     { type: 'atext', label: 'GPU text', required: ['text', 'font'], box: { w: 88, h: 27 }, start: { text: '{{speed}}', font: 'head', color: 'fg' },
-      options: [...TEXT_OPTIONS, o('cells', 'Cells', 'int', { min: 1, max: 32, hint: 'Equal cells across the width, up to 32. Default: the width over the font’s widest advance.' })] },
+      options: [...TEXT_OPTIONS,
+          // hud.js clamps the cells to 1..32 (u_cells)
+          o('cells', 'Cells', 'int', { min: 1, max: 32, hint: 'Equal cells across the width, up to 32. Default: the width over the font’s widest advance.' })] },
     { type: 'boxes', label: 'Boxes', required: ['boxes'], box: { w: 480, h: 240 }, start: { class: 'ambient', z: -10, boxes: [] },
       options: [colour('bg', 'Background'), ...MAP_WINDOW] },
     { type: 'fill', label: 'Fill', required: [], box: { w: 480, h: 240 }, start: { class: 'ambient', z: -10 },
       options: [colour('bg'), ...MAP_WINDOW] },
     { type: 'revbar', label: 'Rev bar', required: ['barH'], box: { w: 600, h: 80 }, start: { barH: 40 },
-      options: [o('barH', 'Bar height', 'int', { min: 1, max: 720 }), o('top', 'Room for marks above', 'int', { min: 0, max: 200, default: 8 }),
-          o('slant', 'Slant', 'int', { min: 0, max: 200, default: 12 }),
-          o('over', 'Scale past the redline', 'int', { min: 0, max: 5000, default: 0, hint: 'rpm past the redline’s thousand the scale runs to.' })] },
+      options: [o('barH', 'Bar height', 'int', { min: 1 }), o('top', 'Room for marks above', 'int', { min: 0, default: 8 }),
+          o('slant', 'Slant', 'int', { min: 0, default: 12 }),
+          o('over', 'Scale past the redline', 'int', { min: 0, default: 0, hint: 'rpm past the redline’s thousand the scale runs to.' })] },
     { type: 'lights', label: 'Shift lights', required: [], box: { w: 600, h: 40 }, start: {},
-      options: [o('count', 'Lights', 'int', { min: 1, max: 32, default: 12 }), o('from', 'First light at rpm', 'int', { min: 0, max: 20000, default: 3000 }),
-          o('tail', 'Blue lights at the end', 'int', { min: 0, max: 32, default: 0 }), o('round', 'Round', 'boolean', { default: false }),
+      options: [o('count', 'Lights', 'int', { min: 1, default: 12, hint: 'The engine sets no upper limit.' }), o('from', 'First light at rpm', 'int', { min: 0, default: 3000 }),
+          o('tail', 'Blue lights at the end', 'int', { min: 0, default: 0 }), o('round', 'Round', 'boolean', { default: false }),
           o('off', 'Unlit opacity', 'number', { min: 0, max: 1, default: 0.14 })] },
     { type: 'arc', label: 'Arc', required: ['signal', 'min', 'max'], box: { w: 240, h: 240 }, start: { signal: 'rpm', min: 0, max: 8000 },
-      options: [o('signal', 'Signal', 'signal'), o('min', 'Minimum', 'number', { min: -100000, max: 100000 }), o('max', 'Maximum', 'number', { min: -100000, max: 100000 }), colour('arc'),
-          o('start', 'Start angle', 'number', { min: -360, max: 360, default: 225, hint: 'Degrees clockwise from 12 o’clock.' }),
-          o('sweep', 'Sweep', 'number', { min: -360, max: 360, default: 270, hint: 'Degrees; negative runs anticlockwise.' }),
-          o('width', 'Width', 'int', { min: 1, max: 200, default: 7 })] },
+      options: [o('signal', 'Signal', 'signal'), o('min', 'Minimum', 'number'), o('max', 'Maximum', 'number'), colour('arc'),
+          o('start', 'Start angle', 'number', { default: 225, hint: 'Degrees clockwise from 12 o’clock.' }),
+          o('sweep', 'Sweep', 'number', { default: 270, hint: 'Degrees; negative runs anticlockwise.' }),
+          o('width', 'Width', 'int', { min: 1, default: 7 })] },
     { type: 'segbar', label: 'Segment bar', required: ['signal', 'max'], box: { w: 160, h: 24 }, start: { signal: 'setupLevel:engine', max: 3 },
-      options: [o('signal', 'Signal', 'signal'), o('max', 'Segments', 'int', { min: 1, max: 32 }), o('slant', 'Slant', 'int', { min: 0, max: 100, default: 0 }), colour('hot')] },
+      options: [o('signal', 'Signal', 'signal'), o('max', 'Segments', 'int', { min: 1, hint: 'The engine sets no upper limit.' }), o('slant', 'Slant', 'int', { min: 0, default: 0 }), colour('hot')] },
     { type: 'icon', label: 'Icon', required: ['icon'], box: { w: 48, h: 48 }, start: { icon: 'gauge', color: 'fg' },
       options: [o('icon', 'Icon', 'icon'), colour('fg')] },
     { type: 'badge', label: 'Badge', required: ['text', 'font', 'tone'], box: { w: 160, h: 40 }, start: { text: '{{verdict}}', font: 'head', tone: 'verdict' },
       options: [o('text', 'Template', 'template'), o('font', 'Font', 'font'), o('tone', 'Tone', 'choice', { choices: TONES, hint: 'verdict: the last shift’s grade colour; cold: blue.' })] },
     { type: 'scale', label: 'Scale', required: ['font'], box: { w: 700, h: 30 }, start: { font: 'scale', color: 'dim' },
-      options: [o('font', 'Font', 'font'), colour('dim'), o('over', 'Scale past the redline', 'int', { min: 0, max: 5000, default: 0 }),
+      options: [o('font', 'Font', 'font'), colour('dim'), o('over', 'Scale past the redline', 'int', { min: 0, default: 0 }),
           o('redFrom', 'Red from the redline', 'boolean', { default: false })] },
     { type: 'stripe', label: 'Stripe', required: [], box: { w: 400, h: 20 }, start: {}, options: [] },
     { type: 'shiftbar', label: 'Shift bar', required: [], box: { w: 1000, h: 60 }, start: {},
-      options: [o('segments', 'Segments', 'int', { min: 1, max: 200, default: 40 })] },
+      options: [o('segments', 'Segments', 'int', { min: 1, default: 40 })] },
 ];
 
 export const clusterWidget = (type: string): ClusterWidgetType | undefined => CLUSTER_WIDGETS.find((w) => w.type === type);

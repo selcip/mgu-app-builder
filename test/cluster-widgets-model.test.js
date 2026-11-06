@@ -65,10 +65,21 @@ test('invalid values are refused: the engine\'s own reason where it has one, the
     refused(doc, { type: 'setWidgetOption', element: 'speed', key: 'align', value: 'middle' }, /Alignment.*left, center, right/);
     refused(doc, { type: 'setWidgetOption', element: 'speed', key: 'font', value: 'comic' }, /not one of the engine’s fonts/);
     refused(doc, { type: 'setWidgetOption', element: 'speed', key: 'z', value: 1.5 }, /whole number/);
-    refused(doc, { type: 'setWidgetOption', element: 'speed', key: 'z', value: 500 }, /from -100 to 100/);
     refused(doc, { type: 'setWidgetOption', element: 'speed', key: 'nope', value: 1 }, /no option/);
     refused(doc, { type: 'setWidgetOption', element: 'ghost', key: 'z', value: 1 }, /no element "ghost"/);
-    refused(doc, { type: 'setWidgetOption', element: 'lights', key: 'count', value: 0 }, /Lights.*from 1 to 32/);
+    refused(doc, { type: 'setWidgetOption', element: 'lights', key: 'count', value: 0 }, /Lights.*at least 1/);
+    refused(doc, { type: 'setWidgetOption', element: 'speed', key: 'conn', value: 4 }, /0\.\.3/);
+});
+
+test('where the engine has no limit the catalog has none: z and the light count take any whole number; atext cells stop at the engine 32', () => {
+    const doc = gt3();
+    const z = M.apply(doc, { type: 'setWidgetOption', element: 'speed', key: 'z', value: 500 });
+    assert.strictEqual(widget(z, 'speed').z, 500);
+    const n = M.apply(doc, { type: 'setWidgetOption', element: 'lights', key: 'count', value: 64 });
+    assert.strictEqual(widget(n, 'lights').count, 64);
+    const atext = M.apply(doc, { type: 'addWidget', widgetType: 'atext' });
+    const id = atext.layout.widgets[atext.layout.widgets.length - 1].id;
+    refused(atext, { type: 'setWidgetOption', element: id, key: 'cells', value: 33 }, /from 1 to 32/);
 });
 
 test('a role must be in the palette of the layout\'s theme', () => {
