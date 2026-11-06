@@ -65,6 +65,7 @@ export function Canvas({ children, design = DESIGN, rings = true }: { children: 
         }
         const names = selection.includes(name) ? selection : [name];
         if (!selection.includes(name)) onSelect(names);
+        if (screen.components.some((c) => names.includes(c.name) && c.locked)) return;       // a locked element is selected, not dragged
         const from: Record<string, Box> = {};
         for (const c of screen.components) if (names.includes(c.name)) from[c.name] = boxOf(c);
         capture(e);
@@ -200,7 +201,7 @@ export function Canvas({ children, design = DESIGN, rings = true }: { children: 
                             {rings && <div className="ring-margin" style={place({ x: b.x - RING_MARGIN, y: b.y - RING_MARGIN, w: b.w + 2 * RING_MARGIN, h: b.h + 2 * RING_MARGIN })} />}
                             <div className={'element' + (sel ? ' selected' : '')} data-canvas-element={c.name} data-canvas-child={typeof c.parent === 'string' ? c.parent : undefined} title={c.name}
                                 style={{ ...place(b), minWidth: 6, minHeight: 6, ...(sel && typeof c.parent === 'string' ? { zIndex: 1 } : {}) }} onPointerDown={(e) => startMove(e, c.name)}>
-                                {single === c.name && HANDLES.map((h) => (
+                                {single === c.name && !c.locked && HANDLES.map((h) => (
                                     <span key={h} className={'handle ' + h} onPointerDown={(e) => startResize(e, c.name, h)} />
                                 ))}
                             </div>
