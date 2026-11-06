@@ -80,3 +80,30 @@ test('a signal outside its slider\'s range is clamped, and an unknown signal is 
     store.getState().setSignal('nope', 1);
     assert.strictEqual('nope' in store.getState().signals, false);
 });
+
+test('what feedsOf sends is decoded by the vendored engine\'s own decoders back to the slider values (drift fails)', async () => {
+    const { createEngine } = require('../cluster/node.js');
+    const gt3 = JSON.parse(fs.readFileSync(path.join(ROOT, 'test', 'fixtures', 'cluster-layouts', 'gt3.json'), 'utf8'));
+    const near = (got, want, what) => assert.ok(Math.abs(got - want) < 1e-6, `${what}: the engine decoded ${got}, the slider said ${want}`);
+    for (const sig of [
+        { ...SIG.defaultSignals(), rpm: 6800, speed: 100, gear: 3, oil: 105, coolant: 88, boost: 0.8, tyreP: 2.6, tyreT: 31, drive: 'sport' },
+        { ...SIG.defaultSignals(), rpm: 1250, speed: 12.5, gear: 0, oil: 20, coolant: 70, boost: 0, tyreP: 1.5, tyreT: 0, drive: 'eco' },
+    ]) {
+        const engine = createEngine({ name: 'gt3', layout: gt3, settings: { demo: 'off' } });
+        try {
+            await new Promise((r) => setTimeout(r, 100));
+            for (const f of SIG.feedsOf(sig)) engine.feed(f.iface, f.field, f.value);
+            const d = engine.hud.car.data(), h = engine.hud;
+            near(d.rpm, sig.rpm, 'rpm'); near(d.speed, sig.speed, 'speed');
+            near(d.coolant, sig.coolant, 'coolant'); near(d.oil, sig.oil, 'oil');
+            assert.strictEqual(d.gear, sig.gear);
+            near(d.gLong, 0, 'longitudinal g'); near(d.gLat, 0, 'lateral g'); near(d.torque, 0, 'torque');
+            near(h.boostFes, sig.boost, 'boost');
+            ['FL', 'FR'].forEach((k) => { near(h.tyres.p[k], sig.tyreP, 'tyre pressure ' + k); near(h.tyres.t[k], sig.tyreT, 'tyre temperature ' + k); });
+            ['RL', 'RR'].forEach((k) => { near(h.tyres.p[k], sig.tyreP + 0.2, 'tyre pressure ' + k); near(h.tyres.t[k], sig.tyreT + 3, 'tyre temperature ' + k); });
+            near(h.ambient, 22, 'outside temperature');
+            assert.strictEqual(h.fuelL, 40); assert.strictEqual(h.rangeKm, 450);
+            assert.strictEqual(h.driveMode, sig.drive);
+        } finally { engine.stop(); }
+    }
+});
