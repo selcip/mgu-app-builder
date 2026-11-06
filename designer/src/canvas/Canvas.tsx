@@ -146,7 +146,7 @@ export function Canvas({ children, design = DESIGN, rings = true }: { children: 
             const r = { x: Math.min(drag.start.x, drag.at.x), y: Math.min(drag.start.y, drag.at.y),
                 w: Math.abs(drag.at.x - drag.start.x), h: Math.abs(drag.at.y - drag.start.y) };
             if (r.w > 2 || r.h > 2) {
-                const hit = screen.components.filter((c) => !c.boxless).filter((c) => overlaps(r, { ...boxOf(c), w: Math.max(c.w, 1), h: Math.max(c.h, 1) })).map((c) => c.name);
+                const hit = screen.components.filter((c) => !c.boxless && typeof c.parent !== 'string').filter((c) => overlaps(r, { ...boxOf(c), w: Math.max(c.w, 1), h: Math.max(c.h, 1) })).map((c) => c.name);
                 onSelect([...new Set(drag.add.concat(hit))]);
             }
         } else if (drag.kind !== 'guide' && drag.op) {
@@ -198,8 +198,8 @@ export function Canvas({ children, design = DESIGN, rings = true }: { children: 
                     return (
                         <div key={c.name}>
                             {rings && <div className="ring-margin" style={place({ x: b.x - RING_MARGIN, y: b.y - RING_MARGIN, w: b.w + 2 * RING_MARGIN, h: b.h + 2 * RING_MARGIN })} />}
-                            <div className={'element' + (sel ? ' selected' : '')} data-canvas-element={c.name} title={c.name}
-                                style={{ ...place(b), minWidth: 6, minHeight: 6 }} onPointerDown={(e) => startMove(e, c.name)}>
+                            <div className={'element' + (sel ? ' selected' : '')} data-canvas-element={c.name} data-canvas-child={typeof c.parent === 'string' ? c.parent : undefined} title={c.name}
+                                style={{ ...place(b), minWidth: 6, minHeight: 6, ...(sel && typeof c.parent === 'string' ? { zIndex: 1 } : {}) }} onPointerDown={(e) => startMove(e, c.name)}>
                                 {single === c.name && HANDLES.map((h) => (
                                     <span key={h} className={'handle ' + h} onPointerDown={(e) => startResize(e, c.name, h)} />
                                 ))}

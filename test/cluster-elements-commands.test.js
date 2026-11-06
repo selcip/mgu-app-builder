@@ -27,7 +27,7 @@ const steps = (st) => st.getState().history.past.length;
 test('the layout is listed as elements named by widget id, bottom first, with kind and box', () => {
     const st = open();
     const screen = S.screenOf(st.getState());
-    assert.deepStrictEqual(screen.components.map((c) => c.name), ids(st));
+    assert.deepStrictEqual(screen.components.filter((c) => !c.parent).map((c) => c.name), ids(st), 'the boxes inside a widget are its children (ticket 07)');
     const speed = screen.components.find((c) => c.name === 'speed');
     assert.deepStrictEqual([speed.gpu, speed.x, speed.y, speed.w, speed.h], ['text', 128, 268, 206, 93]);
 });

@@ -2,6 +2,7 @@
 // its box, with the same Arrange section as for screens (box fields, align, distribute). What the widget's options
 // are comes with the cluster widget catalog.
 import { Arrange } from '../inspector/Arrange';
+import { BoxesSection } from './BoxesSection';
 import { Hint, Row, Section } from '@/components/designer/form';
 import { screenOf } from '../../store/editor.ts';
 import { useEditor } from '../../store/react.tsx';
@@ -21,6 +22,7 @@ export function LayoutInspector() {
                     {Boolean(one.boxless) && <Hint>This element has no box (x, y, w, h) in the layout, so it can’t be moved or resized.</Hint>}
                 </Section>
             )}
+            {one && <BoxesSection element={one} />}
             {sel.length > 0 && !(one && one.boxless) && <Arrange />}
         </div>
     );

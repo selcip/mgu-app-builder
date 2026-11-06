@@ -2,7 +2,7 @@
 // all, nudge and resize by the arrow keys, stacking order (bring forward, send backward, to front, to back), and
 // guides. Each works on the store's selection on the selected screen and edits through the store (so a refusal
 // shows as its problem). Plain TypeScript, no React or DOM: Node tests it.
-import { canRestack, copyElements, pastedNames, type Box, type Place } from '../model/index.ts';
+import { canRestack, copyElements, pastedNames, stackScope, type Box, type Place } from '../model/index.ts';
 import { DESIGN, kindOf, screenOf, type EditorState, type EditorStore } from '../store/editor.ts';
 
 /** How far each paste on the same screen moves from the one before. */
@@ -63,7 +63,7 @@ export function duplicate(store: EditorStore): boolean {
 
 export function selectAll(store: EditorStore): void {
     const s = store.getState();
-    s.select(screenOf(s).components.map((c) => c.name));
+    s.select(screenOf(s).components.filter((c) => typeof c.parent !== 'string').map((c) => c.name));      // not the boxes inside a widget
 }
 
 /** An arrow key: moves the selection 1 px (with Shift: a grid step, 10 px without a grid); with Alt resizes it. */
@@ -91,7 +91,8 @@ export const STACKING = [
 
 /** Whether moving the selection to `place` in the stacking order would change it (for disabling a command). */
 export function canStack(s: EditorState, place: Place): boolean {
-    return canRestack(screenOf(s), selectedIn(s), place);
+    const sel = selectedIn(s);
+    return canRestack(stackScope(screenOf(s), sel), sel, place);
 }
 
 /** Which of the STACKING commands would change anything, as a string of 1s and 0s (a stable store selector). */

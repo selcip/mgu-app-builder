@@ -3,7 +3,7 @@
 // layer list: the top row is the element drawn on top, and dragging rows changes the stacking order.
 import { Fragment, useState, type DragEvent } from 'react';
 import { Home, Image, LayoutList, Plus, RectangleHorizontal, Square, ToggleRight, TriangleAlert, Type, type LucideIcon } from 'lucide-react';
-import { deadLinks, firstScreenOf } from '../../model/index.ts';
+import { deadLinks, firstScreenOf, listOrder } from '../../model/index.ts';
 import { widget } from '../../catalog.ts';
 import { Button } from '@/components/ui/button';
 import { Hint, Section, listRowClass } from '@/components/designer/form';
@@ -50,8 +50,8 @@ export function ElementList() {
     const store = useEditorStore();
     const { select } = useActions();
     const [gap, setGap] = useState<number | null>(null);        // the gap a drag would drop into
-    const shown = screen.components.slice().reverse();          // top first
-    const names = shown.map((c) => c.name);
+    const shown = listOrder(screen.components);                 // top first; a widget's boxes under it
+    const names = shown.filter((c) => typeof c.parent !== 'string').map((c) => c.name);
 
     function dragStart(e: DragEvent, name: string) {
         if (!selection.includes(name)) select([name]);
@@ -62,14 +62,16 @@ export function ElementList() {
         if (!e.dataTransfer.types.includes(ROW_DRAG_TYPE)) return;
         e.preventDefault();
         const r = e.currentTarget.getBoundingClientRect();
-        setGap(e.clientY < r.top + r.height / 2 ? i : i + 1);
+        let g = e.clientY < r.top + r.height / 2 ? i : i + 1;
+        while (g < shown.length && typeof shown[g].parent === 'string') g++;       // below a widget's boxes
+        setGap(g);
     }
     function drop(e: DragEvent) {
         if (!e.dataTransfer.types.includes(ROW_DRAG_TYPE) || gap === null) return;
         e.preventDefault();
         const moving = store.getState().selection;
         setGap(null);
-        stack(store, dropPlace(names, moving, gap));
+        stack(store, dropPlace(names, moving, shown.slice(0, gap).filter((c) => typeof c.parent !== 'string').length));
     }
     const line = <li aria-hidden className="pointer-events-none -my-px h-0.5 rounded bg-blue-500" data-drop-line="" />;
     return (
@@ -79,11 +81,12 @@ export function ElementList() {
                 onDragOver={(e) => { if (e.dataTransfer.types.includes(ROW_DRAG_TYPE)) e.preventDefault(); }} onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setGap(null); }}
                 onDrop={drop} onDragEnd={() => setGap(null)}>{shown.map((c, i) => {
                 const Icon = ICONS[c.gpu] || Square;
+                const inner = typeof c.parent === 'string';      // a box inside a widget: a child row (not stacked by drag)
                 return (
                     <Fragment key={c.name}>
-                        {gap === i && line}
-                        <li draggable onDragStart={(e) => dragStart(e, c.name)} onDragOver={(e) => dragOver(e, i)}>
-                            <button data-element={c.name} data-element-kind={cluster ? c.gpu : undefined} data-boxless={c.boxless ? '' : undefined} aria-current={selection.includes(c.name)} className={listRowClass}
+                        {gap === i && !inner && line}
+                        <li draggable={!inner} className={inner ? 'ml-4' : undefined} onDragStart={inner ? undefined : (e) => dragStart(e, c.name)} onDragOver={inner ? undefined : (e) => dragOver(e, i)}>
+                            <button {...(inner ? { 'data-element-box': c.name, 'data-parent': c.parent as string } : { 'data-element': c.name })} data-element-kind={cluster && !inner ? c.gpu : undefined} data-boxless={c.boxless ? '' : undefined} aria-current={selection.includes(c.name)} className={listRowClass}
                                 title="Shift- or Ctrl-click to select several; drag to change which is drawn on top"
                                 onClick={(e) => select(e.shiftKey || e.metaKey || e.ctrlKey
                                     ? (selection.includes(c.name) ? selection.filter((n) => n !== c.name) : selection.concat([c.name]))
