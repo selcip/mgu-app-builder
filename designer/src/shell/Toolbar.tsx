@@ -49,7 +49,7 @@ export function Toolbar({ autosaveProblem, children }: { autosaveProblem: string
             </span>
             {children}
             {!layout && <ShownLanguage />}
-            {!layout && <PlayButton />}
+            <PlayButton />
             {!layout && <ViewMenu />}
             <ZoomControl />
         </header>

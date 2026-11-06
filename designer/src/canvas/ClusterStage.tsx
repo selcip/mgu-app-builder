@@ -3,17 +3,23 @@
 // started with the layout and told the new layout when it changes (setLayout); its layers and pixels go to the stage,
 // which is redrawn when something changed and on every frame while an effect layer animates. A layout the engine
 // refuses is shown with the engine's own reason (its status row) over the empty canvas.
+// While trying, the engine is started afresh (no data, as on opening) and fed the signals panel's values (feedsOf) as the car
+// would send them, again every REFEED ms (the engine counts a boost reading older than 3 s as gone), or runs the kit's
+// demo drive (the engine's own "demo" setting). Leaving Trying starts it afresh once more, so nothing of the signals stays.
 // Each drawn frame is announced as a 'mgu-cluster-frame' event on window with the time it was drawn at.
 import { useEffect, useRef, useState } from 'react';
 import cluster, { type ClusterEngine } from 'virtual:cluster-engine';
 import { Viewport } from '../shell/Viewport';
 import { layoutOf } from '../store/editor.ts';
+import { feedsOf } from '../store/signals.ts';
 import { useActions, useEditor, useEditorStore } from '../store/react.tsx';
 
 const [W, H] = cluster.TARGETS.panel;
+const REFEED = 250;
 
 export function ClusterStage() {
     const layout = useEditor(layoutOf);
+    const trying = useEditor((s) => s.trying);
     const store = useEditorStore();
     const { zoomToFit } = useActions();
     const canvas = useRef<HTMLCanvasElement>(null);
@@ -50,6 +56,16 @@ export function ClusterStage() {
             onStatus() { dirty = true; Promise.resolve().then(refresh); },
         });
         engine.current = e;
+        const live = e;
+        // the signals, while trying: fed as the car sends them (a field the layout does not watch is not fed)
+        const feedAll = () => {
+            const s = store.getState();
+            if (!s.trying || s.demoDrive) return;
+            feedsOf(s.signals).forEach((f) => { try { live.feed(f.iface, f.field, f.value); } catch { /* not watched */ } });
+        };
+        const setDemo = () => live.setSetting('demo', store.getState().trying && store.getState().demoDrive ? 'on' : 'off');
+        let refeed = 0;
+        if (trying) { setDemo(); feedAll(); refeed = window.setInterval(feedAll, REFEED); }
         drawn.current = first;
         stage.setScene(e.scene());
         refresh();
@@ -64,6 +80,8 @@ export function ClusterStage() {
         };
         raf = requestAnimationFrame(frame);
         const stopWatching = store.subscribe((s, prev) => {
+            if (trying && s.signals !== prev.signals) feedAll();
+            if (trying && s.demoDrive !== prev.demoDrive) { setDemo(); feedAll(); }
             const next = layoutOf(s);
             if (!next || next === drawn.current || layoutOf(prev) === next) return;
             drawn.current = next;
@@ -71,8 +89,8 @@ export function ClusterStage() {
             dirty = true;
             Promise.resolve().then(refresh);
         });
-        return () => { alive = false; cancelAnimationFrame(raf); stopWatching(); e!.stop(); engine.current = null; };
-    }, [store]);
+        return () => { alive = false; cancelAnimationFrame(raf); clearInterval(refeed); stopWatching(); e!.stop(); engine.current = null; };
+    }, [store, trying]);
 
     // open fitted: the cluster is wider than the canvas area at 100 %
     useEffect(() => { zoomToFit(); }, [zoomToFit]);
