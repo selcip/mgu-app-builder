@@ -3,6 +3,8 @@
 // are comes with the cluster widget catalog.
 import { lockedNote } from '../../model/index.ts';
 import { Arrange } from '../inspector/Arrange';
+import { ElementConnection } from './ElementConnection';
+import { LayerBudget } from './LayerBudget';
 import { BoxesSection } from './BoxesSection';
 import { Hint, Row, Section } from '@/components/designer/form';
 import { useWarnings } from '../../canvas/CarView';
@@ -27,6 +29,7 @@ export function LayoutInspector() {
                     {Boolean(one.boxless) && <Hint>This element has no box (x, y, w, h) in the layout, so it can’t be moved or resized.</Hint>}
                 </Section>
             )}
+            {one && <ElementConnection element={one.name} />}
             {one && <BoxesSection element={one} />}
             {sel.some((c) => warnings[c.name]) && (
                 <Section title="Warnings" data-warnings="">
@@ -39,6 +42,7 @@ export function LayoutInspector() {
             {sel.length > 0 && !(one && one.boxless) && <Arrange />}
             {one && <ElementCondition name={one.name} />}
             <PreviewSettings />
+            <LayerBudget />
         </div>
     );
 }
