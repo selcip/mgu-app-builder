@@ -53,6 +53,8 @@ declare module 'virtual:cluster-engine' {
         TARGETS: Record<string, [number, number]> & { panel: [number, number] };
         /** The engine's own widget validator and palettes (cluster/checks.js). */
         checks: import('./model/engine-checks.ts').EngineChecks;
+        /** What the driver cannot see (engine/shared/visible.js): the geometry and the layout check. */
+        visible: import('./model/visibility.ts').Visible;
     }
     const cluster: ClusterEngineModule;
     export default cluster;
