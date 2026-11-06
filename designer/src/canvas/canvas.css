@@ -32,3 +32,5 @@
 .focus-badge { position: absolute; transform: translate(-50%, -50%); min-width: 30px; height: 30px; padding: 0 6px; border-radius: 15px;
     background: #ffd84d; color: #111; font: 600 17px/30px system-ui, sans-serif; text-align: center; box-shadow: 0 0 0 2px #111; }
 .hmi-page:focus { outline: 3px solid #3d6ef5; }
+/* trying a cluster layout: the editing overlay steps aside, trying never edits the layout */
+[data-cluster-page][data-trying="true"] .canvas-layer { display: none; }

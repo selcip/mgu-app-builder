@@ -11,6 +11,7 @@ import {
 import type { Lines } from '../canvas/snap.ts';
 import type { Action, ScreenChange } from '../preview.ts';
 import { centred, fitted, stepZoom, zoomAbout, type Size, type View } from '../shell/view.ts';
+import { DRIVE_MODES, clampSignal, defaultSignals, type DriveMode, type Signals } from './signals.ts';
 import { DEFAULT_PANELS, clampWidth, leftInset, type PanelLayout, type PanelLayouts, type Side } from '../shell/panels.ts';
 
 /** The app's box on iDrive 7, inside the HMI page. */
@@ -55,6 +56,9 @@ export interface EditorState {
     reports: Report[];
     /** While trying: the screen the runtime shows. */
     walking: string | null;
+    /** While trying a cluster layout: the demo signals the sliders hold, and whether the demo drive moves them instead. */
+    signals: Signals;
+    demoDrive: boolean;
     /** The canvas's zoom and where the HMI page sits; null until the canvas is first measured (then: centred at 100 %, or fitted when that is too big). */
     view: View | null;
     /** The canvas's size and the HMI page's (unzoomed), as last measured; null until then. */
@@ -90,6 +94,10 @@ export interface EditorState {
     /** Starts trying (afresh: no reports; the panels step aside) or stops (back to editing the screen the walk ended on). */
     setTrying(on: boolean): void;
     setWalking(screen: string | null): void;
+    /** Sets a slider (clamped to its range) or the drive mode of the demo signals. */
+    setSignal(key: string, value: number | string): void;
+    /** Starts or stops the demo drive (the kit's simulated drive) in place of the sliders. */
+    setDemoDrive(on: boolean): void;
     report(r: Report): void;
     clearReports(): void;
     setMeasure(canvas: Size, page: Size): void;
@@ -156,6 +164,8 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
             trying: false,
             reports: [],
             walking: null,
+            signals: defaultSignals(),
+            demoDrive: false,
             view: null,
             measure: null,
             panels: options.panels || DEFAULT_PANELS,
@@ -208,10 +218,19 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
                 const s = get();
                 if (on === s.trying) return;
                 if (!on && s.walking !== null && s.walking !== s.selected) s.selectScreen(s.walking);
-                set({ dragOp: null, reports: on ? [] : s.reports });
+                set({ dragOp: null, reports: on ? [] : s.reports, demoDrive: false });
                 layOut(s.panels, s.panelsHidden, on);       // the panels step aside while trying, the page stays put
             },
             setWalking(walking) { set({ walking }); },
+            setSignal(key, value) {
+                if (key === 'drive') {
+                    if (DRIVE_MODES.some((m) => m.id === value)) set((s) => ({ signals: { ...s.signals, drive: value as DriveMode } }));
+                    return;
+                }
+                const v = typeof value === 'number' ? clampSignal(key, value) : null;
+                if (v !== null) set((s) => ({ signals: { ...s.signals, [key]: v } }));
+            },
+            setDemoDrive(demoDrive) { set({ demoDrive }); },
             report(r) { set((s) => ({ reports: s.reports.concat([r]).slice(-REPORTS) })); },
             clearReports() { set({ reports: [] }); },
             setMeasure(canvas, page) {

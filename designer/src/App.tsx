@@ -7,6 +7,7 @@ import { Stage } from './canvas/Stage';
 import { useEditKeys } from './shell/keys.ts';
 import { Inspector } from './panels/inspector/Inspector';
 import { TryReport } from './shell/Try';
+import { SignalsPanel } from './shell/Signals';
 import { Panel, PanelArea, usePanelKeys } from './shell/Panel';
 import { readPanels, writePanels } from './shell/panels.ts';
 import { Toolbar } from './shell/Toolbar';
@@ -52,6 +53,7 @@ function Designer() {
                 <Panel side="right" title="Inspector" className="inspector">
                     <LayoutInspector />
                 </Panel>
+                <SignalsPanel />
             </PanelArea>
             ) : (
             <PanelArea>
