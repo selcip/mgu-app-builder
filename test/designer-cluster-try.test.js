@@ -239,3 +239,31 @@ test('leaving Trying leaves the layout, its undo history and its frame as they w
         await context.close();
     }
 });
+
+test('toggling Try 20 times does not make 20 WebGL contexts: one stage serves the canvas', { skip }, async () => {
+    const context = await newContext();
+    try {
+        const { page, errors } = await openDesigner(context);
+        await page.evaluate(() => {
+            const get = HTMLCanvasElement.prototype.getContext;
+            window.__gl = 0;
+            HTMLCanvasElement.prototype.getContext = function (id, ...rest) {
+                const had = this.__gl;
+                const r = get.call(this, id, ...rest);
+                if (r && /webgl/.test(id) && !had) { this.__gl = true; window.__gl++; }
+                return r;
+            };
+        });
+        const toggle = page.locator('[data-try-toggle]');
+        for (let i = 0; i < 20; i++) {
+            const before = await page.evaluate(() => window.__frames);
+            await toggle.click();
+            await page.waitForFunction((n) => window.__frames > n, before, { timeout: 15000 });
+        }
+        await page.waitForFunction(() => window.__last && window.__last.layers === 8, null, { timeout: 30000 });
+        assert.ok(await page.evaluate(() => window.__gl) <= 1, 'WebGL contexts made after the toggles: ' + await page.evaluate(() => window.__gl));
+        assert.deepStrictEqual(errors, []);
+    } finally {
+        await context.close();
+    }
+});

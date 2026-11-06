@@ -25,24 +25,54 @@ const BUDGET_SETTLE = 120;
 export function ClusterStage() {
     const layout = useEditor(layoutOf);
     const trying = useEditor((s) => s.trying);
+    const hasLayout = layout !== null;
     const store = useEditorStore();
     const { zoomToFit } = useActions();
     const canvas = useRef<HTMLCanvasElement>(null);
     const engine = useRef<ClusterEngine | null>(null);
+    const stageRef = useRef<ReturnType<typeof cluster.createStage> | null>(null);
     const drawn = useRef<unknown>(null);          // the layout the engine has been given
     const [refusal, setRefusal] = useState<string | null>(null);
     const [carView, setCarView] = useState(true);       // the car's view masks (ticket 09), an overlay above the engine's canvas
     const [log, setLog] = useState<string[]>([]);
 
+    // the stage (an offscreen WebGL canvas and the image canvases) lives as long as the canvas does, across Trying toggles:
+    // the vendored stage has no destroy, so each stage is one more WebGL context; the browser keeps a handful. On unmount its
+    // WebGL context (found through createCanvas) is told to give itself up.
     useEffect(() => {
         const el = canvas.current;
-        const first = layoutOf(store.getState());
-        if (!el || !first) return;
-        let alive = true, dirty = true, raf = 0;
+        if (!el || !hasLayout) return;
+        let alive = true;
         const lines: string[] = [];
         const note = (level: string, text: string) => { if (level !== 'info' && alive) { lines.push(text); setLog(lines.slice(-4)); } };
-        const stage = cluster.createStage({ canvas: el, log: (level, text) => note(String(level), String(text)) });
+        const gls: WebGLRenderingContext[] = [];       // the WebGL contexts the stage asked for
+        const stage = cluster.createStage({
+            canvas: el, log: (level, text) => note(String(level), String(text)),
+            createCanvas: () => {
+                const c = document.createElement('canvas');
+                const get = c.getContext.bind(c) as (id: string, o?: unknown) => RenderingContext | null;
+                (c as { getContext: unknown }).getContext = (id: string, o?: unknown) => {
+                    const r = get(id, o);
+                    if (r && /webgl/.test(id) && !gls.includes(r as WebGLRenderingContext)) gls.push(r as WebGLRenderingContext);
+                    return r;
+                };
+                return c;
+            },
+        });
         stage.setView('panel', cluster.TARGETS);
+        stageRef.current = stage;
+        return () => {
+            alive = false;
+            stageRef.current = null;
+            gls.forEach((gl) => { try { gl.getExtension('WEBGL_lose_context')?.loseContext(); } catch { /* already lost */ } });
+        };
+    }, [hasLayout]);
+
+    useEffect(() => {
+        const first = layoutOf(store.getState());
+        const stage = stageRef.current;
+        if (!stage || !first) return;
+        let alive = true, dirty = true, raf = 0;
         let e: ClusterEngine | null = null;
         // the Layer budget (panels/layout) comes from this engine too; its stand-in answers a moment after the engine plans
         let budgetT = 0, budgetKey = '';
@@ -121,7 +151,7 @@ export function ClusterStage() {
             budgetSoon();
         });
         return () => { alive = false; clearTimeout(budgetT); cancelAnimationFrame(raf); clearInterval(refeed); stopWatching(); e!.stop(); engine.current = null; };
-    }, [store, trying]);
+    }, [store, trying, hasLayout]);
 
     // open fitted: the cluster is wider than the canvas area at 100 %
     useEffect(() => { zoomToFit(); }, [zoomToFit]);
