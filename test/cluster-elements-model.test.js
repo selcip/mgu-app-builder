@@ -164,6 +164,3 @@ test('the sport and M backdrop shaders are locked since ticket 12: moving them i
         refused(M.openBytes(bytes(file)), { type: 'moveElements', elements: [id], dx: 3, dy: 0 }, /locked/);
     }
 });
-        assert.strictEqual(widget(next, id).x, widget(doc, id).x + 3);
-    }
-});
