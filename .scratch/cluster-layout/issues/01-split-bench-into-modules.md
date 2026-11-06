@@ -4,10 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] The two modules run without `net`, `http` or a server, and take their transport from the caller
-- [ ] The bench uses them and still works for both apps (HUD Widgets and Cluster Themes)
-- [ ] A recording of GT3 on the cluster before and after the split is identical
-- [ ] Layer cap, 32-layer total, pixel memory and asset limits behave as before
-- [ ] The bench README describes the new modules
+- [x] The two modules run without `net`, `http` or a server, and take their transport from the caller
+- [x] The bench uses them and still works for both apps (HUD Widgets and Cluster Themes)
+- [x] A recording of GT3 on the cluster before and after the split is identical
+- [x] Layer cap, 32-layer total, pixel memory and asset limits behave as before
+- [x] The bench README describes the new modules
+
+## Resolution
+
+Done in the apps repo on branch cluster-layout-bench (render_protocol.js, stage.js; bench golden recordings identical before and after). Not pushed.
