@@ -8,6 +8,8 @@ import { Hint, Row, Section } from '@/components/designer/form';
 import { useWarnings } from '../../canvas/CarView';
 import { screenOf } from '../../store/editor.ts';
 import { useEditor } from '../../store/react.tsx';
+import { ElementCondition } from './ElementCondition';
+import { PreviewSettings } from './PreviewSettings';
 
 export function LayoutInspector() {
     const screen = useEditor(screenOf);
@@ -35,6 +37,8 @@ export function LayoutInspector() {
             )}
             {one && Boolean(one.locked) && <LockedNote name={one.name} widget={one.widget as Record<string, unknown>} type={one.gpu} />}
             {sel.length > 0 && !(one && one.boxless) && <Arrange />}
+            {one && <ElementCondition name={one.name} />}
+            <PreviewSettings />
         </div>
     );
 }
