@@ -16,6 +16,7 @@ export { kindOf, type ClusterLayout, type ScreenDoc, type LayoutDoc, type DocKin
 export { targetOf, exportClusterLayout, layoutProblem, EXPOSED_TARGETS, TARGETS, type Target } from './ops/layout.ts';
 export { languagesOf, textIn, hasText, isTextMap, textsOf, missingTranslations, type TextPlace, type TextMap } from './texts.ts';
 export { autosave, memoryStore, type Autosave, type DesignStore, type StoredDesign } from './autosave.ts';
+export { MAX_BOXES, isBoxesWidget, listOrder, newBoxId, stackScope } from './ops/cluster-boxes.ts';
 export { layoutScreen, LAYOUT_SCREEN, CLUSTER } from './ops/cluster-elements.ts';
 export { connOf, CONNECTIONS } from './ops/cluster-connections.ts';
 export { lockedNote, lockedDraws, isLockedType, assertEditable } from './ops/cluster-locked.ts';

@@ -7,6 +7,7 @@
 import { EditError, uniqueName, type ClusterLayout, type Element, type Screen } from '../core.ts';
 import { boundsOf, EDGES, type Box, type Edge } from './canvas.ts';
 import { restacked, type Place } from './stacking.ts';
+import { boxList, innerBox, innerElements, isBoxesWidget, stackScope } from './cluster-boxes.ts';
 import { assertEditable, isLockedType } from './cluster-locked.ts';
 
 /** The cluster's size: what a single element aligns to. */
@@ -30,7 +31,7 @@ export function layoutScreen(layout: ClusterLayout): Screen {
     return s;
 }
 
-function screenOfWidgets(layout: ClusterLayout): Screen {
+function screenOfWidgets(layout: ClusterLayout, inner = true): Screen {
     const components: Element[] = [];
     layout.widgets.forEach((v, i) => {
         const w: Widget = isWidget(v) ? v : {};
@@ -42,6 +43,7 @@ function screenOfWidgets(layout: ClusterLayout): Screen {
             ...(boxed ? {} : { boxless: true }),
             ...(isLockedType(w.type) ? { locked: true } : {}),
         });
+        if (inner) components.push(...innerElements(w, name));
     });
     return { name: LAYOUT_SCREEN, components };
 }
@@ -52,7 +54,7 @@ interface LayoutDraft {
 
 /** The widget named `name` in the draft, with what to refuse movement for when it has no box. */
 function find(d: LayoutDraft, name: string): Widget {
-    const w = d.layout.widgets.find((x) => isWidget(x) && x.id === name);
+    const w = d.layout.widgets.find((x) => isWidget(x) && x.id === name) ?? innerBox(d.layout.widgets, name);
     if (!w) throw new EditError(`The layout has no element "${name}".`);
     return w as Widget;
 }
@@ -110,6 +112,7 @@ export const clusterElementOps = {
     deleteElements(d: LayoutDraft, a: { screen?: string; elements: string[] }) {
         const ws = a.elements.map((n) => find(d, n));
         d.layout.widgets = d.layout.widgets.filter((x) => !ws.includes(x as Widget));
+        for (const x of d.layout.widgets) if (isBoxesWidget(x) && boxList(x).some((b) => ws.includes(b))) x.boxes = (x.boxes as unknown[]).filter((b) => !ws.includes(b as Widget));
     },
 
     /** Adds copies of `elements` (from copyElements) on top, moved by dx, dy, under new ids (see pastedNames). */
@@ -117,14 +120,16 @@ export const clusterElementOps = {
         const dx = a.dx || 0, dy = a.dy || 0;
         checkBox('The offset', { x: dx, y: dy });
         const els = a.elements || [];
-        for (const e of els) {
+        const loose = els.filter((e) => e && typeof e.parent === 'string' && !els.some((p) => p && p.name === e.parent));
+        if (loose.length) throw new EditError('A box inside a widget can’t be pasted on its own; add one with Add box.');
+        for (const e of els.filter((e) => !e || typeof e.parent !== 'string')) {
             if (!e || !isWidget(e.widget)) throw new EditError('Only elements of a cluster layout can be pasted into a cluster layout.');
             assertEditable(e.widget, 'copied (a second backdrop would cover the first)');
             if (!hasBox(e.widget)) throw new EditError(`Element "${String(e.name)}" has no box, so it can’t be pasted.`);
             checkBox(String(e.name), e.widget as Partial<Box>);
         }
         const taken = new Set(d.layout.widgets.map((w) => (isWidget(w) ? String(w.id) : '')));
-        for (const e of els) {
+        for (const e of els.filter((e) => typeof e.parent !== 'string')) {
             const copy = structuredClone(e.widget) as Widget;
             const want = typeof copy.id === 'string' && copy.id ? copy.id : String(copy.type);
             const id = taken.has(want) ? uniqueName(want.replace(/\d+$/, '') || String(copy.type), taken) : want;
@@ -140,7 +145,14 @@ export const clusterElementOps = {
     restackElements(d: LayoutDraft, a: { screen?: string; elements: string[]; place: Place }) {
         (a.elements || []).forEach((n) => find(d, n));
         const s = screenOfWidgets(d.layout);       // not the cached one: the draft is being changed
-        const order = restacked(s, a.elements || [], a.place);
+        const scope = stackScope(s, a.elements || []);
+        const order = restacked(scope, a.elements || [], a.place);
+        if (scope !== s && scope.components.length < s.components.length && scope.components.every((c) => typeof c.parent === 'string')) {
+            // the boxes of one widget: written back into its array
+            const parent = d.layout.widgets.find((x) => isWidget(x) && x.id === scope.components[0].parent) as Widget;
+            parent.boxes = order.map((e) => e.box);
+            return;
+        }
         d.layout.widgets = order.map((e) => e.widget);
     },
 };

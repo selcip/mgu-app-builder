@@ -21,7 +21,7 @@ test('the browser bundle has no Node requires left and runs GT3 on the stand-in'
     const { code, mod } = await bundle();
     assert.doesNotMatch(code, /require\(["'](fs|net|events|path|zlib|child_process|http)["']\)/);
     assert.doesNotMatch(code, /from ["']node:/);
-    assert.deepStrictEqual(Object.keys(mod).sort(), ['CAR', 'TARGETS', 'budgetOf', 'createEngine', 'createStage']);
+    assert.deepStrictEqual(Object.keys(mod).sort(), ['CAR', 'TARGETS', 'budgetOf', 'createEngine', 'createStage', 'visible']);
     const engine = mod.createEngine({ name: 'gt3', layout: gt3 });
     try {
         const t0 = Date.now();

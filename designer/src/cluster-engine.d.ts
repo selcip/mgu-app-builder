@@ -54,6 +54,8 @@ declare module 'virtual:cluster-engine' {
         /** The Layer budget of a running engine (cluster/budget.js), against the car's limits in CAR. */
         budgetOf(engine: ClusterEngine): LayerBudget;
         CAR: { perConnection: number; total: number; pixelBytes: number };
+        /** What the driver cannot see (engine/shared/visible.js): the geometry and the layout check. */
+        visible: import('./model/visibility.ts').Visible;
     }
     export interface LayerBudget {
         /** Layers on each connection, 0-based as the widget's conn field. */

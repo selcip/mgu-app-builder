@@ -5,7 +5,9 @@ import { lockedNote } from '../../model/index.ts';
 import { Arrange } from '../inspector/Arrange';
 import { ElementConnection } from './ElementConnection';
 import { LayerBudget } from './LayerBudget';
+import { BoxesSection } from './BoxesSection';
 import { Hint, Row, Section } from '@/components/designer/form';
+import { useWarnings } from '../../canvas/CarView';
 import { screenOf } from '../../store/editor.ts';
 import { useEditor } from '../../store/react.tsx';
 
@@ -14,6 +16,7 @@ export function LayoutInspector() {
     const selection = useEditor((s) => s.selection);
     const sel = screen.components.filter((c) => selection.includes(c.name));
     const one = sel.length === 1 ? sel[0] : undefined;
+    const warnings = useWarnings();
     return (
         <div data-layout-inspector="">
             {sel.length === 0 && <Hint>Select an element on the canvas or in the list.</Hint>}
@@ -25,6 +28,14 @@ export function LayoutInspector() {
                 </Section>
             )}
             {one && <ElementConnection element={one.name} />}
+            {one && <BoxesSection element={one} />}
+            {sel.some((c) => warnings[c.name]) && (
+                <Section title="Warnings" data-warnings="">
+                    {sel.filter((c) => warnings[c.name]).flatMap((c) => warnings[c.name].map((w) => (
+                        <p key={c.name + w} data-warning-text={c.name} className="m-0 text-xs text-amber-400">{sel.length > 1 ? c.name + ': ' : ''}{w}</p>
+                    )))}
+                </Section>
+            )}
             {one && Boolean(one.locked) && <LockedNote name={one.name} widget={one.widget as Record<string, unknown>} type={one.gpu} />}
             {sel.length > 0 && !(one && one.boxless) && <Arrange />}
             <LayerBudget />

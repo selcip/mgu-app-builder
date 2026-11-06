@@ -13,6 +13,7 @@ import { stackingOps } from './ops/stacking.ts';
 import { layoutOps } from './ops/layout.ts';
 import { clusterElementOps } from './ops/cluster-elements.ts';
 import { clusterConnectionOps } from './ops/cluster-connections.ts';
+import { clusterBoxOps } from './ops/cluster-boxes.ts';
 
 /** The screen file's operations. */
 export const HANDLERS = {
@@ -32,6 +33,7 @@ export const LAYOUT_HANDLERS = {
     ...layoutOps,
     ...clusterElementOps,
     ...clusterConnectionOps,
+    ...clusterBoxOps,
 };
 
 export type ScreenOp = OpsOf<typeof HANDLERS>;
