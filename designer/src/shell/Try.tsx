@@ -1,7 +1,7 @@
 // Trying the app in the preview: arrow keys and Enter stand in for the iDrive controller, clicks for taps, Esc for
 // BACK. The preview follows navigation links and BACK through the screens; what the runtime reports (actions, screen
 // changes, leaving the app) is listed as the app's code would receive it.
-import type { Report } from '../store/editor.ts';
+import { kindOf, type Report } from '../store/editor.ts';
 import { useActions, useEditor } from '../store/react.tsx';
 import { useEffect, useRef } from 'react';
 import { Play, Square } from 'lucide-react';
@@ -37,10 +37,11 @@ function ReportItem({ r }: { r: Report }) {
 /** The toolbar's Play button: starts trying the app on the canvas (as Figma's Present does), or stops. */
 export function PlayButton() {
     const trying = useEditor((s) => s.trying);
+    const layout = useEditor(kindOf) === 'cluster-layout';
     const { setTrying } = useActions();
     return (
         <Button variant={trying ? 'default' : 'ghost'} size="sm" role="switch" aria-checked={trying} data-try-toggle=""
-            title={trying ? 'Stop trying and go back to editing' : 'Try the app: the controller and taps, from the first screen'}
+            title={trying ? 'Stop trying and go back to editing' : layout ? 'Try the layout on demo signals' : 'Try the app: the controller and taps, from the first screen'}
             onClick={() => setTrying(!trying)}>
             {trying ? <Square className="fill-current" /> : <Play className="fill-current" />}
             {trying ? 'Stop' : 'Try'}

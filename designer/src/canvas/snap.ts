@@ -26,10 +26,10 @@ export interface Snapped {
 /** A side or corner of the box being dragged: n, s, e, w, ne, nw, se, sw. */
 export type Handle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
-/** The lines the elements not in `moving` give, with the screen's own lines and the guides. */
-export function snapLines(screen: Screen, moving: readonly string[], guides: Lines, design: { w: number; h: number }): Lines {
-    const xs = [0, RING_MARGIN, design.w / 2, design.w - RING_MARGIN, design.w, ...guides.xs];
-    const ys = [0, RING_MARGIN, design.h / 2, design.h - RING_MARGIN, design.h, ...guides.ys];
+/** The lines the elements not in `moving` give, with the screen's own lines (and the ring margin inside them) and the guides. */
+export function snapLines(screen: Screen, moving: readonly string[], guides: Lines, design: { w: number; h: number }, margin = RING_MARGIN): Lines {
+    const xs = [0, margin, design.w / 2, design.w - margin, design.w, ...guides.xs];
+    const ys = [0, margin, design.h / 2, design.h - margin, design.h, ...guides.ys];
     for (const c of screen.components) {
         if (moving.includes(c.name)) continue;
         xs.push(c.x, c.x + c.w / 2, c.x + c.w);

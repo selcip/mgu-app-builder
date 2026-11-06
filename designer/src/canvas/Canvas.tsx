@@ -27,13 +27,15 @@ type Drag =
 const boxOf = (c: Box): Box => ({ x: c.x, y: c.y, w: c.w, h: c.h });
 const overlaps = (a: Box, b: Box) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
-/** The overlay for laying out the selected screen; `children` is the preview canvas under it. */
-export function Canvas({ children }: { children: ReactNode }) {
+/**
+ * The overlay for laying out the selected screen; `children` is the preview canvas under it. For a cluster layout
+ * (one "screen" of the layout's widgets) `design` is the cluster's 1920x720 and `rings` is off: no focus ring there.
+ */
+export function Canvas({ children, design = DESIGN, rings = true }: { children: ReactNode; design?: { w: number; h: number }; rings?: boolean }) {
     const screen = useEditor(screenOf);
     const selection = useEditor((s) => s.selection);
     const settings = useEditor((s) => s.settings);
     const actions = useActions();
-    const design = DESIGN;
     const onSelect = actions.select;
     const onEdit = (op: Op) => actions.edit(op) !== null;
     const onDrag = actions.setDragOp;          // the edit being dragged, shown in the preview until committed
@@ -49,7 +51,7 @@ export function Canvas({ children }: { children: ReactNode }) {
     }
 
     const snapOpts = (free: boolean) => (free ? { grid: 0, threshold: 0 } : { grid: settings.grid, threshold: settings.snap ? THRESHOLD : 0 });
-    const linesWithout = (names: string[]) => snapLines(screen, names, settings.snap ? settings.guides : { xs: [], ys: [] }, design);
+    const linesWithout = (names: string[]) => snapLines(screen, names, settings.snap ? settings.guides : { xs: [], ys: [] }, design, rings ? RING_MARGIN : 0);
 
     function startMove(e: RPointerEvent, name: string) {
         e.stopPropagation();
@@ -63,6 +65,7 @@ export function Canvas({ children }: { children: ReactNode }) {
         }
         const names = selection.includes(name) ? selection : [name];
         if (!selection.includes(name)) onSelect(names);
+        if (screen.components.some((c) => names.includes(c.name) && c.locked)) return;       // a locked element is selected, not dragged
         const from: Record<string, Box> = {};
         for (const c of screen.components) if (names.includes(c.name)) from[c.name] = boxOf(c);
         capture(e);
@@ -144,7 +147,7 @@ export function Canvas({ children }: { children: ReactNode }) {
             const r = { x: Math.min(drag.start.x, drag.at.x), y: Math.min(drag.start.y, drag.at.y),
                 w: Math.abs(drag.at.x - drag.start.x), h: Math.abs(drag.at.y - drag.start.y) };
             if (r.w > 2 || r.h > 2) {
-                const hit = screen.components.filter((c) => overlaps(r, { ...boxOf(c), w: Math.max(c.w, 1), h: Math.max(c.h, 1) })).map((c) => c.name);
+                const hit = screen.components.filter((c) => !c.boxless && typeof c.parent !== 'string').filter((c) => overlaps(r, { ...boxOf(c), w: Math.max(c.w, 1), h: Math.max(c.h, 1) })).map((c) => c.name);
                 onSelect([...new Set(drag.add.concat(hit))]);
             }
         } else if (drag.kind !== 'guide' && drag.op) {
@@ -189,16 +192,16 @@ export function Canvas({ children }: { children: ReactNode }) {
             <div ref={layer} className="canvas-layer" data-canvas="" onPointerDown={startMarquee} onPointerMove={pointerMove}
                 onPointerUp={pointerUp} onPointerCancel={pointerUp}
                 onDragOver={(e) => { if (e.dataTransfer.types.includes(WIDGET_DRAG_TYPE)) e.preventDefault(); }} onDrop={drop}>
-                <div className="screen-margin" style={place({ x: RING_MARGIN, y: RING_MARGIN, w: design.w - 2 * RING_MARGIN, h: design.h - 2 * RING_MARGIN })} />
-                {screen.components.map((c) => {
+                {rings && <div className="screen-margin" style={place({ x: RING_MARGIN, y: RING_MARGIN, w: design.w - 2 * RING_MARGIN, h: design.h - 2 * RING_MARGIN })} />}
+                {screen.components.filter((c) => !c.boxless).map((c) => {
                     const b = (boxes && boxes[c.name]) || boxOf(c);
                     const sel = selection.includes(c.name);
                     return (
                         <div key={c.name}>
-                            <div className="ring-margin" style={place({ x: b.x - RING_MARGIN, y: b.y - RING_MARGIN, w: b.w + 2 * RING_MARGIN, h: b.h + 2 * RING_MARGIN })} />
-                            <div className={'element' + (sel ? ' selected' : '')} data-canvas-element={c.name} title={c.name}
-                                style={{ ...place(b), minWidth: 6, minHeight: 6 }} onPointerDown={(e) => startMove(e, c.name)}>
-                                {single === c.name && HANDLES.map((h) => (
+                            {rings && <div className="ring-margin" style={place({ x: b.x - RING_MARGIN, y: b.y - RING_MARGIN, w: b.w + 2 * RING_MARGIN, h: b.h + 2 * RING_MARGIN })} />}
+                            <div className={'element' + (sel ? ' selected' : '')} data-canvas-element={c.name} data-canvas-child={typeof c.parent === 'string' ? c.parent : undefined} title={c.name}
+                                style={{ ...place(b), minWidth: 6, minHeight: 6, ...(sel && typeof c.parent === 'string' ? { zIndex: 1 } : {}) }} onPointerDown={(e) => startMove(e, c.name)}>
+                                {single === c.name && !c.locked && HANDLES.map((h) => (
                                     <span key={h} className={'handle ' + h} onPointerDown={(e) => startResize(e, c.name, h)} />
                                 ))}
                             </div>

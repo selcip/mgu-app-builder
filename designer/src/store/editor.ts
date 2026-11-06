@@ -4,12 +4,15 @@
 // binding is ./react.tsx.
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import {
-    canRedo, canUndo, createHistory, dispatch, firstScreenOf, languagesOf, newDocument, redo, undo,
+    acceptsValue, canRedo, canUndo, createHistory, dispatch, firstScreenOf, kindOf as docKindOf, languagesOf, layoutScreen, newDocument, redo, settingByKey, undo,
+    type ClusterLayout, type DocKind,
     type Doc, type Element, type History, type Op, type Screen, type ScreenFile,
 } from '../model/index.ts';
 import type { Lines } from '../canvas/snap.ts';
+import type { LayerBudget } from 'virtual:cluster-engine';
 import type { Action, ScreenChange } from '../preview.ts';
 import { centred, fitted, stepZoom, zoomAbout, type Size, type View } from '../shell/view.ts';
+import { DRIVE_MODES, clampSignal, defaultSignals, type DriveMode, type Signals } from './signals.ts';
 import { DEFAULT_PANELS, clampWidth, leftInset, type PanelLayout, type PanelLayouts, type Side } from '../shell/panels.ts';
 
 /** The app's box on iDrive 7, inside the HMI page. */
@@ -23,6 +26,8 @@ export interface CanvasSettings {
 
 /** What was copied, and from which screen (pasting there again moves each paste a little further). */
 export interface Clipboard {
+    /** Which kind of document it was copied in: elements of a screen file and of a cluster layout don't mix. */
+    kind?: DocKind;
     screen: string;
     elements: Element[];
     pastes: number;
@@ -52,6 +57,13 @@ export interface EditorState {
     reports: Report[];
     /** While trying: the screen the runtime shows. */
     walking: string | null;
+    /** While trying a cluster layout: the demo signals the sliders hold, and whether the demo drive moves them instead. */
+    signals: Signals;
+    demoDrive: boolean;
+    /** While designing a cluster layout: the app's settings the canvas previews (key -> value; a setting not here has its default). Never saved, never in the history. */
+    previewSettings: Record<string, boolean | string>;
+    /** While designing a cluster layout: the Layer budget the canvas's engine reports (null until it has planned the layers). Never saved. */
+    layerBudget: LayerBudget | null;
     /** The canvas's zoom and where the HMI page sits; null until the canvas is first measured (then: centred at 100 %, or fitted when that is too big). */
     view: View | null;
     /** The canvas's size and the HMI page's (unzoomed), as last measured; null until then. */
@@ -87,6 +99,13 @@ export interface EditorState {
     /** Starts trying (afresh: no reports; the panels step aside) or stops (back to editing the screen the walk ended on). */
     setTrying(on: boolean): void;
     setWalking(screen: string | null): void;
+    /** Sets a slider (clamped to its range) or the drive mode of the demo signals. */
+    setSignal(key: string, value: number | string): void;
+    /** Starts or stops the demo drive (the kit's simulated drive) in place of the sliders. */
+    setDemoDrive(on: boolean): void;
+    setLayerBudget(budget: LayerBudget | null): void;
+    /** Sets a setting the canvas previews (ignored when the app has no such setting or the value is not one it takes). */
+    setPreviewSetting(key: string, value: boolean | string): void;
     report(r: Report): void;
     clearReports(): void;
     setMeasure(canvas: Size, page: Size): void;
@@ -129,7 +148,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
         /** A new history: the selected screen follows it, and the selection keeps only elements still on it. */
         function moveTo(history: History, op: Op | null) {
             const s = get();
-            const file = history.present.file;
+            const file = screenFileOf(history.present);
             const selected = followScreen(file, s.selected, op);
             const screen = file.screens.find((x) => x.name === selected)!;
             let selection = selected === s.selected ? s.selection : [];
@@ -142,7 +161,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
 
         return {
             history: createHistory(doc),
-            selected: firstScreenOf(doc.file),
+            selected: firstScreenOf(screenFileOf(doc)),
             selection: [],
             settings: { grid: 8, snap: true, guides: { xs: [], ys: [] } },
             showFocus: true,
@@ -153,6 +172,10 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
             trying: false,
             reports: [],
             walking: null,
+            signals: defaultSignals(),
+            demoDrive: false,
+            previewSettings: {},
+            layerBudget: null,
             view: null,
             measure: null,
             panels: options.panels || DEFAULT_PANELS,
@@ -173,7 +196,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
             undo() { if (canUndo(get().history)) moveTo(undo(get().history), null); },
             redo() { if (canRedo(get().history)) moveTo(redo(get().history), null); },
             open(d) {
-                set({ history: createHistory(d), selected: firstScreenOf(d.file), selection: [], problem: null, dragOp: null });
+                set({ history: createHistory(d), selected: firstScreenOf(screenFileOf(d)), selection: [], problem: null, dragOp: null, previewSettings: {}, layerBudget: null });
             },
             setProblem(problem) { set({ problem }); },
             selectScreen(screen) {
@@ -192,7 +215,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
                 const before = new Set(screen.components.map((c) => c.name));
                 const next = get().edit({ type: 'addElement', screen: screen.name, widget, x: 24 + (n % 12) * 24, y: 24 + (n % 12) * 24 });
                 if (!next) return;
-                const added = next.file.screens.find((s) => s.name === screen.name)!.components.find((c) => !before.has(c.name));
+                const added = screenFileOf(next).screens.find((s) => s.name === screen.name)!.components.find((c) => !before.has(c.name));
                 if (added) get().selectOnly(added.name);
             },
             setSettings(settings) { set({ settings }); },
@@ -205,10 +228,24 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
                 const s = get();
                 if (on === s.trying) return;
                 if (!on && s.walking !== null && s.walking !== s.selected) s.selectScreen(s.walking);
-                set({ dragOp: null, reports: on ? [] : s.reports });
+                set({ dragOp: null, reports: on ? [] : s.reports, demoDrive: false });
                 layOut(s.panels, s.panelsHidden, on);       // the panels step aside while trying, the page stays put
             },
             setWalking(walking) { set({ walking }); },
+            setSignal(key, value) {
+                if (key === 'drive') {
+                    if (DRIVE_MODES.some((m) => m.id === value)) set((s) => ({ signals: { ...s.signals, drive: value as DriveMode } }));
+                    return;
+                }
+                const v = typeof value === 'number' ? clampSignal(key, value) : null;
+                if (v !== null) set((s) => ({ signals: { ...s.signals, [key]: v } }));
+            },
+            setDemoDrive(demoDrive) { set({ demoDrive }); },
+            setLayerBudget(layerBudget) { set({ layerBudget }); },
+            setPreviewSetting(key, value) {
+                const setting = settingByKey(key);
+                if (setting && acceptsValue(setting, value)) set((s) => ({ previewSettings: { ...s.previewSettings, [key]: value } }));
+            },
             report(r) { set((s) => ({ reports: s.reports.concat([r]).slice(-REPORTS) })); },
             clearReports() { set({ reports: [] }); },
             setMeasure(canvas, page) {
@@ -241,8 +278,24 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
 
 // derived state, for selectors
 
+/**
+ * What the shared canvas, element list and editing commands read while a cluster layout is open: one screen whose
+ * elements are the layout's widgets (model/ops/cluster-elements.ts).
+ */
+const layoutFiles = new WeakMap<ClusterLayout, ScreenFile>();
+function screenFileOf(doc: Doc): ScreenFile {
+    if (doc.kind !== 'cluster-layout') return doc.file;
+    let f = layoutFiles.get(doc.layout);
+    if (!f) layoutFiles.set(doc.layout, (f = { screens: [layoutScreen(doc.layout)] }));
+    return f;
+}
+
 export const docOf = (s: EditorState): Doc => s.history.present;
-export const fileOf = (s: EditorState): ScreenFile => s.history.present.file;
+export const fileOf = (s: EditorState): ScreenFile => screenFileOf(s.history.present);
+/** Which kind of document is open. */
+export const kindOf = (s: EditorState): DocKind => docKindOf(s.history.present);
+/** The open cluster layout, or null when a screen file is open. */
+export const layoutOf = (s: EditorState): ClusterLayout | null => { const d = s.history.present; return d.kind === 'cluster-layout' ? d.layout : null; };
 export const screenOf = (s: EditorState): Screen => fileOf(s).screens.find((x) => x.name === s.selected)!;
 /** The one selected element, or undefined when none or several are selected. */
 export const elementOf = (s: EditorState): Element | undefined =>

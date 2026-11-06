@@ -1,6 +1,8 @@
 // "From design to car": how a downloaded screen file becomes an app on the head unit, in short. Opened from the main
 // menu (Help, and beside Download). The details and the emulator walkthrough are in starter/README.md.
 import type { ReactNode } from 'react';
+import { kindOf } from '../store/editor.ts';
+import { useEditor } from '../store/react.tsx';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const Code = ({ children }: { children: ReactNode }) => (
@@ -8,10 +10,49 @@ const Code = ({ children }: { children: ReactNode }) => (
 );
 const C = ({ children }: { children: ReactNode }) => <code className="rounded bg-muted px-1 font-mono text-[0.7rem]">{children}</code>;
 
-export function Guide({ open, onOpenChange }: { open: boolean; onOpenChange(open: boolean): void }) {
+// The same guide while a cluster layout is open: the file is one <name>.json, and it goes to the car by one of two routes.
+function ClusterGuide({ open, onOpenChange }: { open: boolean; onOpenChange(open: boolean): void }) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl" data-guide="">
+            <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl" data-guide="cluster-layout">
+                <DialogHeader>
+                    <DialogTitle>From design to car</DialogTitle>
+                    <DialogDescription>
+                        A Cluster layout is one file, <C>{'<name>.json'}</C>, that the cluster app draws on the instrument cluster.
+                        The file the Designer downloads replaces the Python generators for a layout you edit here: edit it in the
+                        Designer from now on, not in the generators.
+                    </DialogDescription>
+                </DialogHeader>
+                <ol className="m-0 flex list-decimal flex-col gap-3 pl-5 text-xs leading-relaxed">
+                    <li>
+                        <b>Download</b> the Cluster layout (main menu). You get <C>{'<name>.json'}</C>.
+                    </li>
+                    <li>
+                        Then take one of two routes to the car.
+                        <ul className="m-0 mt-2 flex list-disc flex-col gap-3 pl-5">
+                            <li>
+                                <b>Build it into the app.</b> Copy the file into the cluster app’s layouts folder in the apps
+                                repository, <C>apps/cluster_themes/hud/layouts/</C>, and rebuild the app.
+                            </li>
+                            <li>
+                                <b>Push it to the car.</b> Run the deploy script from the apps repository; the file lands in the
+                                car’s <C>data/layouts</C> override folder, with no rebuild:
+                                <Code>{'APP=cluster_themes ./scripts/deploy.sh root@<car-ip-or-hostname> <name>.json'}</Code>
+                            </li>
+                        </ul>
+                    </li>
+                </ol>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+export function Guide({ open, onOpenChange }: { open: boolean; onOpenChange(open: boolean): void }) {
+    const kind = useEditor(kindOf);
+    if (kind === 'cluster-layout') return <ClusterGuide open={open} onOpenChange={onOpenChange} />;
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl" data-guide="screen-file">
                 <DialogHeader>
                     <DialogTitle>From design to car</DialogTitle>
                     <DialogDescription>

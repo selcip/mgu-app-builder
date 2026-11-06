@@ -3,7 +3,7 @@
 // zoom. The Open file input stays in the bar itself (not in the menu, which is only drawn while open).
 import { useRef, useState, type ChangeEvent, type ReactNode, type Ref } from 'react';
 import { ChevronDown, Maximize, Minus, Plus, Redo2, Search, Undo2 } from 'lucide-react';
-import { exportZip, importZip, newDocument } from '../model/index.ts';
+import { exportDocument, newDocument, openBytes } from '../model/index.ts';
 import { WIDGETS } from '../catalog.ts';
 import { WIDGET_DRAG_TYPE } from '../canvas/Canvas';
 import { AutosaveProblem } from './Autosave';
@@ -17,10 +17,11 @@ import {
     DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { ClusterInsertMenu } from './ClusterInsert';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { STACKING, addGuide, clearGuides, copy, cut, deleteSelection, duplicate, paste, selectAll, stack, stackableOf } from './commands.ts';
-import { canRedoOf, canUndoOf, docOf } from '../store/editor.ts';
+import { canRedoOf, canUndoOf, docOf, kindOf } from '../store/editor.ts';
 import { useActions, useEditor, useEditorStore } from '../store/react.tsx';
 
 const GRIDS = [0, 4, 8, 16, 32];
@@ -31,6 +32,7 @@ export function Toolbar({ autosaveProblem, children }: { autosaveProblem: string
     const canUndo = useEditor(canUndoOf);
     const canRedo = useEditor(canRedoOf);
     const trying = useEditor((s) => s.trying);
+    const layout = useEditor(kindOf) === 'cluster-layout';
     const { undo, redo } = useActions();
     const openInput = useRef<HTMLInputElement>(null);
     return (
@@ -38,7 +40,9 @@ export function Toolbar({ autosaveProblem, children }: { autosaveProblem: string
             <MainMenu onOpen={() => openInput.current?.click()} />
             <OpenInput ref={openInput} />
             <span className="mx-1 h-5 w-px bg-border" />
-            {!trying && <InsertMenu />}
+            <DocKind />
+            {!trying && !layout && <InsertMenu />}
+            {!trying && layout && <ClusterInsertMenu />}
             <Button variant="ghost" size="icon-sm" data-undo="" title={`Undo (${MOD}Z)`} disabled={!canUndo || trying} onClick={undo}><Undo2 /></Button>
             <Button variant="ghost" size="icon-sm" data-redo="" title={`Redo (${MOD}Shift+Z)`} disabled={!canRedo || trying} onClick={redo}><Redo2 /></Button>
             <span className="min-w-0 flex-1 truncate px-2 text-xs">
@@ -46,11 +50,21 @@ export function Toolbar({ autosaveProblem, children }: { autosaveProblem: string
                 <AutosaveProblem problem={autosaveProblem} />
             </span>
             {children}
-            <ShownLanguage />
+            {!layout && <ShownLanguage />}
             <PlayButton />
-            <ViewMenu />
+            {!layout && <ViewMenu />}
             <ZoomControl />
         </header>
+    );
+}
+
+/** Which kind of document is open, so the app author knows which menus apply. */
+function DocKind() {
+    const kind = useEditor(kindOf);
+    return (
+        <span data-doc-kind={kind} className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground" title="The kind of document open">
+            {kind === 'cluster-layout' ? 'Cluster layout' : 'Screen file'}
+        </span>
     );
 }
 
@@ -62,12 +76,12 @@ function OpenInput({ ref }: { ref: Ref<HTMLInputElement> }) {
         e.target.value = '';
         if (!f) return;
         try {
-            open(importZip(new Uint8Array(await f.arrayBuffer())));
+            open(openBytes(new Uint8Array(await f.arrayBuffer())));
         } catch (err) {
             setProblem(`Couldn’t open ${f.name}: ${(err as Error).message} Your design is unchanged.`);
         }
     }
-    return <input ref={ref} type="file" accept=".zip,application/zip" className="hidden" data-open-input="" onChange={upload} />;
+    return <input ref={ref} type="file" accept=".zip,.json,application/zip,application/json" className="hidden" data-open-input="" onChange={upload} />;
 }
 
 function MainMenu({ onOpen }: { onOpen(): void }) {
@@ -78,14 +92,15 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
     const clip = useEditor((s) => s.clipboard !== null);
     const trying = useEditor((s) => s.trying);
     const stackable = useEditor(stackableOf);
+    const layout = useEditor(kindOf) === 'cluster-layout';
     const [guide, setGuide] = useState(false);
     const { open, undo, redo } = useActions();
     function download() {
-        const bytes = exportZip(docOf(store.getState()));
-        const url = URL.createObjectURL(new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/zip' }));
+        const file = exportDocument(docOf(store.getState()));
+        const url = URL.createObjectURL(new Blob([file.bytes as Uint8Array<ArrayBuffer>], { type: file.type }));
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'design.zip';
+        a.download = file.name;
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
@@ -100,8 +115,8 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
                 <DropdownMenuGroup>
                     <DropdownMenuLabel>Design</DropdownMenuLabel>
                     <DropdownMenuItem data-menu-new="" onClick={() => open(newDocument())}>New design</DropdownMenuItem>
-                    <DropdownMenuItem data-menu-open="" onClick={onOpen}>Open… <DropdownMenuShortcut>.zip</DropdownMenuShortcut></DropdownMenuItem>
-                    <DropdownMenuItem data-menu-download="" onClick={download}>Download <DropdownMenuShortcut>.zip</DropdownMenuShortcut></DropdownMenuItem>
+                    <DropdownMenuItem data-menu-open="" onClick={onOpen}>Open… <DropdownMenuShortcut>.zip .json</DropdownMenuShortcut></DropdownMenuItem>
+                    <DropdownMenuItem data-menu-download="" onClick={download}>Download <DropdownMenuShortcut>{layout ? '.json' : '.zip'}</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem data-menu-to-car="" onClick={() => setGuide(true)}>From design to car…</DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
@@ -109,13 +124,16 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
                     <DropdownMenuLabel>Edit</DropdownMenuLabel>
                     <DropdownMenuItem disabled={!edits || !canUndo} onClick={undo}>Undo <DropdownMenuShortcut>{MOD}Z</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !canRedo} onClick={redo}>Redo <DropdownMenuShortcut>{MOD}⇧Z</DropdownMenuShortcut></DropdownMenuItem>
+                    <>
                     <DropdownMenuItem disabled={!edits || !any} data-menu-copy="" onClick={() => copy(store)}>Copy <DropdownMenuShortcut>{MOD}C</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !any} data-menu-cut="" onClick={() => cut(store)}>Cut <DropdownMenuShortcut>{MOD}X</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !clip} data-menu-paste="" onClick={() => paste(store)}>Paste <DropdownMenuShortcut>{MOD}V</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !any} data-menu-duplicate="" onClick={() => duplicate(store)}>Duplicate <DropdownMenuShortcut>{MOD}D</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !any} variant="destructive" data-menu-delete="" onClick={() => deleteSelection(store)}>Delete <DropdownMenuShortcut>Del</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits} onClick={() => selectAll(store)}>Select all <DropdownMenuShortcut>{MOD}A</DropdownMenuShortcut></DropdownMenuItem>
+                    </>
                 </DropdownMenuGroup>
+                <>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuLabel>Arrange</DropdownMenuLabel>
@@ -125,6 +143,7 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
                         </DropdownMenuItem>
                     ))}
                 </DropdownMenuGroup>
+                </>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuLabel>Help</DropdownMenuLabel>

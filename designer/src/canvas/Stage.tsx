@@ -31,7 +31,7 @@ export function Stage() {
         if (!canvas.current) return;
         let shown = file;
         if (dragOp && !trying) {
-            try { shown = apply(doc, dragOp).file; } catch { /* refused: show the file as it is */ }
+            try { const next = apply(doc, dragOp); if (next.kind !== 'cluster-layout') shown = next.file; } catch { /* refused: show the file as it is */ }
         }
         // trying walks through the app: from the first screen to this one, then wherever links and BACK lead
         const p = startPreview(shown, screen.name, canvas.current, {
