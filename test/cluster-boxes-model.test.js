@@ -18,11 +18,26 @@ const boxOf = (doc, id) => frame(doc).boxes.find((b) => b.id === id);
 const refused = (doc, op, re) => assert.throws(() => M.apply(doc, op), (e) => e instanceof M.EditError && re.test(e.message));
 const children = (doc) => M.layoutScreen(doc.layout).components.filter((c) => c.parent === 'frame');
 
-test('the engine draws as many boxes as the shader holds, and MAX_BOXES says so', () => {
+test('the engine draws as many boxes as MAX_BOXES says: a 13-box widget is drawn with that many (probed in the engine), and the shader holds as many', async () => {
+    // probe: the engine's own boxes layer says how many boxes it kept (its u_n uniform) of 13 that all qualify
+    const { createEngine } = require(path.join(ROOT, 'cluster', 'node.js'));
+    const boxes = Array.from({ length: 13 }, (_, i) => ({ id: 'b' + i, x: 10 + i * 100, y: 10, w: 90, h: 90 }));
+    const layout = { schemaVersion: 2, name: 'probe', theme: 'gt3', widgets: [{ id: 'f', type: 'boxes', x: 0, y: 0, w: 1920, h: 200, boxes }] };
+    const engine = createEngine({ name: 'probe', layout });
+    try {
+        let layer;
+        for (let t0 = Date.now(); !(layer = engine.scene().find((l) => l.uniforms && l.uniforms.u_n)); ) {
+            if (Date.now() - t0 > 8000) throw new Error('the engine drew no boxes layer: ' + engine.status());
+            await new Promise((r) => setTimeout(r, 25));
+        }
+        const kept = layer.uniforms.u_n.v[0];
+        assert.strictEqual(kept, M.MAX_BOXES, 'the engine keeps ' + kept + ' of 13 boxes: set MAX_BOXES in designer/src/model/ops/cluster-boxes.ts to that');
+    } finally { engine.stop(); }
+    // the shader's array length can only be read from its source (WebGL is not available here)
     const shaders = fs.readFileSync(path.join(ROOT, 'engine', 'shared', 'shaders.js'), 'utf8');
-    const hud = fs.readFileSync(path.join(ROOT, 'engine', 'shared', 'hud.js'), 'utf8');
-    assert.strictEqual(Number(/uniform vec4 u_box\[(\d+)\]/.exec(shaders)[1]), M.MAX_BOXES);
-    assert.ok(hud.includes('.slice(0, ' + M.MAX_BOXES + ')'), 'the engine slices the list to the same number');
+    const m = /uniform vec4 u_box\[(\d+)\]/.exec(shaders);
+    assert.ok(m, 'shaders.js no longer declares "uniform vec4 u_box[N]": update this test to read the boxes shader capacity from where it is now');
+    assert.ok(Number(m[1]) >= M.MAX_BOXES, 'the shader holds ' + m[1] + ' boxes, fewer than MAX_BOXES');
 });
 
 test('each box of the frame is an element, a child of the frame, right after it', () => {

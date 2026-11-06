@@ -23,11 +23,36 @@ before(async () => {
     checks = require(path.join(ROOT, 'cluster', 'checks.js'));
 });
 
-/** layouts.js's TYPES table: { type: [required options] }, read from the engine's source. */
+/**
+ * layouts.js's types and the options each requires. The required options are probed through the engine's own validator
+ * (checks.problem: add what it says a widget "needs" until it accepts it), so the layout of the source does not matter.
+ * Only the list of type names is read from the source (the validator cannot enumerate its types): the keys of the
+ * `const TYPES = {...}` table; if that moves, the failure says so.
+ */
+function engineTypeNames() {
+    const m = /const TYPES = \{([\s\S]*?)\n\};/.exec(engineSource('layouts.js'));
+    assert.ok(m, 'layouts.js no longer has "const TYPES = {...}": update engineTypeNames() in test/cluster-catalog.test.js to list the engine\'s widget types from where they are now');
+    const names = Array.from(m[1].matchAll(/^\s{4}([a-z0-9_]+):/gm), (x) => x[1]);
+    assert.ok(names.length > 10, 'read ' + names.length + ' widget types from layouts.js TYPES; update engineTypeNames() if its entries are written differently now');
+    return names;
+}
+function requiredOf(type) {
+    const w = { id: 'probe', type, x: 0, y: 0, w: 10, h: 10 };
+    const needs = [];
+    for (let i = 0; i < 20; i++) {
+        const why = checks.problem(w);
+        if (why === null) return needs;
+        const m = /needs "([^"]+)"/.exec(why);
+        assert.ok(m, `${type}: the engine refuses a bare widget for a reason this probe does not know: ${why}`);
+        needs.push(m[1]);
+        w[m[1]] = 1;
+    }
+    throw new Error(type + ' needs more than 20 options?');
+}
 function engineTypes() {
-    const m = /const TYPES = (\{[\s\S]*?\n\});/.exec(engineSource('layouts.js'));
-    assert.ok(m, 'layouts.js has a TYPES table');
-    return new Function('return ' + m[1])();
+    const out = {};
+    engineTypeNames().forEach((t) => { out[t] = requiredOf(t); });
+    return out;
 }
 
 const box = { x: 0, y: 0, w: 100, h: 50 };
