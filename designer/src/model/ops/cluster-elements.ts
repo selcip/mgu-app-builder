@@ -7,6 +7,7 @@
 import { EditError, uniqueName, type ClusterLayout, type Element, type Screen } from '../core.ts';
 import { boundsOf, EDGES, type Box, type Edge } from './canvas.ts';
 import { restacked, type Place } from './stacking.ts';
+import { assertEditable, isLockedType } from './cluster-locked.ts';
 
 /** The cluster's size: what a single element aligns to. */
 export const CLUSTER = { w: 1920, h: 720 } as const;
@@ -39,6 +40,7 @@ function screenOfWidgets(layout: ClusterLayout): Screen {
             name, gpu: typeof w.type === 'string' ? w.type : 'unknown', opts: {}, widget: w,
             x: boxed ? (w.x as number) : 0, y: boxed ? (w.y as number) : 0, w: boxed ? (w.w as number) : 0, h: boxed ? (w.h as number) : 0,
             ...(boxed ? {} : { boxless: true }),
+            ...(isLockedType(w.type) ? { locked: true } : {}),
         });
     });
     return { name: LAYOUT_SCREEN, components };
@@ -57,6 +59,7 @@ function find(d: LayoutDraft, name: string): Widget {
 
 function placeable(d: LayoutDraft, name: string): Widget {
     const w = find(d, name);
+    assertEditable(w, 'moved, resized or aligned');
     if (!hasBox(w)) throw new EditError(`Element "${name}" has no box (x, y, w, h) in the layout, so it can’t be moved or resized.`);
     return w;
 }
@@ -116,6 +119,7 @@ export const clusterElementOps = {
         const els = a.elements || [];
         for (const e of els) {
             if (!e || !isWidget(e.widget)) throw new EditError('Only elements of a cluster layout can be pasted into a cluster layout.');
+            assertEditable(e.widget, 'copied (a second backdrop would cover the first)');
             if (!hasBox(e.widget)) throw new EditError(`Element "${String(e.name)}" has no box, so it can’t be pasted.`);
             checkBox(String(e.name), e.widget as Partial<Box>);
         }
