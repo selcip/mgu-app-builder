@@ -4,6 +4,7 @@
 import { lockedNote } from '../../model/index.ts';
 import { PalettePanel, WidgetOptions } from './WidgetOptions';
 import { Arrange } from '../inspector/Arrange';
+import { BoxesSection } from './BoxesSection';
 import { Hint, Row, Section } from '@/components/designer/form';
 import { useWarnings } from '../../canvas/CarView';
 import { screenOf } from '../../store/editor.ts';
@@ -25,6 +26,7 @@ export function LayoutInspector() {
                     {Boolean(one.boxless) && <Hint>This element has no box (x, y, w, h) in the layout, so it can’t be moved or resized.</Hint>}
                 </Section>
             )}
+            {one && <BoxesSection element={one} />}
             {sel.some((c) => warnings[c.name]) && (
                 <Section title="Warnings" data-warnings="">
                     {sel.filter((c) => warnings[c.name]).flatMap((c) => warnings[c.name].map((w) => (

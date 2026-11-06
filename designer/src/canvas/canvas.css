@@ -9,6 +9,7 @@
 .canvas-wrap { position: relative; }
 .canvas-layer { position: absolute; inset: 0; cursor: default; touch-action: none; user-select: none; }
 .canvas-layer .element { position: absolute; outline: 1px dashed rgba(255, 255, 255, .25); cursor: move; }
+.canvas-layer .element[data-canvas-child] { outline-style: dotted; }
 .canvas-layer .element:hover { outline-color: rgba(120, 170, 255, .8); }
 .canvas-layer .element.selected { outline: 2px solid #3d8bff; }
 /* the 8 px focus-ring margin around each element and inside the screen's edges */
