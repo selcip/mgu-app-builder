@@ -103,3 +103,19 @@ test('a signal fed as the car sends it reaches the layers', async () => {
         engine.stop();
     }
 });
+
+test('stop() ends the Layouts reload debounce too: a layout pushed just before stop reloads nothing', async () => {
+    const engine = createEngine({ name: 'gt3', layout: gt3 });
+    await until('GT3 layers', () => engine.scene().length === 8);
+    engine.setLayout(gt3);
+    engine.stop();
+    const before = engine.logs.length;
+    await new Promise((r) => setTimeout(r, 450));      // the debounce is 300 ms
+    assert.deepStrictEqual(engine.logs.slice(before), [], 'nothing ran after stop');
+    assert.ok(!engine.logs.some((l) => /changed on disk/.test(l.text)));
+    // a stopped engine ignores late calls
+    engine.setLayout(gt3);
+    engine.setSetting('mapWindow', true);
+    await new Promise((r) => setTimeout(r, 450));
+    assert.deepStrictEqual(engine.logs.slice(before), []);
+});

@@ -21,7 +21,9 @@
  * The shimmed Node pieces (what the engine would need injectable if shims became heavy): `net` (shims/net.js),
  * `fs` (shims/fs.js), `events` (shims/events.js), `process.env` and `Buffer` (the bundle injects them), __dirname (the
  * bundle defines it), the kit's ctx (below), and the timers, which are recorded so stop() ends them (kit/car.js starts a
- * 50 ms interval it never clears).
+ * 50 ms interval it never clears). Timers are recorded only while the engine's own code runs (the constructor, start(),
+ * and the calls setLayout / setSetting / feed make), never left patched, so several engines can live side by side; a
+ * stopped engine ignores those calls.
  */
 const Hud = require('../engine/shared/hud.js');
 const { createRenderer, TARGETS } = require('../engine/bench/render_protocol.js');
@@ -107,16 +109,18 @@ function createEngine(o) {
         pixelRect: (r) => renderer.pixelRect(r),
         status: () => hud.statusText(),
         settings: () => Object.assign({}, values),
-        setSetting: (k, v) => settings.set(k, v),
+        setSetting: (k, v) => { if (!stopped) recordTimers(() => settings.set(k, v), timers); },
+        // the engine's watcher answers on the spot and starts its reload debounce (a setTimeout): recorded, so stop() ends it
         setLayout(layout) {
+            if (stopped) return;
             memfs.host.write(dataDir + '/layouts/' + name + '.json', JSON.stringify(layout));
-            memfs.host.notify(dataDir + '/layouts');
+            recordTimers(() => memfs.host.notify(dataDir + '/layouts'), timers);
         },
         /** One signal field as the car's watch would deliver it (the raw SOME/IP values, see kit/runtime/car.js). */
         feed(iface, field, value) {
             const f = watched[iface] && watched[iface][field];
             if (!f) throw new Error('the engine does not watch ' + iface + '.' + field);
-            f(value);
+            if (!stopped) recordTimers(() => f(value), timers);
         },
         watched: () => Object.keys(watched).map((i) => ({ iface: i, fields: Object.keys(watched[i]) })),
         stop() {
