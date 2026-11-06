@@ -4,9 +4,9 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Guide shows the cluster steps when a cluster layout is open
-- [ ] Both routes are described, with the commands
-- [ ] Reachable from Help and from Download
-- [ ] Browser test opens the guide for a cluster layout
+- [x] Guide shows the cluster steps when a cluster layout is open
+- [x] Both routes are described, with the commands
+- [x] Reachable from Help and from Download
+- [x] Browser test opens the guide for a cluster layout

@@ -57,7 +57,7 @@ test('Open takes a cluster layout, the kind shows, menus that do not apply go, r
         assert.strictEqual(await page.locator('[data-insert]').count(), 0, 'no insert menu');
         assert.strictEqual(await page.locator('[data-zoom-level]').count(), 0, 'no zoom');
         await page.locator('[data-main-menu]').click();
-        assert.ok(await page.locator('[data-menu-download]').count());
+        await page.locator('[data-menu-download]').waitFor();
         assert.strictEqual(await page.locator('[data-menu-copy]').count(), 0);
         assert.strictEqual(await page.locator('[data-menu-stack]').count(), 0);
         await page.keyboard.press('Escape');
@@ -94,6 +94,45 @@ test('Open takes a cluster layout, the kind shows, menus that do not apply go, r
         await page.locator('[data-menu-new]').click();
         await page.locator('[data-insert]').waitFor();
         assert.strictEqual(await kind(), 'screen-file');
+        assert.deepStrictEqual(errors, []);
+    } finally {
+        await context.close();
+    }
+});
+
+test('the guide for a cluster layout names both routes to the car, from Help and from Download; a screen file keeps its guide', { skip }, async () => {
+    const context = await browser.newContext({ viewport: { width: 2400, height: 1300 } });
+    try {
+        const { page, errors } = await openDesigner(context);
+        const guide = page.locator('[data-guide]');
+        const openFrom = async (hook) => {
+            await page.locator('[data-main-menu]').click();
+            await page.locator(hook).click();
+            await guide.waitFor();
+        };
+        await openFrom('[data-menu-guide]');
+        assert.strictEqual(await guide.getAttribute('data-guide'), 'screen-file');
+        assert.match(await guide.innerText(), /design\.zip/);
+        assert.doesNotMatch(await guide.innerText(), /deploy\.sh/);
+        await page.keyboard.press('Escape');
+        await guide.waitFor({ state: 'detached' });
+
+        await page.setInputFiles('header input[type=file]', { name: 'gt3.json', mimeType: 'application/json', buffer: GT3 });
+        await page.locator('[data-layout-panel]').waitFor();
+        for (const hook of ['[data-menu-guide]', '[data-menu-to-car]']) {
+            await openFrom(hook);
+            assert.strictEqual(await guide.getAttribute('data-guide'), 'cluster-layout');
+            const text = await guide.innerText();
+            assert.match(text, /Cluster layout/);
+            assert.match(text, /apps\/cluster_themes\/hud\/layouts\//);
+            assert.match(text, /APP=cluster_themes \.\/scripts\/deploy\.sh root@<car-ip-or-hostname> <name>\.json/);
+            assert.match(text, /data\/layouts/);
+            assert.match(text, /generators/);
+            assert.doesNotMatch(text, /design\.zip/);
+            assert.doesNotMatch(text, /\btheme\b/i);
+            await page.keyboard.press('Escape');
+            await guide.waitFor({ state: 'detached' });
+        }
         assert.deepStrictEqual(errors, []);
     } finally {
         await context.close();
