@@ -40,7 +40,7 @@ export function LayoutInspector() {
                 </Section>
             )}
             {one && Boolean(one.locked) && <LockedNote name={one.name} widget={one.widget as Record<string, unknown>} type={one.gpu} />}
-            {one && !one.locked && <WidgetOptions name={one.name} widget={one.widget as Record<string, unknown>} />}
+            {one && !one.locked && !one.parent && Boolean(one.widget) && <WidgetOptions name={one.name} widget={one.widget as Record<string, unknown>} />}
             {sel.length > 0 && !(one && one.boxless) && <Arrange />}
             {one && <ElementCondition name={one.name} />}
             <PreviewSettings />
