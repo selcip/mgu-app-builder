@@ -2,7 +2,7 @@
 // under them, the selected screen's elements (click to select one, Shift/Ctrl/Cmd-click to select several), like a
 // layer list: the top row is the element drawn on top, and dragging rows changes the stacking order.
 import { Fragment, useState, type DragEvent } from 'react';
-import { Home, Image, LayoutList, Plus, RectangleHorizontal, Square, ToggleRight, TriangleAlert, Type, type LucideIcon } from 'lucide-react';
+import { Home, Lock, Image, LayoutList, Plus, RectangleHorizontal, Square, ToggleRight, TriangleAlert, Type, type LucideIcon } from 'lucide-react';
 import { deadLinks, firstScreenOf } from '../../model/index.ts';
 import { widget } from '../../catalog.ts';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Hint, Section, listRowClass } from '@/components/designer/form';
 import { fileOf, kindOf, screenOf } from '../../store/editor.ts';
 import { useActions, useEditor, useEditorStore } from '../../store/react.tsx';
 import { dropPlace, stack } from '../../shell/commands.ts';
+import { WarningMark } from '../../canvas/CarView';
 
 export function ScreenList() {
     const file = useEditor(fileOf);
@@ -83,13 +84,15 @@ export function ElementList() {
                     <Fragment key={c.name}>
                         {gap === i && line}
                         <li draggable onDragStart={(e) => dragStart(e, c.name)} onDragOver={(e) => dragOver(e, i)}>
-                            <button data-element={c.name} data-element-kind={cluster ? c.gpu : undefined} data-boxless={c.boxless ? '' : undefined} aria-current={selection.includes(c.name)} className={listRowClass}
+                            <button data-element={c.name} data-element-kind={cluster ? c.gpu : undefined} data-boxless={c.boxless ? '' : undefined} data-locked={c.locked ? '' : undefined} aria-current={selection.includes(c.name)} className={listRowClass}
                                 title="Shift- or Ctrl-click to select several; drag to change which is drawn on top"
                                 onClick={(e) => select(e.shiftKey || e.metaKey || e.ctrlKey
                                     ? (selection.includes(c.name) ? selection.filter((n) => n !== c.name) : selection.concat([c.name]))
                                     : [c.name])}>
                                 <Icon className="size-3.5 flex-none text-muted-foreground" />
                                 <span className="flex-1 truncate">{c.name}</span>
+                                {cluster && <WarningMark name={c.name} />}
+                                {Boolean(c.locked) && <Lock className="size-3 flex-none text-muted-foreground" data-lock-marker="" aria-label="Locked" />}
                                 <small className="truncate text-[0.7rem] text-muted-foreground">{cluster ? c.gpu : (widget(c.gpu) || { label: c.gpu }).label}</small>
                             </button>
                         </li>

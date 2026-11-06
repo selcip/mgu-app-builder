@@ -51,6 +51,8 @@ declare module 'virtual:cluster-engine' {
         createEngine(opts: ClusterEngineOptions): ClusterEngine;
         createStage(opts: { canvas: HTMLCanvasElement; log?: (level: string, text: string) => void; createCanvas?: () => HTMLCanvasElement }): ClusterStage;
         TARGETS: Record<string, [number, number]> & { panel: [number, number] };
+        /** What the driver cannot see (engine/shared/visible.js): the geometry and the layout check. */
+        visible: import('./model/visibility.ts').Visible;
     }
     const cluster: ClusterEngineModule;
     export default cluster;

@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import cluster, { type ClusterEngine } from 'virtual:cluster-engine';
 import { apply } from '../model/index.ts';
 import { Canvas } from './Canvas';
+import { CarViewMasks, CarViewToggle } from './CarView';
 import { Viewport } from '../shell/Viewport';
 import { layoutOf } from '../store/editor.ts';
 import { settingByKey } from '../model/index.ts';
@@ -29,6 +30,7 @@ export function ClusterStage() {
     const engine = useRef<ClusterEngine | null>(null);
     const drawn = useRef<unknown>(null);          // the layout the engine has been given
     const [refusal, setRefusal] = useState<string | null>(null);
+    const [carView, setCarView] = useState(true);       // the car's view masks (ticket 09), an overlay above the engine's canvas
     const [log, setLog] = useState<string[]>([]);
 
     useEffect(() => {
@@ -117,6 +119,7 @@ export function ClusterStage() {
         <section className="flex min-h-0 min-w-0 flex-1 flex-col" data-stage="" data-cluster-stage="">
             <Viewport overlay={(
                 <>
+                    <CarViewToggle on={carView} onChange={setCarView} />
                     {refusal && (
                         <div role="alert" data-cluster-refusal="" className="absolute inset-x-6 top-6 z-20 rounded-md border border-destructive/40 bg-card p-3 text-sm shadow">
                             <p className="m-0 font-medium text-destructive">The engine does not draw this layout</p>
@@ -128,7 +131,10 @@ export function ClusterStage() {
             )}>
                 <div data-cluster-page="" data-trying={trying} style={{ width: W, height: H, background: '#000' }}>
                     <Canvas design={{ w: W, h: H }} rings={false}>
-                        <canvas ref={canvas} width={W} height={H} data-cluster-canvas="" style={{ display: 'block' }} />
+                        <div style={{ position: 'relative', width: W, height: H }}>
+                            <canvas ref={canvas} width={W} height={H} data-cluster-canvas="" style={{ display: 'block' }} />
+                            {carView && <CarViewMasks />}
+                        </div>
                     </Canvas>
                 </div>
             </Viewport>

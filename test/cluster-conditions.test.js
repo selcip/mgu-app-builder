@@ -141,3 +141,19 @@ test('an unknown preview setting, a wrong kind of value, or a choice value not o
     store.getState().setPreviewSetting('units', 'metric');
     assert.deepStrictEqual(store.getState().previewSettings, { units: 'metric' });
 });
+
+test('a condition and palettes are allowed on a locked element (M\'s and Sport\'s whole-theme shaders)', () => {
+    for (const [file, type] of [['m', 'mdash'], ['m', 'mtach'], ['sport', 'sdash']]) {
+        const doc = open(file);
+        const locked = doc.layout.widgets.find((w) => w.type === type);
+        assert.ok(locked, type);
+        const before = JSON.stringify(locked);
+        const one = M.apply(doc, { type: 'setCondition', elements: [locked.id], condition: { setting: 'showBoost', not: true } });
+        assert.strictEqual(widget(one, locked.id).toggle, '!showBoost');
+        const two = M.apply(one, { type: 'setThemes', elements: [locked.id], themes: ['mdash'] });
+        assert.deepStrictEqual(widget(two, locked.id).themes, ['mdash']);
+        const { toggle, themes, ...rest } = widget(two, locked.id);
+        const { toggle: t0, themes: th0, ...rest0 } = JSON.parse(before);
+        assert.deepStrictEqual(rest, rest0, 'its parameters are untouched');
+    }
+});
