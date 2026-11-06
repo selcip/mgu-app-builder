@@ -159,10 +159,8 @@ test('the saved file differs from the opened one only where the author edited', 
     assert.match(diff[0][1], /"x": 111/);
 });
 
-test('the sport and M layouts, backdrop shaders included, are ordinary movable widgets for now', () => {
+test('the sport and M backdrop shaders are locked since ticket 12: moving them is refused (see cluster-locked-model.test.js)', () => {
     for (const [file, id] of [['sport.json', 'sport'], ['m.json', 'backdrop']]) {
-        const doc = M.openBytes(bytes(file));
-        const next = M.apply(doc, { type: 'moveElements', elements: [id], dx: 3, dy: 0 });
-        assert.strictEqual(widget(next, id).x, widget(doc, id).x + 3);
+        refused(M.openBytes(bytes(file)), { type: 'moveElements', elements: [id], dx: 3, dy: 0 }, /locked/);
     }
 });
