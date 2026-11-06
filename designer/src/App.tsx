@@ -2,6 +2,7 @@
 // the inspector panel on the right. Every part reads the editor store and edits through it (store/editor.ts); App only places them.
 import { RestorePrompt, useAutosave } from './shell/Autosave';
 import { ElementList, ScreenList } from './panels/screens/ScreensPanel';
+import { ClusterStage } from './canvas/ClusterStage';
 import { Stage } from './canvas/Stage';
 import { useEditKeys } from './shell/keys.ts';
 import { Inspector } from './panels/inspector/Inspector';
@@ -9,7 +10,7 @@ import { TryReport } from './shell/Try';
 import { Panel, PanelArea, usePanelKeys } from './shell/Panel';
 import { readPanels, writePanels } from './shell/panels.ts';
 import { Toolbar } from './shell/Toolbar';
-import { LayoutCanvasNote, LayoutPanel } from './panels/layout/LayoutPanel';
+import { LayoutPanel } from './panels/layout/LayoutPanel';
 import { createEditorStore, kindOf, type EditorStore } from './store/editor.ts';
 import { EditorProvider, useEditor } from './store/react.tsx';
 
@@ -46,7 +47,7 @@ function Designer() {
                 <Panel side="left" title="Cluster layout">
                     <LayoutPanel />
                 </Panel>
-                <LayoutCanvasNote />
+                <ClusterStage />
             </PanelArea>
             ) : (
             <PanelArea>

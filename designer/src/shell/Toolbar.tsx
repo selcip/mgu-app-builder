@@ -51,7 +51,7 @@ export function Toolbar({ autosaveProblem, children }: { autosaveProblem: string
             {!layout && <ShownLanguage />}
             {!layout && <PlayButton />}
             {!layout && <ViewMenu />}
-            {!layout && <ZoomControl />}
+            <ZoomControl />
         </header>
     );
 }

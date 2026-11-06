@@ -1,5 +1,5 @@
 // What the Designer shows while a cluster layout is open: the layout's name (rename) and facts in the left panel,
-// and a note where the canvas will draw the cluster. Words follow GLOSSARY.md: Cluster layout, never "theme".
+// (the canvas is canvas/ClusterStage.tsx). Words follow GLOSSARY.md: Cluster layout, never "theme".
 import { EXPOSED_TARGETS } from '../../model/index.ts';
 import { CommitInput } from '@/components/designer/CommitInput';
 import { layoutOf } from '../../store/editor.ts';
@@ -26,19 +26,6 @@ export function LayoutPanel() {
             <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground">Elements</span>
                 <span data-layout-widgets="">{layout.widgets.length}</span>
-            </div>
-        </div>
-    );
-}
-
-export function LayoutCanvasNote() {
-    const layout = useEditor(layoutOf);
-    if (!layout) return null;
-    return (
-        <div className="flex min-w-0 flex-1 items-center justify-center bg-muted/30 p-8 text-center text-sm text-muted-foreground" data-layout-canvas="">
-            <div>
-                <p className="m-0 font-medium text-foreground">{layout.name}</p>
-                <p className="m-0 mt-1">Cluster layout open. Drawing it on the canvas comes next; you can rename it and download it as it is.</p>
             </div>
         </div>
     );

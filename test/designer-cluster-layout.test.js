@@ -55,7 +55,7 @@ test('Open takes a cluster layout, the kind shows, menus that do not apply go, r
         assert.strictEqual(await kind(), 'cluster-layout');
         assert.match(await page.locator('[data-doc-kind]').innerText(), /Cluster layout/);
         assert.strictEqual(await page.locator('[data-insert]').count(), 0, 'no insert menu');
-        assert.strictEqual(await page.locator('[data-zoom-level]').count(), 0, 'no zoom');
+        assert.strictEqual(await page.locator('[data-zoom-level]').count(), 1, 'zoom works on the cluster canvas');
         await page.locator('[data-main-menu]').click();
         await page.locator('[data-menu-download]').waitFor();
         assert.strictEqual(await page.locator('[data-menu-copy]').count(), 0);

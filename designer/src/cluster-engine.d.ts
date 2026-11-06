@@ -21,8 +21,20 @@ declare module 'virtual:cluster-engine' {
         /** One signal field as the car's watch delivers it (raw SOME/IP values). */
         feed(iface: string, field: string, value: unknown): void;
         watched(): { iface: string; fields: string[] }[];
+        /** The hud engine itself; problem is why it refuses the layout (null when it draws it). */
+        hud: { problem: string | null };
         logs: { level: string; text: string }[];
         stop(): void;
+    }
+    /** The apps repo's WebGL stage (engine/bench/stage.js). */
+    export interface ClusterStage {
+        setView(view: string, targets: Record<string, [number, number]>): void;
+        setScene(layers: ClusterLayer[]): void;
+        putPixels(key: string, iw: number, ih: number, x: number, y: number, w: number, h: number, bytes: Uint8Array): void;
+        /** A layer with time needs a redraw every frame. */
+        animated(): boolean;
+        /** Draws the layers at t (ms). */
+        draw(t: number, hooks?: { before?(ctx: CanvasRenderingContext2D): void; after?(ctx: CanvasRenderingContext2D, shown: ClusterLayer[]): void }): void;
     }
     export interface ClusterEngineOptions {
         name?: string;
@@ -37,8 +49,8 @@ declare module 'virtual:cluster-engine' {
     }
     export interface ClusterEngineModule {
         createEngine(opts: ClusterEngineOptions): ClusterEngine;
-        createStage(opts: { canvas: HTMLCanvasElement; log?: (...a: unknown[]) => void; createCanvas?: () => HTMLCanvasElement }): unknown;
-        TARGETS: Record<string, [number, number]>;
+        createStage(opts: { canvas: HTMLCanvasElement; log?: (level: string, text: string) => void; createCanvas?: () => HTMLCanvasElement }): ClusterStage;
+        TARGETS: Record<string, [number, number]> & { panel: [number, number] };
     }
     const cluster: ClusterEngineModule;
     export default cluster;
