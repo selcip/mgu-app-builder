@@ -55,12 +55,14 @@ export function imageUses(file: ScreenFile): ImageUse[] {
 
 /** The images some element uses: what the download keeps. */
 export function usedImages(doc: Doc): string[] {
+    if (doc.kind === 'cluster-layout') return [];
     const used = new Set(imageUses(doc.file).map((u) => u.path));
     return Object.keys(doc.images).filter((p) => used.has(p)).sort();
 }
 
 /** Pictures elements name that the design doesn't have: the head unit would draw an empty frame for them. */
 export function missingImages(doc: Doc): ImageUse[] {
+    if (doc.kind === 'cluster-layout') return [];
     return imageUses(doc.file).filter((u) => !(u.path in doc.images));
 }
 

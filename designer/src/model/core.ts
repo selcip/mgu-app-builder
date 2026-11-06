@@ -37,11 +37,35 @@ export interface ScreenFile {
     [key: string]: unknown;
 }
 
-/** What the Designer has open: the screen file and its PNGs ('images/x.png' -> bytes). */
-export interface Doc {
+/** The cluster layout (ADR 0004): the apps repo's layout file, read and written as it is. */
+export interface ClusterLayout {
+    schemaVersion: number;
+    name: string;
+    target?: string;                    // 'cluster' (1920x720, the default) or 'hud' (800x480, not exposed yet)
+    widgets: unknown[];
+    [key: string]: unknown;             // theme, _about, ...: kept as they are
+}
+
+/** A screen file open: the file and its PNGs ('images/x.png' -> bytes). */
+export interface ScreenDoc {
+    readonly kind?: 'screen-file';
     readonly file: ScreenFile;
     readonly images: Readonly<Record<string, Uint8Array>>;
 }
+
+/** A cluster layout open. It has no images of its own. */
+export interface LayoutDoc {
+    readonly kind: 'cluster-layout';
+    readonly layout: ClusterLayout;
+    readonly images: Readonly<Record<string, Uint8Array>>;
+}
+
+/** What the Designer has open: a screen file or a cluster layout. */
+export type Doc = ScreenDoc | LayoutDoc;
+
+export type DocKind = 'screen-file' | 'cluster-layout';
+
+export const kindOf = (doc: Doc): DocKind => (doc.kind === 'cluster-layout' ? 'cluster-layout' : 'screen-file');
 
 /** A draft of the document that an operation changes in place; apply() hands each operation a fresh copy. */
 export interface Draft {
@@ -68,7 +92,7 @@ export class EditError extends Error {
 export type Handler<A = any> = (d: Draft, args: A) => void;
 
 /** The operation union of a set of handlers: `{ type: 'addScreen', name?: string } | ...`. */
-export type OpsOf<H extends Record<string, Handler>> = {
+export type OpsOf<H extends Record<string, (d: never, args: any) => void>> = {
     [K in keyof H & string]: { type: K } & Parameters<H[K]>[1]
 }[keyof H & string];
 

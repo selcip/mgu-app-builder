@@ -9,8 +9,9 @@ import { TryReport } from './shell/Try';
 import { Panel, PanelArea, usePanelKeys } from './shell/Panel';
 import { readPanels, writePanels } from './shell/panels.ts';
 import { Toolbar } from './shell/Toolbar';
-import { createEditorStore, type EditorStore } from './store/editor.ts';
-import { EditorProvider } from './store/react.tsx';
+import { LayoutCanvasNote, LayoutPanel } from './panels/layout/LayoutPanel';
+import { createEditorStore, kindOf, type EditorStore } from './store/editor.ts';
+import { EditorProvider, useEditor } from './store/react.tsx';
 
 export function App({ store }: { store?: EditorStore }) {
     return (
@@ -35,10 +36,19 @@ function Designer() {
     const saved = useAutosave();
     usePanelKeys();
     useEditKeys();
+    const layout = useEditor(kindOf) === 'cluster-layout';
     return (
         <div className="app flex h-screen flex-col overflow-hidden">
             <Toolbar autosaveProblem={saved.problem} />
             {saved.offer && <RestorePrompt onRestore={saved.restore} onDecline={saved.decline} />}
+            {layout ? (
+            <PanelArea>
+                <Panel side="left" title="Cluster layout">
+                    <LayoutPanel />
+                </Panel>
+                <LayoutCanvasNote />
+            </PanelArea>
+            ) : (
             <PanelArea>
                 <Panel side="left" title="Screen file">
                     <ScreenList />
@@ -50,6 +60,7 @@ function Designer() {
                 </Panel>
                 <TryReport />
             </PanelArea>
+            )}
         </div>
     );
 }

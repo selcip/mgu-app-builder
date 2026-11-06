@@ -200,3 +200,19 @@ test('trying starts with no reports and moves the panels aside, keeping the page
     assert.strictEqual(st().panelsHidden, true);
     assert.strictEqual(st().view.x, x + 240);
 });
+
+test('opening a cluster layout shows its kind, renames through edit(), and a screen-file operation on it is refused', async () => {
+    const model = await import(pathToFileURL(path.join(ROOT, 'designer', 'src', 'model', 'index.ts')).href);
+    const bytes = new Uint8Array(require('node:fs').readFileSync(path.join(ROOT, 'test', 'fixtures', 'cluster-layouts', 'sport.json')));
+    const store = S.createEditorStore();
+    assert.strictEqual(S.kindOf(store.getState()), 'screen-file');
+    store.getState().open(model.openBytes(bytes));
+    assert.strictEqual(S.kindOf(store.getState()), 'cluster-layout');
+    assert.strictEqual(S.layoutOf(store.getState()).name, 'Sport');
+    assert.ok(store.getState().edit({ type: 'renameLayout', name: 'Mine' }));
+    assert.strictEqual(S.layoutOf(store.getState()).name, 'Mine');
+    assert.strictEqual(store.getState().edit({ type: 'addScreen', name: 'x' }), null);
+    assert.match(store.getState().problem, /not an operation on a cluster layout/);
+    store.getState().undo();
+    assert.strictEqual(S.layoutOf(store.getState()).name, 'Sport');
+});

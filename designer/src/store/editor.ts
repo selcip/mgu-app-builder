@@ -4,7 +4,8 @@
 // binding is ./react.tsx.
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import {
-    canRedo, canUndo, createHistory, dispatch, firstScreenOf, languagesOf, newDocument, redo, undo,
+    canRedo, canUndo, createHistory, dispatch, firstScreenOf, kindOf as docKindOf, languagesOf, newDocument, redo, undo,
+    type ClusterLayout, type DocKind,
     type Doc, type Element, type History, type Op, type Screen, type ScreenFile,
 } from '../model/index.ts';
 import type { Lines } from '../canvas/snap.ts';
@@ -129,7 +130,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
         /** A new history: the selected screen follows it, and the selection keeps only elements still on it. */
         function moveTo(history: History, op: Op | null) {
             const s = get();
-            const file = history.present.file;
+            const file = screenFileOf(history.present);
             const selected = followScreen(file, s.selected, op);
             const screen = file.screens.find((x) => x.name === selected)!;
             let selection = selected === s.selected ? s.selection : [];
@@ -142,7 +143,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
 
         return {
             history: createHistory(doc),
-            selected: firstScreenOf(doc.file),
+            selected: firstScreenOf(screenFileOf(doc)),
             selection: [],
             settings: { grid: 8, snap: true, guides: { xs: [], ys: [] } },
             showFocus: true,
@@ -173,7 +174,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
             undo() { if (canUndo(get().history)) moveTo(undo(get().history), null); },
             redo() { if (canRedo(get().history)) moveTo(redo(get().history), null); },
             open(d) {
-                set({ history: createHistory(d), selected: firstScreenOf(d.file), selection: [], problem: null, dragOp: null });
+                set({ history: createHistory(d), selected: firstScreenOf(screenFileOf(d)), selection: [], problem: null, dragOp: null });
             },
             setProblem(problem) { set({ problem }); },
             selectScreen(screen) {
@@ -192,7 +193,7 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
                 const before = new Set(screen.components.map((c) => c.name));
                 const next = get().edit({ type: 'addElement', screen: screen.name, widget, x: 24 + (n % 12) * 24, y: 24 + (n % 12) * 24 });
                 if (!next) return;
-                const added = next.file.screens.find((s) => s.name === screen.name)!.components.find((c) => !before.has(c.name));
+                const added = screenFileOf(next).screens.find((s) => s.name === screen.name)!.components.find((c) => !before.has(c.name));
                 if (added) get().selectOnly(added.name);
             },
             setSettings(settings) { set({ settings }); },
@@ -241,8 +242,18 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
 
 // derived state, for selectors
 
+/** What the screen file's panels read while a cluster layout is open (they are not drawn then): one empty screen. */
+const NO_SCREENS: ScreenFile = { screens: [{ name: 'main', components: [] }] };
+function screenFileOf(doc: Doc): ScreenFile {
+    return doc.kind === 'cluster-layout' ? NO_SCREENS : doc.file;
+}
+
 export const docOf = (s: EditorState): Doc => s.history.present;
-export const fileOf = (s: EditorState): ScreenFile => s.history.present.file;
+export const fileOf = (s: EditorState): ScreenFile => screenFileOf(s.history.present);
+/** Which kind of document is open. */
+export const kindOf = (s: EditorState): DocKind => docKindOf(s.history.present);
+/** The open cluster layout, or null when a screen file is open. */
+export const layoutOf = (s: EditorState): ClusterLayout | null => { const d = s.history.present; return d.kind === 'cluster-layout' ? d.layout : null; };
 export const screenOf = (s: EditorState): Screen => fileOf(s).screens.find((x) => x.name === s.selected)!;
 /** The one selected element, or undefined when none or several are selected. */
 export const elementOf = (s: EditorState): Element | undefined =>

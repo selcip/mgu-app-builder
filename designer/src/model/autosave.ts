@@ -1,10 +1,14 @@
 // Autosave: the open design (screen file and images) kept in browser storage, so a refresh or a closed tab
 // doesn't lose it. Storage sits behind DesignStore; the Designer uses IndexedDB, tests use memoryStore().
-import type { Doc } from './core.ts';
+import type { ClusterLayout, Doc, ScreenFile } from './core.ts';
+import { layoutDocument, layoutProblem } from './ops/layout.ts';
 import { screenFileProblem } from './zip.ts';
 
 /** What is kept: the screen file and its PNGs, as structured-cloneable data. */
 export interface StoredDesign {
+    /** Absent in copies kept before cluster layouts: a screen file. */
+    kind?: 'screen-file' | 'cluster-layout';
+    /** The screen file, or the cluster layout's file. */
     file: unknown;
     images: Record<string, Uint8Array>;
 }
@@ -42,7 +46,9 @@ export function autosave(store: DesignStore): Autosave {
     return {
         async save(doc) {
             try {
-                await store.write({ file: doc.file, images: { ...doc.images } });
+                await store.write(doc.kind === 'cluster-layout'
+                    ? { kind: 'cluster-layout', file: doc.layout, images: {} }
+                    : { kind: 'screen-file', file: doc.file, images: { ...doc.images } });
                 return null;
             } catch (err) {
                 return `Autosave failed: ${reason(err)} Your edits are still here; download the design to keep them.`;
@@ -56,13 +62,18 @@ export function autosave(store: DesignStore): Autosave {
                 return { doc: null, problem: `The autosaved design can’t be read: ${reason(err)}` };
             }
             if (!kept) return { doc: null, problem: null };
+            if (kept.kind === 'cluster-layout') {
+                const bad = layoutProblem(kept.file);
+                if (bad) return { doc: null, problem: `The autosaved design can’t be restored: ${bad}` };
+                return { doc: layoutDocument(kept.file as ClusterLayout), problem: null };
+            }
             const problem = screenFileProblem(kept.file);
             const images = kept.images;
             const imagesOk = !!images && typeof images === 'object' && Object.values(images).every((b) => b instanceof Uint8Array);
             if (problem || !imagesOk) {
                 return { doc: null, problem: `The autosaved design can’t be restored: ${problem || 'its images are damaged.'}` };
             }
-            return { doc: { file: kept.file as Doc['file'], images }, problem: null };
+            return { doc: { file: kept.file as ScreenFile, images }, problem: null };
         },
     };
 }

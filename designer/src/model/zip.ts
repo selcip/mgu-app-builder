@@ -3,8 +3,9 @@
 // to an unedited file, so Store screen files import and download unchanged. Images no element uses are left out of
 // the download.
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
-import { SCHEMA, type Doc, type ScreenFile } from './core.ts';
+import { SCHEMA, type ClusterLayout, type Doc, type ScreenDoc, type ScreenFile } from './core.ts';
 import { usedImages } from './ops/images.ts';
+import { exportClusterLayout, layoutDocument, layoutFileName, layoutProblem } from './ops/layout.ts';
 
 /** An upload was refused: not a zip, no screens.json, not JSON or not a screen file this Designer reads. */
 export class ImportError extends Error {
@@ -48,13 +49,31 @@ export function screenFileProblem(f: unknown): string | null {
 }
 
 /** Reads a parsed screen file into a document (no images), refusing it with ImportError when it isn't valid. */
-export function importScreenFile(f: unknown, images: Record<string, Uint8Array> = {}): Doc {
+export function importScreenFile(f: unknown, images: Record<string, Uint8Array> = {}): ScreenDoc {
     const problem = screenFileProblem(f);
     if (problem) throw new ImportError(problem);
     return { file: f as ScreenFile, images };
 }
 
-export function importZip(bytes: Uint8Array): Doc {
+/** Reads a parsed cluster layout (the apps repo's layout file) into a document, refusing it with ImportError. */
+export function importClusterLayout(f: unknown): Doc {
+    const problem = layoutProblem(f);
+    if (problem) throw new ImportError(problem);
+    return layoutDocument(f as ClusterLayout);
+}
+
+/**
+ * Opens what the app author picked: a design zip (a screen file) or a cluster layout's JSON, told apart by what
+ * the bytes are. Throws ImportError when it is neither, or is a file this Designer doesn't read.
+ */
+export function openBytes(bytes: Uint8Array): Doc {
+    if (bytes[0] === 0x50 && bytes[1] === 0x4b) return importZip(bytes);       // 'PK': a zip
+    let f: unknown;
+    try { f = JSON.parse(strFromU8(bytes)); } catch { throw new ImportError('This is neither a design zip nor a cluster layout (JSON).'); }
+    return importClusterLayout(f);
+}
+
+export function importZip(bytes: Uint8Array): ScreenDoc {
     let entries: Record<string, Uint8Array>;
     try { entries = unzipSync(bytes); } catch { throw new ImportError('Not a zip file.'); }
     const at = Object.keys(entries).find((p) => /^([^/]+\/)?screens\.json$/.test(p));
@@ -73,7 +92,17 @@ export function importZip(bytes: Uint8Array): Doc {
 // a fixed date, so the same design always downloads as the same bytes
 const MTIME = new Date(2020, 0, 1);
 
-export function exportZip(doc: Doc): Uint8Array {
+/** The file a download gives: a screen file as design.zip, a cluster layout as <its name>.json. */
+export function exportDocument(doc: Doc): { name: string; type: string; bytes: Uint8Array } {
+    if (doc.kind === 'cluster-layout') {
+        return { name: layoutFileName(doc), type: 'application/json', bytes: strToU8(exportClusterLayout(doc)) };
+    }
+    return { name: 'design.zip', type: 'application/zip', bytes: exportZip(doc) };
+}
+
+export const downloadName = (doc: Doc): string => exportDocument(doc).name;
+
+export function exportZip(doc: ScreenDoc): Uint8Array {
     const files: Record<string, Uint8Array> = { 'screens.json': strToU8(JSON.stringify(doc.file, null, 2) + '\n') };
     for (const p of usedImages(doc)) files[p] = doc.images[p];
     return zipSync(files, { mtime: MTIME });
