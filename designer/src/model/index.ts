@@ -19,4 +19,6 @@ export { autosave, memoryStore, type Autosave, type DesignStore, type StoredDesi
 export { MAX_BOXES, isBoxesWidget, listOrder, newBoxId, stackScope } from './ops/cluster-boxes.ts';
 export { layoutScreen, LAYOUT_SCREEN, CLUSTER } from './ops/cluster-elements.ts';
 export { setEngineChecks, engineChecks, type EngineChecks, type PaletteRole } from './engine-checks.ts';
+export { CONDITION_SETTINGS, THEME_NAMES, settingsOf, parseCondition, conditionString, previewValue, acceptsValue, settingByKey, type Condition, type ConditionSetting } from './cluster-settings.ts';
+export { connOf, CONNECTIONS } from './ops/cluster-connections.ts';
 export { lockedNote, lockedDraws, isLockedType, assertEditable } from './ops/cluster-locked.ts';

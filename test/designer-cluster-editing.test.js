@@ -281,3 +281,42 @@ test('the downloaded file differs from the one opened only by what was edited', 
         await context.close();
     }
 });
+
+test('an element condition is picked from the settings, written as the apps repo strings, one undo step; preview settings stay out of the file', { skip }, async () => {
+    const context = await browser.newContext({ viewport: { width: 2400, height: 1300 } });
+    try {
+        const { page, errors, frame } = await openGt3(context);
+        const picker = page.locator('[data-condition-picker]');
+        await page.locator('[data-element="speed"]').click();
+        assert.strictEqual(await picker.inputValue(), '', 'speed shows always');
+        await picker.selectOption('units=metric');
+        assert.strictEqual((await download(page)).widgets.find((w) => w.id === 'speed').toggle, 'units=metric');
+        await picker.selectOption('!showBoost');
+        assert.strictEqual((await download(page)).widgets.find((w) => w.id === 'speed').toggle, '!showBoost');
+        // the setting it now refers to is listed under Preview settings; flipping it hides the element
+        const boost = page.locator('[data-preview-switch="showBoost"]');
+        assert.strictEqual(await boost.getAttribute('aria-checked'), 'true');
+        // one undo step per pick
+        await page.locator('[data-undo]').click();
+        assert.strictEqual(await picker.inputValue(), 'units=metric');
+        await page.locator('[data-undo]').click();
+        assert.strictEqual(await picker.inputValue(), '');
+        assert.strictEqual('toggle' in (await download(page)).widgets.find((w) => w.id === 'speed'), false);
+        // palettes
+        await page.locator('[data-condition-theme="gt3"]').check();
+        await page.locator('[data-condition-theme="night"]').check();
+        assert.deepStrictEqual((await download(page)).widgets.find((w) => w.id === 'speed').themes, ['night', 'gt3']);
+        await page.locator('[data-undo]').click();
+        await page.locator('[data-undo]').click();
+        // a preview switch is not part of the file nor of the history
+        const before = await page.locator('[data-undo]').isDisabled();
+        await page.locator('[data-preview-switch="mapWindow"]').click();
+        assert.strictEqual(await page.locator('[data-undo]').isDisabled(), before);
+        const saved = await download(page);
+        assert.deepStrictEqual(saved, ORIGINAL);
+        await frame();
+        assert.deepStrictEqual(errors, []);
+    } finally {
+        await context.close();
+    }
+});

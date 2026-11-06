@@ -4,11 +4,15 @@
 import { lockedNote } from '../../model/index.ts';
 import { PalettePanel, WidgetOptions } from './WidgetOptions';
 import { Arrange } from '../inspector/Arrange';
+import { ElementConnection } from './ElementConnection';
+import { LayerBudget } from './LayerBudget';
 import { BoxesSection } from './BoxesSection';
 import { Hint, Row, Section } from '@/components/designer/form';
 import { useWarnings } from '../../canvas/CarView';
 import { screenOf } from '../../store/editor.ts';
 import { useEditor } from '../../store/react.tsx';
+import { ElementCondition } from './ElementCondition';
+import { PreviewSettings } from './PreviewSettings';
 
 export function LayoutInspector() {
     const screen = useEditor(screenOf);
@@ -26,6 +30,7 @@ export function LayoutInspector() {
                     {Boolean(one.boxless) && <Hint>This element has no box (x, y, w, h) in the layout, so it can’t be moved or resized.</Hint>}
                 </Section>
             )}
+            {one && <ElementConnection element={one.name} />}
             {one && <BoxesSection element={one} />}
             {sel.some((c) => warnings[c.name]) && (
                 <Section title="Warnings" data-warnings="">
@@ -37,6 +42,9 @@ export function LayoutInspector() {
             {one && Boolean(one.locked) && <LockedNote name={one.name} widget={one.widget as Record<string, unknown>} type={one.gpu} />}
             {one && !one.locked && <WidgetOptions name={one.name} widget={one.widget as Record<string, unknown>} />}
             {sel.length > 0 && !(one && one.boxless) && <Arrange />}
+            {one && <ElementCondition name={one.name} />}
+            <PreviewSettings />
+            <LayerBudget />
             <PalettePanel />
         </div>
     );

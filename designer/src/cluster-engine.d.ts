@@ -53,8 +53,20 @@ declare module 'virtual:cluster-engine' {
         TARGETS: Record<string, [number, number]> & { panel: [number, number] };
         /** The engine's own widget validator and palettes (cluster/checks.js). */
         checks: import('./model/engine-checks.ts').EngineChecks;
+        /** The Layer budget of a running engine (cluster/budget.js), against the car's limits in CAR. */
+        budgetOf(engine: ClusterEngine): LayerBudget;
+        CAR: { perConnection: number; total: number; pixelBytes: number };
         /** What the driver cannot see (engine/shared/visible.js): the geometry and the layout check. */
         visible: import('./model/visibility.ts').Visible;
+    }
+    export interface LayerBudget {
+        /** Layers on each connection, 0-based as the widget's conn field. */
+        connections: { conn: number; layers: number; limit: number; over: boolean }[];
+        layers: { count: number; limit: number; over: boolean };
+        pixels: { bytes: number; limit: number; over: boolean };
+        /** One sentence for each limit that is passed, naming it. */
+        over: string[];
+        effects: number; sheets: number; waiting: number;
     }
     const cluster: ClusterEngineModule;
     export default cluster;

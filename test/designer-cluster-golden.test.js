@@ -70,13 +70,13 @@ const FRAME_BASE64 = () => {
 };
 
 /** The layout through the engine in Node: the scene and each image layer's whole pixels. */
-async function nodeScene(layout) {
+async function nodeScene(layout, settings) {
     const { createEngine } = require('../cluster/node.js');
     // the engine's clock text reads `new Date()`: the same minute as the browser's fake clock (as the apps bench's fixed-clock.js)
     const RealDate = Date;
     const fixed = CLOCK.getTime();
     global.Date = class extends RealDate { constructor(...a) { if (a.length) super(...a); else super(fixed); } };
-    const engine = createEngine({ name: 'design', layout });
+    const engine = createEngine({ name: 'design', layout, settings });
     try {
         const t0 = Date.now();
         for (;;) {
@@ -238,6 +238,43 @@ test('a changed layout is drawn again (the engine reloads it)', { skip }, async 
         await name.fill('Renamed GT3');
         await name.press('Enter');
         await page.waitForFunction((n) => window.__frames > n, before, { timeout: 15000 });
+        assert.deepStrictEqual(errors, []);
+    } finally {
+        await context.close();
+    }
+});
+
+test('flipping "Leave room for the map" on GT3 cuts the map window out of the canvas, pixel-equal to the engine with that setting', { skip }, async () => {
+    const context = await browser.newContext({ viewport: { width: 2400, height: 1300 } });
+    try {
+        await context.clock.install({ time: CLOCK });
+        const layout = JSON.parse(layoutFile('gt3').toString('utf8'));
+        const off = await nodeScene(layout);
+        const on = await nodeScene(layout, { mapWindow: true });
+        assert.notStrictEqual(on.scene.length, 0);
+        const { page, errors } = await openDesigner(context);
+        const first = await designerFrame(page, off.scene.length, 'gt3');
+        // the pixel in the middle of the map window: opaque before, see-through after
+        const [hx, hy, hw, hh] = layout.widgets.find((w) => w.hole).hole;
+        const at = (b64) => Buffer.from(b64, 'base64')[(Math.floor(hy + hh / 2) * 1920 + Math.floor(hx + hw / 2)) * 4 + 3];
+        assert.ok(at(first.b64) > 0, 'the cluster is opaque where the map goes');
+        const sw = page.locator('[data-preview-switch="mapWindow"]');
+        assert.strictEqual(await sw.getAttribute('aria-checked'), 'false');
+        await page.clock.resume();
+        await sw.click();
+        assert.strictEqual(await sw.getAttribute('aria-checked'), 'true');
+        await page.waitForFunction((n) => window.__last && window.__last.layers === n, on.scene.length, { timeout: 30000 });
+        await page.waitForTimeout(1500);
+        await page.clock.pauseAt(new Date((await page.evaluate(() => Date.now())) + 1000));
+        await page.clock.runFor(48);
+        const t = await page.evaluate(() => window.__last.t);
+        const got = await page.evaluate(FRAME_BASE64);
+        assert.strictEqual(at(got), 0, 'the map window is see-through');
+        const want = await referenceFrame(context, on, t);
+        const a = Buffer.from(got, 'base64'), b = Buffer.from(want.b64, 'base64');
+        assert.ok(a.equals(b), 'the canvas differs from the stage drawing the engine with mapWindow on, first at ' + firstDifference(a, b));
+        // nothing was saved or made undoable by the switch
+        assert.strictEqual(await page.locator('[data-undo]').isDisabled(), true);
         assert.deepStrictEqual(errors, []);
     } finally {
         await context.close();
