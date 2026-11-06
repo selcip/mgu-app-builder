@@ -13,6 +13,7 @@ import { apply } from '../model/index.ts';
 import { Canvas } from './Canvas';
 import { Viewport } from '../shell/Viewport';
 import { layoutOf } from '../store/editor.ts';
+import { settingByKey } from '../model/index.ts';
 import { feedsOf } from '../store/signals.ts';
 import { useActions, useEditor, useEditorStore } from '../store/react.tsx';
 
@@ -47,7 +48,7 @@ export function ClusterStage() {
             setRefusal(problem ? e.status() : null);
         };
         e = cluster.createEngine({
-            name: 'design', layout: first,
+            name: 'design', layout: first, settings: store.getState().previewSettings,
             onChange() { if (e) stage.setScene(e.scene()); dirty = true; },
             onPixels(l, x, y, w, h) {
                 const layer = l as { key: string; iw: number; ih: number };
@@ -88,6 +89,13 @@ export function ClusterStage() {
             try { const d = apply(s.history.present, s.dragOp); return d.kind === 'cluster-layout' ? d.layout : open; } catch { return open; }
         };
         const stopWatching = store.subscribe((s, prev) => {
+            if (s.previewSettings !== prev.previewSettings) {      // a preview setting flipped: the engine rebuilds with it
+                for (const k of new Set([...Object.keys(s.previewSettings), ...Object.keys(prev.previewSettings)])) {
+                    const was = prev.previewSettings[k], now = s.previewSettings[k] ?? settingByKey(k)?.default;
+                    if (s.previewSettings[k] !== was) live.setSetting(k, now);
+                }
+                dirty = true;
+            }
             if (trying && s.signals !== prev.signals) feedAll();
             if (trying && s.demoDrive !== prev.demoDrive) { setDemo(); feedAll(); }
             if (layoutOf(s) === layoutOf(prev) && s.dragOp === prev.dragOp) return;

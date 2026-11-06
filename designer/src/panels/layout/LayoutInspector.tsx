@@ -5,6 +5,8 @@ import { Arrange } from '../inspector/Arrange';
 import { Hint, Row, Section } from '@/components/designer/form';
 import { screenOf } from '../../store/editor.ts';
 import { useEditor } from '../../store/react.tsx';
+import { ElementCondition } from './ElementCondition';
+import { PreviewSettings } from './PreviewSettings';
 
 export function LayoutInspector() {
     const screen = useEditor(screenOf);
@@ -22,6 +24,8 @@ export function LayoutInspector() {
                 </Section>
             )}
             {sel.length > 0 && !(one && one.boxless) && <Arrange />}
+            {one && <ElementCondition name={one.name} />}
+            <PreviewSettings />
         </div>
     );
 }

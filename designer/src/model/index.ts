@@ -17,3 +17,4 @@ export { targetOf, exportClusterLayout, layoutProblem, EXPOSED_TARGETS, TARGETS,
 export { languagesOf, textIn, hasText, isTextMap, textsOf, missingTranslations, type TextPlace, type TextMap } from './texts.ts';
 export { autosave, memoryStore, type Autosave, type DesignStore, type StoredDesign } from './autosave.ts';
 export { layoutScreen, LAYOUT_SCREEN, CLUSTER } from './ops/cluster-elements.ts';
+export { CONDITION_SETTINGS, THEME_NAMES, settingsOf, parseCondition, conditionString, previewValue, acceptsValue, settingByKey, type Condition, type ConditionSetting } from './cluster-settings.ts';
