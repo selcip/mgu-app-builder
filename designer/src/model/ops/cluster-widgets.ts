@@ -6,6 +6,7 @@ import { EditError, uniqueName, type ClusterLayout } from '../core.ts';
 import { engineChecks } from '../engine-checks.ts';
 import { CLUSTER_FONTS, CLUSTER_ICONS, clusterWidget, optionsOf, type ClusterOption } from '../../cluster-catalog.ts';
 import { CLUSTER } from './cluster-elements.ts';
+import { assertEditable } from './cluster-locked.ts';
 
 type Widget = Record<string, unknown>;
 const isWidget = (v: unknown): v is Widget => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -79,6 +80,7 @@ export const clusterWidgetOps = {
     /** Sets option `key` of the named element; `value` null puts it back to the engine's default (removes the key). */
     setWidgetOption(d: LayoutDraft, a: { element: string; key: string; value: unknown }) {
         const w = find(d, a.element);
+        assertEditable(w, 'given other options');
         const type = String(w.type);
         const t = clusterWidget(type);
         if (!t) throw new EditError(`Element "${a.element}" is a ${type}, which the Designer doesn’t edit the options of.`);

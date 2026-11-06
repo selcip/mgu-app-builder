@@ -51,6 +51,8 @@ declare module 'virtual:cluster-engine' {
         createEngine(opts: ClusterEngineOptions): ClusterEngine;
         createStage(opts: { canvas: HTMLCanvasElement; log?: (level: string, text: string) => void; createCanvas?: () => HTMLCanvasElement }): ClusterStage;
         TARGETS: Record<string, [number, number]> & { panel: [number, number] };
+        /** The engine's own widget validator and palettes (cluster/checks.js). */
+        checks: import('./model/engine-checks.ts').EngineChecks;
     }
     const cluster: ClusterEngineModule;
     export default cluster;

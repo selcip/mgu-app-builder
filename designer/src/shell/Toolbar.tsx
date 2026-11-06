@@ -17,6 +17,7 @@ import {
     DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { ClusterInsertMenu } from './ClusterInsert';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { STACKING, addGuide, clearGuides, copy, cut, deleteSelection, duplicate, paste, selectAll, stack, stackableOf } from './commands.ts';
@@ -41,6 +42,7 @@ export function Toolbar({ autosaveProblem, children }: { autosaveProblem: string
             <span className="mx-1 h-5 w-px bg-border" />
             <DocKind />
             {!trying && !layout && <InsertMenu />}
+            {!trying && layout && <ClusterInsertMenu />}
             <Button variant="ghost" size="icon-sm" data-undo="" title={`Undo (${MOD}Z)`} disabled={!canUndo || trying} onClick={undo}><Undo2 /></Button>
             <Button variant="ghost" size="icon-sm" data-redo="" title={`Redo (${MOD}Shift+Z)`} disabled={!canRedo || trying} onClick={redo}><Redo2 /></Button>
             <span className="min-w-0 flex-1 truncate px-2 text-xs">

@@ -16,4 +16,4 @@ function createEngine(opts) {
     return host.createEngine(Object.assign({ fonts }, opts));
 }
 
-module.exports = { createEngine };
+module.exports = { createEngine, checks: require('./checks.js') };

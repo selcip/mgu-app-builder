@@ -2,6 +2,7 @@
 // its box, with the same Arrange section as for screens (box fields, align, distribute). What the widget's options
 // are comes with the cluster widget catalog.
 import { lockedNote } from '../../model/index.ts';
+import { PalettePanel, WidgetOptions } from './WidgetOptions';
 import { Arrange } from '../inspector/Arrange';
 import { Hint, Row, Section } from '@/components/designer/form';
 import { screenOf } from '../../store/editor.ts';
@@ -23,7 +24,9 @@ export function LayoutInspector() {
                 </Section>
             )}
             {one && Boolean(one.locked) && <LockedNote name={one.name} widget={one.widget as Record<string, unknown>} type={one.gpu} />}
+            {one && !one.locked && <WidgetOptions name={one.name} widget={one.widget as Record<string, unknown>} />}
             {sel.length > 0 && !(one && one.boxless) && <Arrange />}
+            <PalettePanel />
         </div>
     );
 }
