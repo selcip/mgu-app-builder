@@ -6,6 +6,8 @@
 // Each drawn frame is announced as a 'mgu-cluster-frame' event on window with the time it was drawn at.
 import { useEffect, useRef, useState } from 'react';
 import cluster, { type ClusterEngine } from 'virtual:cluster-engine';
+import { apply } from '../model/index.ts';
+import { Canvas } from './Canvas';
 import { Viewport } from '../shell/Viewport';
 import { layoutOf } from '../store/editor.ts';
 import { useActions, useEditor, useEditorStore } from '../store/react.tsx';
@@ -63,9 +65,16 @@ export function ClusterStage() {
             raf = requestAnimationFrame(frame);
         };
         raf = requestAnimationFrame(frame);
+        // the layout the engine draws: the open one, with the edit being dragged applied (the canvas edits show at once)
+        const shown = (s: ReturnType<typeof store.getState>) => {
+            const open = layoutOf(s);
+            if (!open || !s.dragOp) return open;
+            try { const d = apply(s.history.present, s.dragOp); return d.kind === 'cluster-layout' ? d.layout : open; } catch { return open; }
+        };
         const stopWatching = store.subscribe((s, prev) => {
-            const next = layoutOf(s);
-            if (!next || next === drawn.current || layoutOf(prev) === next) return;
+            if (layoutOf(s) === layoutOf(prev) && s.dragOp === prev.dragOp) return;
+            const next = shown(s);
+            if (!next || next === drawn.current) return;
             drawn.current = next;
             e!.setLayout(next);
             dirty = true;
@@ -92,7 +101,9 @@ export function ClusterStage() {
                 </>
             )}>
                 <div data-cluster-page="" style={{ width: W, height: H, background: '#000' }}>
-                    <canvas ref={canvas} width={W} height={H} data-cluster-canvas="" style={{ display: 'block' }} />
+                    <Canvas design={{ w: W, h: H }} rings={false}>
+                        <canvas ref={canvas} width={W} height={H} data-cluster-canvas="" style={{ display: 'block' }} />
+                    </Canvas>
                 </div>
             </Viewport>
         </section>

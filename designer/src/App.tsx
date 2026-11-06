@@ -11,6 +11,7 @@ import { Panel, PanelArea, usePanelKeys } from './shell/Panel';
 import { readPanels, writePanels } from './shell/panels.ts';
 import { Toolbar } from './shell/Toolbar';
 import { LayoutPanel } from './panels/layout/LayoutPanel';
+import { LayoutInspector } from './panels/layout/LayoutInspector';
 import { createEditorStore, kindOf, type EditorStore } from './store/editor.ts';
 import { EditorProvider, useEditor } from './store/react.tsx';
 
@@ -48,6 +49,9 @@ function Designer() {
                     <LayoutPanel />
                 </Panel>
                 <ClusterStage />
+                <Panel side="right" title="Inspector" className="inspector">
+                    <LayoutInspector />
+                </Panel>
             </PanelArea>
             ) : (
             <PanelArea>

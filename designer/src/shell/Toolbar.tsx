@@ -122,16 +122,16 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
                     <DropdownMenuLabel>Edit</DropdownMenuLabel>
                     <DropdownMenuItem disabled={!edits || !canUndo} onClick={undo}>Undo <DropdownMenuShortcut>{MOD}Z</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !canRedo} onClick={redo}>Redo <DropdownMenuShortcut>{MOD}⇧Z</DropdownMenuShortcut></DropdownMenuItem>
-                    {!layout && <>
+                    <>
                     <DropdownMenuItem disabled={!edits || !any} data-menu-copy="" onClick={() => copy(store)}>Copy <DropdownMenuShortcut>{MOD}C</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !any} data-menu-cut="" onClick={() => cut(store)}>Cut <DropdownMenuShortcut>{MOD}X</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !clip} data-menu-paste="" onClick={() => paste(store)}>Paste <DropdownMenuShortcut>{MOD}V</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !any} data-menu-duplicate="" onClick={() => duplicate(store)}>Duplicate <DropdownMenuShortcut>{MOD}D</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits || !any} variant="destructive" data-menu-delete="" onClick={() => deleteSelection(store)}>Delete <DropdownMenuShortcut>Del</DropdownMenuShortcut></DropdownMenuItem>
                     <DropdownMenuItem disabled={!edits} onClick={() => selectAll(store)}>Select all <DropdownMenuShortcut>{MOD}A</DropdownMenuShortcut></DropdownMenuItem>
-                    </>}
+                    </>
                 </DropdownMenuGroup>
-                {!layout && <>
+                <>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuLabel>Arrange</DropdownMenuLabel>
@@ -141,7 +141,7 @@ function MainMenu({ onOpen }: { onOpen(): void }) {
                         </DropdownMenuItem>
                     ))}
                 </DropdownMenuGroup>
-                </>}
+                </>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuLabel>Help</DropdownMenuLabel>

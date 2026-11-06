@@ -7,7 +7,7 @@ import { deadLinks, firstScreenOf } from '../../model/index.ts';
 import { widget } from '../../catalog.ts';
 import { Button } from '@/components/ui/button';
 import { Hint, Section, listRowClass } from '@/components/designer/form';
-import { fileOf, screenOf } from '../../store/editor.ts';
+import { fileOf, kindOf, screenOf } from '../../store/editor.ts';
 import { useActions, useEditor, useEditorStore } from '../../store/react.tsx';
 import { dropPlace, stack } from '../../shell/commands.ts';
 
@@ -46,6 +46,7 @@ const ROW_DRAG_TYPE = 'application/x-mgu-element';
 export function ElementList() {
     const screen = useEditor(screenOf);
     const selection = useEditor((s) => s.selection);
+    const cluster = useEditor(kindOf) === 'cluster-layout';        // the layout's widgets: their kind is the engine's, not the catalog's
     const store = useEditorStore();
     const { select } = useActions();
     const [gap, setGap] = useState<number | null>(null);        // the gap a drag would drop into
@@ -72,8 +73,8 @@ export function ElementList() {
     }
     const line = <li aria-hidden className="pointer-events-none -my-px h-0.5 rounded bg-blue-500" data-drop-line="" />;
     return (
-        <Section title={<>Elements <span className="font-normal">on {screen.name}</span></>} data-elements="">
-            {shown.length === 0 && <Hint>No elements yet: add a widget.</Hint>}
+        <Section title={cluster ? 'Elements' : <>Elements <span className="font-normal">on {screen.name}</span></>} data-elements="">
+            {shown.length === 0 && <Hint>{cluster ? 'No elements in this layout.' : 'No elements yet: add a widget.'}</Hint>}
             <ul className="m-0 flex list-none flex-col gap-0.5 p-0"
                 onDragOver={(e) => { if (e.dataTransfer.types.includes(ROW_DRAG_TYPE)) e.preventDefault(); }} onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setGap(null); }}
                 onDrop={drop} onDragEnd={() => setGap(null)}>{shown.map((c, i) => {
@@ -82,14 +83,14 @@ export function ElementList() {
                     <Fragment key={c.name}>
                         {gap === i && line}
                         <li draggable onDragStart={(e) => dragStart(e, c.name)} onDragOver={(e) => dragOver(e, i)}>
-                            <button data-element={c.name} aria-current={selection.includes(c.name)} className={listRowClass}
+                            <button data-element={c.name} data-element-kind={cluster ? c.gpu : undefined} data-boxless={c.boxless ? '' : undefined} aria-current={selection.includes(c.name)} className={listRowClass}
                                 title="Shift- or Ctrl-click to select several; drag to change which is drawn on top"
                                 onClick={(e) => select(e.shiftKey || e.metaKey || e.ctrlKey
                                     ? (selection.includes(c.name) ? selection.filter((n) => n !== c.name) : selection.concat([c.name]))
                                     : [c.name])}>
                                 <Icon className="size-3.5 flex-none text-muted-foreground" />
                                 <span className="flex-1 truncate">{c.name}</span>
-                                <small className="truncate text-[0.7rem] text-muted-foreground">{(widget(c.gpu) || { label: c.gpu }).label}</small>
+                                <small className="truncate text-[0.7rem] text-muted-foreground">{cluster ? c.gpu : (widget(c.gpu) || { label: c.gpu }).label}</small>
                             </button>
                         </li>
                     </Fragment>

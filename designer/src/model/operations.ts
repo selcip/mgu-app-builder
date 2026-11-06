@@ -11,6 +11,7 @@ import { focusOps } from './ops/focus.ts';
 import { navigationOps } from './ops/navigation.ts';
 import { stackingOps } from './ops/stacking.ts';
 import { layoutOps } from './ops/layout.ts';
+import { clusterElementOps } from './ops/cluster-elements.ts';
 
 /** The screen file's operations. */
 export const HANDLERS = {
@@ -28,6 +29,7 @@ export const HANDLERS = {
 /** The cluster layout's operations. */
 export const LAYOUT_HANDLERS = {
     ...layoutOps,
+    ...clusterElementOps,
 };
 
 export type ScreenOp = OpsOf<typeof HANDLERS>;

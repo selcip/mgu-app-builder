@@ -3,7 +3,7 @@
 // guides. Each works on the store's selection on the selected screen and edits through the store (so a refusal
 // shows as its problem). Plain TypeScript, no React or DOM: Node tests it.
 import { canRestack, copyElements, pastedNames, type Box, type Place } from '../model/index.ts';
-import { DESIGN, screenOf, type EditorState, type EditorStore } from '../store/editor.ts';
+import { DESIGN, kindOf, screenOf, type EditorState, type EditorStore } from '../store/editor.ts';
 
 /** How far each paste on the same screen moves from the one before. */
 const PASTE_STEP = 16;
@@ -21,7 +21,7 @@ export function selectedIn(s: EditorState): string[] {
 export function copy(store: EditorStore): boolean {
     const s = store.getState(), sel = selected(store);
     if (!sel.length) return false;
-    s.setClipboard({ screen: s.selected, elements: copyElements(screenOf(s), sel), pastes: 0 });
+    s.setClipboard({ kind: kindOf(s), screen: s.selected, elements: copyElements(screenOf(s), sel), pastes: 0 });
     return true;
 }
 
@@ -39,7 +39,7 @@ export function cut(store: EditorStore): boolean {
 /** Pastes the clipboard on the selected screen (each paste on the screen it came from a step further) and selects it. */
 export function paste(store: EditorStore): boolean {
     const s = store.getState(), clip = s.clipboard;
-    if (!clip || !clip.elements.length) return false;
+    if (!clip || !clip.elements.length || (clip.kind || 'screen-file') !== kindOf(s)) return false;
     const same = clip.screen === s.selected;
     const pastes = same ? clip.pastes + 1 : clip.pastes;
     const step = same ? pastes * PASTE_STEP : 0;

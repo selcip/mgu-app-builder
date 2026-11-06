@@ -4,7 +4,7 @@
 // binding is ./react.tsx.
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import {
-    canRedo, canUndo, createHistory, dispatch, firstScreenOf, kindOf as docKindOf, languagesOf, newDocument, redo, undo,
+    canRedo, canUndo, createHistory, dispatch, firstScreenOf, kindOf as docKindOf, languagesOf, layoutScreen, newDocument, redo, undo,
     type ClusterLayout, type DocKind,
     type Doc, type Element, type History, type Op, type Screen, type ScreenFile,
 } from '../model/index.ts';
@@ -24,6 +24,8 @@ export interface CanvasSettings {
 
 /** What was copied, and from which screen (pasting there again moves each paste a little further). */
 export interface Clipboard {
+    /** Which kind of document it was copied in: elements of a screen file and of a cluster layout don't mix. */
+    kind?: DocKind;
     screen: string;
     elements: Element[];
     pastes: number;
@@ -242,10 +244,16 @@ export function createEditorStore(doc: Doc = newDocument(), options: EditorOptio
 
 // derived state, for selectors
 
-/** What the screen file's panels read while a cluster layout is open (they are not drawn then): one empty screen. */
-const NO_SCREENS: ScreenFile = { screens: [{ name: 'main', components: [] }] };
+/**
+ * What the shared canvas, element list and editing commands read while a cluster layout is open: one screen whose
+ * elements are the layout's widgets (model/ops/cluster-elements.ts).
+ */
+const layoutFiles = new WeakMap<ClusterLayout, ScreenFile>();
 function screenFileOf(doc: Doc): ScreenFile {
-    return doc.kind === 'cluster-layout' ? NO_SCREENS : doc.file;
+    if (doc.kind !== 'cluster-layout') return doc.file;
+    let f = layoutFiles.get(doc.layout);
+    if (!f) layoutFiles.set(doc.layout, (f = { screens: [layoutScreen(doc.layout)] }));
+    return f;
 }
 
 export const docOf = (s: EditorState): Doc => s.history.present;

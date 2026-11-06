@@ -58,8 +58,8 @@ test('Open takes a cluster layout, the kind shows, menus that do not apply go, r
         assert.strictEqual(await page.locator('[data-zoom-level]').count(), 1, 'zoom works on the cluster canvas');
         await page.locator('[data-main-menu]').click();
         await page.locator('[data-menu-download]').waitFor();
-        assert.strictEqual(await page.locator('[data-menu-copy]').count(), 0);
-        assert.strictEqual(await page.locator('[data-menu-stack]').count(), 0);
+        assert.strictEqual(await page.locator('[data-menu-copy]').count(), 1, 'editing commands apply to the layout elements');
+        assert.strictEqual(await page.locator('[data-menu-stack]').count(), 4);
         await page.keyboard.press('Escape');
 
         // rename
