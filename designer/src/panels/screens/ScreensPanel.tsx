@@ -10,6 +10,7 @@ import { Hint, Section, listRowClass } from '@/components/designer/form';
 import { fileOf, kindOf, screenOf } from '../../store/editor.ts';
 import { useActions, useEditor, useEditorStore } from '../../store/react.tsx';
 import { dropPlace, stack } from '../../shell/commands.ts';
+import { WarningMark } from '../../canvas/CarView';
 
 export function ScreenList() {
     const file = useEditor(fileOf);
@@ -90,6 +91,7 @@ export function ElementList() {
                                     : [c.name])}>
                                 <Icon className="size-3.5 flex-none text-muted-foreground" />
                                 <span className="flex-1 truncate">{c.name}</span>
+                                {cluster && <WarningMark name={c.name} />}
                                 <small className="truncate text-[0.7rem] text-muted-foreground">{cluster ? c.gpu : (widget(c.gpu) || { label: c.gpu }).label}</small>
                             </button>
                         </li>
