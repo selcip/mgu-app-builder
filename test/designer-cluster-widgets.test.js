@@ -140,8 +140,8 @@ test('an invalid value is refused with the engine\'s reason, the field goes back
         await alert.waitFor();
         assert.match(await alert.innerText(), /"conn" must be 0\.\.3 \(the connection to cluster-render\)/);
         assert.strictEqual(await field(page, 'conn').locator('input').inputValue(), '', 'the field shows what the layout has');
-        await commit(page, 'z', 500);
-        assert.match(await page.getByRole('alert').innerText(), /from -100 to 100/);
+        await commit(page, 'z', 1.5);            // the engine sets no range on z (any whole number), so a fraction is what is refused
+        assert.match(await page.getByRole('alert').innerText(), /whole number/);
         assert.ok(!('conn' in (await download(page)).widgets[0]));
     } finally { await context.close(); }
 });

@@ -16,7 +16,11 @@ const STARTER = path.join(ROOT, 'starter');
 const TREE = path.join(STARTER, 'app');
 const UI = JSON.parse(fs.readFileSync(path.join(TREE, 'rhmiData', 'uiDescriptions', 'ID7', 'uiDescription.json'), 'utf8'));
 const APP = JSON.parse(fs.readFileSync(path.join(TREE, 'rhmiData', 'application.json'), 'utf8')).application;
-const tick = () => new Promise((r) => setTimeout(r, 5));
+// One turn of the loop for everything the app has queued (its start is a setImmediate, then promises). Not a timer: a timer
+// is due after 5 ms of wall clock, and on a busy machine the loop reaches its timers phase before its check phase, so a
+// timed tick could pass before the app had even started. Immediates run in the order they were queued, after the app's.
+const tick = () => new Promise((r) => setImmediate(() => setImmediate(r)));
+const stall = (ms) => { const t = Date.now(); while (Date.now() - t < ms) { /* busy */ } };
 
 class Comp extends EventEmitter {
     constructor(world, name, id) { super(); this.world = world; this.name = name; this.id = id; }
@@ -119,7 +123,9 @@ function load(w) {
 test('the app maps its tile to the entry page state, enables it and draws in the page when the HMI shows it', async () => {
     const w = load(world());
     try {
-        await tick();
+        const turn = tick();
+        stall(20);        // a busy machine: the loop is away longer than a timer's 5 ms before it looks at what is waiting
+        await turn;
         assert.ok(w.initialized);
         assert.ok(w.states.indexOf(`map ${APP.entryPoints[0].uuid} ST_OnlineApps_MguPage1`) >= 0, w.states.join('\n'));
         assert.strictEqual(w.tile, 'ENABLED');

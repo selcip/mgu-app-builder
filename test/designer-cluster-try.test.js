@@ -134,8 +134,16 @@ function firstDifference(a, b) {
 /** Waits for the current frame to settle, then reads the frame at a known time. */
 async function settledFrame(page) {
     await page.waitForTimeout(1800);
-    // pause a moment ahead of the page's own clock (a long jump would age the fed signals past the engine's 3 s freshness)
-    await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now()) + 20));
+    // pause a moment ahead of the page's own clock. The page's clock keeps running while the pause is on its way, and under
+    // load the round trip takes longer than any fixed lead, so pauseAt fails with "Cannot fast-forward to the past": ask again,
+    // further ahead each time. A jump is harmless up to a second: the jump runs the page's timers, the 250 ms refeed included,
+    // so the fed signals stay inside the engine's 3 s freshness.
+    for (const lead of [50, 200, 600, 1500]) {
+        const now = await page.evaluate(() => Date.now());
+        try { await page.clock.pauseAt(new Date(now + lead)); break; } catch (e) {
+            if (!/past/.test(String(e)) || lead === 1500) throw e;
+        }
+    }
     await page.clock.runFor(48);
     const t = await page.evaluate(() => window.__last.t);
     return { t, b64: await page.evaluate(FRAME_BASE64) };
