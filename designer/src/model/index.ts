@@ -18,3 +18,4 @@ export { languagesOf, textIn, hasText, isTextMap, textsOf, missingTranslations, 
 export { autosave, memoryStore, type Autosave, type DesignStore, type StoredDesign } from './autosave.ts';
 export { layoutScreen, LAYOUT_SCREEN, CLUSTER } from './ops/cluster-elements.ts';
 export { setEngineChecks, engineChecks, type EngineChecks, type PaletteRole } from './engine-checks.ts';
+export { lockedNote, lockedDraws, isLockedType, assertEditable } from './ops/cluster-locked.ts';
