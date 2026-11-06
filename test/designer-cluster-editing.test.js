@@ -308,6 +308,15 @@ test('an element condition is picked from the settings, written as the apps repo
         assert.deepStrictEqual((await download(page)).widgets.find((w) => w.id === 'speed').themes, ['night', 'gt3']);
         await page.locator('[data-undo]').click();
         await page.locator('[data-undo]').click();
+        // unticking the only palette says "all palettes" and leaves no themes key
+        const legend = page.locator('[data-condition-themes] legend');
+        await page.locator('[data-condition-theme="gt3"]').check();
+        assert.ok(!/\(all\)/.test(await legend.innerText()), 'one palette is not all');
+        await page.locator('[data-condition-theme="gt3"]').uncheck();
+        assert.match(await legend.innerText(), /\(all\)/);
+        assert.strictEqual('themes' in (await download(page)).widgets.find((w) => w.id === 'speed'), false);
+        await page.locator('[data-undo]').click();
+        await page.locator('[data-undo]').click();
         // a preview switch is not part of the file nor of the history
         const before = await page.locator('[data-undo]').isDisabled();
         await page.locator('[data-preview-switch="mapWindow"]').click();

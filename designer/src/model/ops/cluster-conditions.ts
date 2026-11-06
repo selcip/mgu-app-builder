@@ -39,11 +39,18 @@ export const clusterConditionOps = {
         }
     },
 
-    /** Limits the named elements to those palettes (an empty list: every palette). */
+    /**
+     * Limits the named elements to those palettes (an empty list: every palette, and the key goes). A name the Designer does not
+     * know is refused, unless the element already has it (a file written for a palette this build lacks keeps it while others
+     * are toggled).
+     */
     setThemes(d: LayoutDraft, a: { screen?: string; elements: string[]; themes: string[] }) {
         const ws = widgetsNamed(d, a.elements);
         const themes = a.themes || [];
-        for (const t of themes) if (!THEME_NAMES.includes(t)) throw new EditError(`There is no palette "${t}".`);
+        for (const w of ws) {
+            const had = Array.isArray(w.themes) ? w.themes.map(String) : [];
+            for (const t of themes) if (!THEME_NAMES.includes(t) && !had.includes(t)) throw new EditError(`There is no palette "${t}".`);
+        }
         for (const w of ws) {
             if (themes.length) w.themes = [...themes];
             else delete w.themes;

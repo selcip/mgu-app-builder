@@ -99,7 +99,24 @@ test('setThemes limits an element to palettes (or lifts the limit), refusing a p
     const none = M.apply(next, { type: 'setThemes', elements: ['speed'], themes: [] });
     assert.strictEqual('themes' in widget(none, 'speed'), false);
     refused(doc, { type: 'setThemes', elements: ['speed'], themes: ['gt3', 'neon'] }, /neon/);
+    // unticking the only palette leaves no key (= every palette), not an empty list
+    const one = M.apply(doc, { type: 'setThemes', elements: ['speed'], themes: ['gt3'] });
+    assert.deepStrictEqual(widget(one, 'speed').themes, ['gt3']);
+    assert.strictEqual('themes' in widget(M.apply(one, { type: 'setThemes', elements: ['speed'], themes: [] }), 'speed'), false);
     refused(doc, { type: 'setThemes', elements: ['ghost'], themes: ['gt3'] }, /ghost/);
+});
+
+test('a palette the file names that the Designer does not know is kept while the others are toggled, and can be removed', () => {
+    const doc = open('gt3');
+    const w = doc.layout.widgets.find((x) => x.id === 'speed');
+    const odd = M.apply(doc, { type: 'setThemes', elements: ['speed'], themes: ['gt3'] });
+    widget(odd, 'speed').themes = ['gt3', 'future']; // as a file from a newer apps repo would be
+    const toggled = M.apply(odd, { type: 'setThemes', elements: ['speed'], themes: ['night', 'gt3', 'future'] });
+    assert.deepStrictEqual(widget(toggled, 'speed').themes, ['night', 'gt3', 'future']);
+    const removed = M.apply(toggled, { type: 'setThemes', elements: ['speed'], themes: ['night', 'gt3'] });
+    assert.deepStrictEqual(widget(removed, 'speed').themes, ['night', 'gt3']);
+    refused(odd, { type: 'setThemes', elements: ['speed'], themes: ['gt3', 'other'] }, /other/);
+    assert.ok(w);
 });
 
 test('the palettes and the settings offered equal the apps repo\'s', () => {

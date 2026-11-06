@@ -28,7 +28,9 @@ export function ElementCondition({ name }: { name: string }) {
     const toggle = typeof widget.toggle === 'string' ? widget.toggle : '';
     const themes = Array.isArray(widget.themes) ? widget.themes.map(String) : [];
     const known = !toggle || CHOICES.some((c) => c.value === toggle);
-    const setThemes = (next: string[]) => edit({ type: 'setThemes', elements: [name], themes: THEME_NAMES.filter((t) => next.includes(t)) });
+    // palettes the file names that this build does not know stay listed (and ticked) so they are kept, and can be unticked
+    const extra = themes.filter((t) => !THEME_NAMES.includes(t));
+    const setThemes = (next: string[]) => edit({ type: 'setThemes', elements: [name], themes: [...THEME_NAMES.filter((t) => next.includes(t)), ...extra.filter((t) => next.includes(t))] });
     return (
         <Section title="Shown when" data-element-condition={name}>
             <Row label="Condition">
@@ -49,7 +51,7 @@ export function ElementCondition({ name }: { name: string }) {
             <fieldset className="m-0 border-0 p-0" data-condition-themes="" aria-label="Palettes">
                 <legend className="mb-1 p-0 text-xs text-muted-foreground">Only in these palettes{themes.length === 0 ? ' (all)' : ''}</legend>
                 <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-                    {THEME_NAMES.map((t) => (
+                    {[...THEME_NAMES, ...extra].map((t) => (
                         <label key={t} className="flex items-center gap-1.5 text-xs">
                             <input type="checkbox" className={checkboxClass} data-condition-theme={t} checked={themes.includes(t)}
                                 onChange={(e) => setThemes(e.target.checked ? [...themes, t] : themes.filter((x) => x !== t))} />
