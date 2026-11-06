@@ -38,6 +38,22 @@ _Avoid_: screen, page template (when meaning the app's layout)
 The file the designer saves and the app ships: the app's screens, their elements, focus order and navigation.
 _Avoid_: project, layout file, screens.json
 
+**Cluster layout**:
+The file the Designer saves for a cluster-render display (first the instrument cluster): every element drawn on it, in one file kept apart from the screen file.
+_Avoid_: cluster screen, cluster theme, cluster screen file
+
+**Palette**:
+The named set of colours a cluster layout is drawn in; each element picks one of its roles.
+_Avoid_: theme, skin
+
+**Role**:
+A colour's name in a palette (foreground, dim, accent…), which an element in a cluster layout uses instead of a colour value.
+_Avoid_: token, colour slot
+
+**Layer budget**:
+The number of layers, connections and pixel memory a cluster layout needs, against the limits of the renderer on the head unit.
+_Avoid_: layer count, cost
+
 **Theme**:
 The kit's named set of colours and fonts that every screen of an app is drawn in; one per screen file.
 _Avoid_: skin, palette, style
